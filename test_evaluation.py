@@ -134,7 +134,7 @@ class EvaluationTests(unittest.TestCase):
 
     def test_live_lock_prevents_competing_experiments_and_is_released(self):
         with tempfile.TemporaryDirectory() as temp, patch('evaluation.runner.tempfile.gettempdir', return_value=temp), \
-                patch.object(s, 'ensure_local_model'):
+                patch.object(s, 'ensure_local_model', return_value='a' * 64):
             with live_guard():
                 with self.assertRaises(FileExistsError):
                     with live_guard():
@@ -143,11 +143,30 @@ class EvaluationTests(unittest.TestCase):
 
     def test_live_socket_guard_rejects_non_numeric_and_other_ports(self):
         with tempfile.TemporaryDirectory() as temp, patch('evaluation.runner.tempfile.gettempdir', return_value=temp), \
-                patch.object(s, 'ensure_local_model'):
+                patch.object(s, 'ensure_local_model', return_value='a' * 64):
             with live_guard(), socket.socket() as sock:
                 for address in [('localhost', 11434), ('127.0.0.1', 80), ('192.0.2.1', 11434)]:
                     with self.assertRaises(OSError):
                         sock.connect(address)
+
+    def test_live_pins_identity_before_and_after_each_inference(self):
+        for identities, calls in [(['a' * 64, 'b' * 64], 0),
+                                  (['a' * 64, 'a' * 64, 'b' * 64], 1)]:
+            with tempfile.TemporaryDirectory() as temp, \
+                    patch('evaluation.runner.tempfile.gettempdir', return_value=temp), \
+                    patch.object(s, 'ensure_local_model', side_effect=identities), \
+                    patch.object(s, 'api', return_value={}) as transport:
+                with live_guard(), self.assertRaises(s.Blocked):
+                    s.api('/api/chat', {})
+                self.assertEqual(transport.call_count, calls)
+
+    def test_live_missing_digest_fails_before_inference(self):
+        with tempfile.TemporaryDirectory() as temp, \
+                patch('evaluation.runner.tempfile.gettempdir', return_value=temp), \
+                patch.object(s, 'ensure_local_model', return_value=None):
+            with self.assertRaises(RuntimeError):
+                with live_guard():
+                    self.fail('missing identity')
 
     def test_live_mode_keeps_faults_injected_and_calls_useful_fixtures_serially(self):
         by_raw = {fixture.raw: fixture for fixture in corpus() if fixture.meaning}
@@ -162,7 +181,7 @@ class EvaluationTests(unittest.TestCase):
 
         original = s.scrub
         with tempfile.TemporaryDirectory() as temp, patch('evaluation.runner.tempfile.gettempdir', return_value=temp), \
-                patch.object(s, 'ensure_local_model'), patch.object(s, 'scrub', side_effect=synthetic_scrub):
+                patch.object(s, 'ensure_local_model', return_value='a' * 64), patch.object(s, 'scrub', side_effect=synthetic_scrub):
             receipt = run(live=True)
         self.assertTrue(receipt['passed'])
         self.assertEqual(calls, [f.id for f in corpus() if f.meaning])

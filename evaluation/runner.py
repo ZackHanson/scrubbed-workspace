@@ -3,6 +3,7 @@ import argparse
 from contextlib import ExitStack, contextmanager, redirect_stdout, redirect_stderr
 import io
 import json
+import re
 from pathlib import Path
 import socket
 import tempfile
@@ -105,8 +106,22 @@ def live_guard():
 
             stack.enter_context(patch.object(socket.socket, 'connect', connect))
             stack.enter_context(patch.object(socket.socket, 'connect_ex', side_effect=OSError('non_loopback_rejected')))
-            s.ensure_local_model()
-            yield
+            digest = s.ensure_local_model()
+            if not isinstance(digest, str) or not re.fullmatch(r'[0-9a-f]{64}', digest):
+                raise RuntimeError('live_model_identity_rejected')
+            original_api = s.api
+
+            def pinned_api(route, payload=None):
+                # Metadata uses this same proxy-free client; only chat is wrapped.
+                if route == '/api/chat' and s.ensure_local_model() != digest:
+                    raise s.Blocked('model_error')
+                result = original_api(route, payload)
+                if route == '/api/chat' and s.ensure_local_model() != digest:
+                    raise s.Blocked('model_error')
+                return result
+
+            stack.enter_context(patch.object(s, 'api', side_effect=pinned_api))
+            yield digest
     finally:
         handle.close()  # Windows cannot unlink an open lock file.
         lock.unlink()
@@ -137,8 +152,9 @@ def run(live=False):
         # Defensive capture: future core diagnostics must not escape into receipts.
         stack.enter_context(redirect_stdout(io.StringIO()))
         stack.enter_context(redirect_stderr(io.StringIO()))
+        digest = None
         if live:
-            stack.enter_context(live_guard())
+            digest = stack.enter_context(live_guard())
         else:
             stack.enter_context(patch.object(socket.socket, 'connect', side_effect=OSError('network_disabled')))
             stack.enter_context(patch.object(socket.socket, 'connect_ex', side_effect=OSError('network_disabled')))
@@ -158,7 +174,10 @@ def run(live=False):
                 rows.append(row)
         if list(Path(folder).iterdir()):
             raise RuntimeError('unexpected_evaluation_state')
-    return summarize(rows, 'live_qwen' if live else 'mocked_contract')
+    receipt = summarize(rows, 'live_qwen' if live else 'mocked_contract')
+    if live:
+        receipt['model_digest'] = digest
+    return receipt
 
 
 def main(argv=None):

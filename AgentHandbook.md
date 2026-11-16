@@ -273,3 +273,17 @@ verified against the remote branch and PR head, with a clean worktree and nothin
 ahead. GitHub reported no checks and no reviews. This final documentation-only
 checkpoint records that publication; its remote SHA is verified at handoff.
 PR remains open for integration; no merge or combined-head rerun was performed.
+
+### November 16 Qwen privacy and meaning fixes (in progress)
+
+This host-managed task worktree starts at exact integrated head
+92633ac067ee074b44ee5435f22e0b4ef5923f18, not main. Evaluation reproduction and
+publication commits 14eaa31 and 2b92654 were cherry-picked with history preserved;
+both existing handbook records were retained. No other worktree was modified.
+Redactor instructions now separate requested work from distinctive biography and
+explicitly retain scope, exclusions and negation. Auditor instructions explicitly
+check residual trait combinations without requiring a name or location. Examples
+use unrelated invented topics. Core corpus and strict thresholds are unchanged.
+The guarded runner now pins the verified model digest across every inference.
+Focused live probes include both reproductions, four independent synthetic cases,
+and separate rare-context/clean auditor probes. Live qualification is pending.
