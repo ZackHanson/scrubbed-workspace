@@ -177,3 +177,32 @@ supersedes the generic hanster1 destination guidance; the existing T3 root stays
 Only repository-local user.name/user.email were set. SSH trust and global Git
 configuration remain unchanged. Initial baseline captures the verified 15-file
 source allowlist; remote publication is pending at checkpoint creation.
+
+
+Verified shared implementation baseline:
+`c07001746060b4c53054fb42d61c451a4043e2a9`.
+The source owner sent that exact SHA and same-thread T3 handoff instructions to all
+six implementation threads. Their task worktrees must start from this local SHA,
+not a remote/default branch. Root remains source-owner controlled.
+
+The baseline was pushed to approved private ZackHanson/scrubbed-workspace on
+feature/local-email-scrubber using command-scoped HTTPS transport with existing gh
+login. Stored SSH origin and SSH trust were preserved. Remote branch SHA was
+verified, and a fresh GitHub API restore of all 15 source blobs matched byte for
+byte. Detailed receipts and restored files are outside Git under the source-setup
+backup directory. This proves selected source recovery only, never runtime/private
+data backup. Git's first archive applied Windows newline conversion; a second
+archive with command-scoped core.autocrlf=false verified exact Git blob bytes.
+
+The previously empty remote made the first feature branch its default; no main
+branch exists. A PR cannot yet target main. Do not initialize/push main, change
+repository visibility, or install protection under this setup authority. Source
+branches may be backed up; PR/integration setup awaits an owner-approved base-branch
+bootstrap. GitHub reports paid-plan requirements for private rulesets/protection.
+No workflows, hooks, Pages deployment or deployment records were found.
+
+Owner additionally requested changing Windows Codex startup repository guidance
+from hanster1/<project> to ZackHanson/<project>. Only that text was replaced in
+C:/Users/zackw/.codex/AGENTS.md after preserving its original bytes outside Git.
+Existing explicitly recorded repository destinations are not migrated by this
+local startup-default change. No global Git configuration changed.
