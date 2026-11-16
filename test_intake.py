@@ -117,11 +117,10 @@ class IntakeTests(unittest.TestCase):
 
     def test_hold_write_failure_repaired_without_new_inference(self):
         raw = b'Subject: Synthetic\n\nGeneral workflow.'
-        with patch.object(scrubber, 'STATE', self.root), patch.object(scrubber, 'scrub', side_effect=scrubber.Blocked('model_error')) as model:
+        with patch.object(scrubber, 'STATE', self.root), patch.object(scrubber, 'ensure_local_model', return_value='a' * 64), patch.object(scrubber, 'scrub', side_effect=scrubber.Blocked('model_error')) as model:
             with patch('scrubber.HoldStore.create', side_effect=OSError('Synthetic failure')):
-                with self.assertRaises(OSError):
-                    scrubber.process(raw, self.source)
-            self.assertFalse(scrubber.process(raw, self.source))
+                self.assertFalse(scrubber.process(raw, self.source, source_reader=lambda source: raw))
+            self.assertFalse(scrubber.process(raw, self.source, source_reader=lambda source: raw))
             self.assertEqual(model.call_count, 1)
         self.assertEqual(len(list((self.root / 'holds').glob('*.json'))), 1)
 
@@ -251,17 +250,17 @@ class IntakeTests(unittest.TestCase):
 
     def test_source_backed_process_deduplicates_inference_and_candidates(self):
         raw = b'Subject: Synthetic\n\nGeneral question.'
-        with patch.object(scrubber, 'STATE', self.root), patch.object(scrubber, 'scrub', return_value=RECORD) as model:
-            self.assertTrue(scrubber.process(raw, self.source))
-            self.assertTrue(scrubber.process(raw, self.source))
+        with patch.object(scrubber, 'STATE', self.root), patch.object(scrubber, 'ensure_local_model', return_value='a' * 64), patch.object(scrubber, 'scrub', return_value=RECORD) as model:
+            self.assertTrue(scrubber.process(raw, self.source, source_reader=lambda source: raw))
+            self.assertTrue(scrubber.process(raw, self.source, source_reader=lambda source: raw))
             self.assertEqual(model.call_count, 1)
         self.assertEqual(len(list(self.root.glob('*.json'))), 1)
 
     def test_failed_process_not_repeated_until_explicit_retry(self):
         raw = b'Subject: Synthetic\n\nGeneral question.'
-        with patch.object(scrubber, 'STATE', self.root), patch.object(scrubber, 'scrub', side_effect=scrubber.Blocked('model_error')) as model:
-            self.assertFalse(scrubber.process(raw, self.source))
-            self.assertFalse(scrubber.process(raw, self.source))
+        with patch.object(scrubber, 'STATE', self.root), patch.object(scrubber, 'ensure_local_model', return_value='a' * 64), patch.object(scrubber, 'scrub', side_effect=scrubber.Blocked('model_error')) as model:
+            self.assertFalse(scrubber.process(raw, self.source, source_reader=lambda source: raw))
+            self.assertFalse(scrubber.process(raw, self.source, source_reader=lambda source: raw))
             self.assertEqual(model.call_count, 1)
         self.assertEqual(len(list((self.root / 'holds').glob('*.json'))), 1)
 
@@ -275,7 +274,7 @@ class IntakeTests(unittest.TestCase):
             return {'subject': 'General workflow',
                     'body': 'General hypertension diabetes asthma inhaler workflow.',
                     'uncertain': False}
-        with patch.object(scrubber, 'ensure_local_model'), patch.object(scrubber, 'llm', side_effect=model), patch('sys.argv', ['synthetic_check.py']):
+        with patch.object(scrubber, 'ensure_local_model', return_value='a' * 64), patch.object(scrubber, 'llm', side_effect=model), patch('sys.argv', ['synthetic_check.py']):
             self.assertEqual(synthetic_check.main(), 0)
 
 

@@ -41,6 +41,45 @@ class RecoveryTests(unittest.TestCase):
     def backup(self, **kwargs):
         return snapshot(self.state, self.root / 'snapshot', **kwargs)
 
+    def test_copy_time_activation_is_fenced_and_restored_claims_stay_unknown(self):
+        import recovery
+        import operations
+        from unittest.mock import Mock
+        operations_root = self.state / 'operations'
+        with operations.ledger(operations_root) as db, db:
+            db.execute('INSERT INTO jobs VALUES (?,?,?,?,?)', ('b' * 32, 'claimed', 1, 0, 1))
+        backup = self.backup()
+        target = self.root / 'restored'
+        intake, router = Mock(), Mock()
+        # A constructor from before restore must not bypass its later fence.
+        old = operations.Runner(target / 'operations', intake, router)
+        original = recovery._populate_restore
+        attempts = []
+        def copy(source, destination, manifest):
+            self.assertFalse((destination / 'operations' / 'operations.sqlite3').exists())
+            for invoke in (old.run, lambda: operations.Runner(destination / 'operations', intake, router)):
+                with self.assertRaises(RecoveryError):
+                    invoke()
+            # Explicit acknowledgement cannot activate a partially copied tree.
+            with self.assertRaises(RecoveryError):
+                acknowledge_restore(destination, operator_acknowledged=True,
+                                    reconciliation_recorded=True)
+            attempts.append('fenced_before_copy')
+            return original(source, destination, manifest)
+        with patch.object(recovery, '_populate_restore', side_effect=copy):
+            restore(backup, target)
+        self.assertEqual(attempts, ['fenced_before_copy'])
+        intake.poll.assert_not_called()
+        router.shadow.assert_not_called()
+        acknowledge_restore(target, operator_acknowledged=True, reconciliation_recorded=True)
+        intake.poll.return_value = [operations.WorkItem('b' * 32)]
+        report = old.run()
+        self.assertEqual((report.recovered, report.attempted), (1, 0))
+        router.shadow.assert_not_called()
+        with operations.ledger(target / 'operations') as db:
+            self.assertEqual(db.execute('SELECT state FROM jobs WHERE key=?', ('b' * 32,)).fetchone(),
+                             ('uncertain',))
+
     def test_full_journey_preserves_bindings_revisions_revocations_results_unknown(self):
         external = self.root / 'external'
         external.mkdir()

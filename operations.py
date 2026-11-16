@@ -309,64 +309,6 @@ def retention_preview(folder, older_than):
             (older_than,)).fetchone()[0], 'deletion_enabled': False}
 
 
-@state_mutation(lambda folder, *args, **kwargs: folder)
-def backup(folder, destination):
-    """Snapshot this ledger only, using SQLite's online backup, under the runner lock."""
-    destination = Path(destination)
-    with instance_lock(folder), ledger(folder) as source:
-        # Exclusive create: never replace an existing recovery copy or source.
-        with destination.open('xb'):
-            pass
-        try:
-            with closing(sqlite3.connect(destination)) as target:
-                source.backup(target)
-                if target.execute('PRAGMA integrity_check').fetchone() != ('ok',):
-                    raise OperationsError('backup_invalid')
-        except BaseException:
-            destination.unlink(missing_ok=True)  # Only the file just created here.
-            raise
-
-
-@state_read(lambda snapshot, destination: Path(destination).parent)
-def restore(snapshot, destination):
-    """Fresh local destination only; restored runs require explicit acknowledgement."""
-    snapshot, destination = Path(snapshot), Path(destination)
-    if snapshot.is_symlink() or not snapshot.is_file():
-        raise OperationsError('backup_invalid')
-    with closing(sqlite3.connect(snapshot.resolve().as_uri() + '?mode=ro', uri=True)) as source:
-        if (source.execute('PRAGMA application_id').fetchone() != (1398230864,)
-                or source.execute('PRAGMA user_version').fetchone() != (1,)
-                or source.execute('PRAGMA integrity_check').fetchone() != ('ok',)):
-            raise OperationsError('backup_invalid')
-        # Never overwrite an existing directory, even if empty.
-        destination.mkdir(parents=False, exist_ok=False)
-        from recovery_guard import _write_state, state_lock
-        _write_state(destination, 'pending')
-        with state_lock(destination):
-            with closing(sqlite3.connect(destination / 'operations.sqlite3')) as target, target:
-                source.backup(target)
-                target.execute("INSERT OR REPLACE INTO metadata VALUES ('restore_pending','1')")
-
-
-@state_read(lambda folder: Path(folder).parent)
-def acknowledge_restore(folder):
-    """Explicit local action after adapters/private state have been reconciled."""
-    from recovery_guard import RecoveryError, _state, _write_state, state_lock
-    folder = Path(folder)
-    if (folder / '.recovery' / 'receipt.json').exists():
-        raise RecoveryError('use_coordinated_restore_acknowledgement')
-    with state_lock(folder), instance_lock(folder), \
-            closing(sqlite3.connect(folder / 'operations.sqlite3')) as db, db:
-        if (db.execute('PRAGMA application_id').fetchone() != (1398230864,)
-                or db.execute('PRAGMA user_version').fetchone() != (1,)
-                or db.execute('PRAGMA integrity_check').fetchone() != ('ok',)):
-            raise OperationsError('invalid_ledger')
-        db.execute("DELETE FROM metadata WHERE key='restore_pending'")
-        db.commit()
-        if _state(folder) == 'pending':
-            _write_state(folder, 'active')
-
-
 def schedule_preview(*, enabled=False, interval_minutes=15, config=None):
     config = config or Config()
     if type(enabled) is not bool or type(interval_minutes) is not int or not 1 <= interval_minutes <= 1440:

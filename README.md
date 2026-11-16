@@ -106,7 +106,9 @@ The Gmail command reads up to five unread inbox messages without marking them re
 It also saves `run-status.json` in the local review folder, containing only run
 stage, counts, sign-in success and fixed error categories. This lets us diagnose
 a run after its terminal closes without reading email content or credentials.
-Running it again can process the same messages. Headers are discarded; plain-text
+Repeated imports deduplicate source identities and inference. New file/Gmail
+imports share durable checked provenance, shadow routing and managed exception
+review. Existing candidates are not silently adopted or given evidence. Headers are discarded; plain-text
 bodies and subjects pass through pattern redaction, Qwen generalization/redaction
 and Qwen review. Identifying profiles and irrelevant instruction attacks are
 removed while useful clinical/work requests are retained. This generalization may
@@ -130,8 +132,9 @@ This is a prototype, not a HIPAA compliance certification. The second pass uses
 the same model and can share its mistakes. HHS describes Safe Harbor and Expert
 Determination as de-identification methods; redaction by an LLM alone does not
 establish either. See [HHS guidance](https://www.hhs.gov/hipaa/for-professionals/special-topics/de-identification/index.html).
-Forwarding to a second account and connecting Claude remain unimplemented until
-the review and de-identification requirements are established.
+Claude is solely the eventual LAST consumer of already-scrubbed email. Intake,
+scrubbing, validation, routing, exception review, storage and recovery stay local.
+No real requests are enabled; the owner selected prepare-only pilot work.
 
 Project state and boundaries: [AgentHandbook](AgentHandbook.md).
 

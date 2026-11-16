@@ -16,6 +16,7 @@ import threading
 
 from scrubber import MAX_CHARS, PATTERNS
 from state_access import state_read, state_mutation
+from result_v1 import canonical_result
 
 
 class ContractError(ValueError):
@@ -71,25 +72,10 @@ def decision_digest(decision):
 
 
 def _action_result(value):
-    """Project the actions v1 wire contract without importing its local store."""
-    if (type(value) is not dict or set(value) != {'schema_version', 'actions'}
-            or type(value['schema_version']) is not int or value['schema_version'] != 1
-            or type(value['actions']) is not list or not 1 <= len(value['actions']) <= 20):
-        raise ContractError('invalid_response')
-    actions = []
-    for action in value['actions']:
-        if (type(action) is not dict or set(action) != {'kind', 'text'}
-                or type(action['kind']) is not str
-                or action['kind'] not in {'summarize', 'suggest_organization', 'draft_reply'}
-                or type(action['text']) is not str or not action['text'].strip()
-                or len(action['text']) > 128_000):
-            raise ContractError('invalid_response')
-        actions.append(action.copy())
-    result = {'schema_version': 1, 'actions': actions}
-    if len(json.dumps(result, sort_keys=True, ensure_ascii=True,
-                      separators=(',', ':')).encode('ascii')) > 128_000:
-        raise ContractError('invalid_response')
-    return result
+    try:
+        return json.loads(canonical_result(value))
+    except ValueError:
+        raise ContractError('invalid_response') from None
 
 
 @dataclass(frozen=True)

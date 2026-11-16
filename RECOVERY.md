@@ -89,16 +89,15 @@ malformed state inside an existing anchor fails closed. Acknowledgement verifies
 the restored receipt/bytes again, requires BOTH explicit boolean attestations,
 and only changes the fence to active. It does not renew evidence, reset IDs,
 retry claims, clear reservations, un-revoke requests, approve candidates, send
-anything, or clear an older operations-only restore fence. Current source/model/
+anything, or activate unsupported operations-only snapshots. Current source/model/
 validator/version checks still apply. A claimed/uncertain job needs its existing
 proof-based reconciliation. Unknown adapter reservations remain unknown: this
 module cannot fabricate provider reconciliation. The booleans record operator
 intent, not an independent provider proof.
 
-## Required integration owned by the primary
+## Runtime guard integration
 
-This source PR deliberately edits no existing core, desktop or pilot modules.
-It supplies `recovery_guard.require_active(path)` (read-only) and
+The implementation supplies `recovery_guard.require_active(path)` (read-only) and
 `active_state(path)` (whole-operation context manager). Direct existing runtime
 entrypoints are not fenced merely by importing this module. The combined build
 now wires the following through state_access decorators/context adapters:
@@ -112,10 +111,10 @@ now wires the following through state_access decorators/context adapters:
 | `intake.py` | Guard `_db` context for all DB methods; `materialize` across DB read and candidate publication; constructor before mkdir |
 | `actions.py` | Constructor and entire `_transaction` context, including read methods using it |
 | `routing.py` | Entire `DecisionStore.record`; preserve in-memory/no-folder behavior |
-| `operations.py` | Entire `Runner.run`, including old restore fence, polling and dispatch; maintenance mutators must use the guard too |
+| `operations.py` | Entire `Runner.run`, including refusal of old partial restores, polling and dispatch; maintenance mutators must use the guard too |
 | `claude_adapter.py` | Enabled `submit` across reservation, transport and finish; read check for `captured`; disabled constructor/submit retain no-files behavior |
 | New pilot | Whole run/reconciliation with canonical state root and separately configured ledger parent lock |
-| Intake output writers | Existing scrubber candidate publication/hold paths must also participate in the same root guard |
+| Intake output writers | Canonical scrubber process/Gmail batches and legacy candidate publication/hold paths must also participate in the same root guard |
 
 Every call on a preexisting object must recheck/lock; constructor-only checks are
 insufficient. Mutating constructors lock BEFORE creating stores. Guards import
@@ -157,10 +156,10 @@ the fence API. Combined test_state_access additionally calls unwrapped direct
 ShadowWorkflow, Reviewer, Runner, stores, legacy writers, adapter and pilot APIs,
 including objects created before a pending fence. A full synthetic snapshot and
 restore verifies that direct use stays blocked until acknowledgement, and that
-duplicate work remains suppressed afterward. The legacy operations-only restore
-also publishes a pending recovery fence before any copied DB bytes and holds
-the destination state lock; its acknowledgement cannot clear a coordinated
-restore's ancestor fence. Source
+duplicate work remains suppressed afterward. Copy-time regressions attempt direct
+activation before the first runtime file is copied and while destination copying
+holds its lock. Operations-only recovery APIs/format are retired; only this
+coordinated system is supported. Source
 tests do not prove real operator/provider reconciliation, separate-original
 recoverability, encryption, production permissions, or crash durability of the
 underlying storage hardware. No live-model or provider qualification is claimed.

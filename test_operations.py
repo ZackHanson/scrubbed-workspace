@@ -154,8 +154,6 @@ class OperationsTests(unittest.TestCase):
         with o.instance_lock(self.folder):
             with self.assertRaisesRegex(o.OperationsError, 'already_running'):
                 o.Runner(self.folder, FakeIntake(), FakeRouter()).run()
-            with self.assertRaises(o.OperationsError):
-                o.backup(self.folder, Path(self.temp.name) / 'locked.sqlite3')
         # A persistent lock file is safe: the OS lock, not file existence, owns it.
         self.assertTrue((self.folder / 'operations.lock').exists())
         self.assertEqual(o.Runner(self.folder, FakeIntake(), FakeRouter()).run().shadow, 1)
@@ -184,42 +182,6 @@ with o.instance_lock(sys.argv[1]), o.ledger(sys.argv[1]) as db, db:
         report = runner.run()
         self.assertEqual((report.attempted, report.exceptions), (0, 1))
 
-    def test_fresh_restore_is_inactive_and_preserves_dedup(self):
-        o.Runner(self.folder, FakeIntake(), FakeRouter()).run()
-        # Nearby credentials/private files are deliberately outside snapshot scope.
-        (self.folder / 'credentials.fake').write_text(PRIVATE)
-        snapshot = Path(self.temp.name) / 'recovery.sqlite3'
-        o.backup(self.folder, snapshot)
-        self.assertNotIn(PRIVATE.encode(), snapshot.read_bytes())
-        fresh = Path(self.temp.name) / 'restored'
-        o.restore(snapshot, fresh)
-        self.assertEqual([p.name for p in fresh.iterdir()
-                          if p.name not in {'.recovery', '.recovery-lock'}], ['operations.sqlite3'])
-        router = FakeRouter()
-        from recovery_guard import RecoveryError
-        with self.assertRaisesRegex(RecoveryError, 'restore_requires_reconciliation'):
-            o.Runner(fresh, FakeIntake(), router)
-        o.acknowledge_restore(fresh)
-        runner = o.Runner(fresh, FakeIntake(), router)
-        self.assertEqual(runner.run().attempted, 0)
-        self.assertEqual(router.calls, 0)
-        self.assertEqual(self.states(), self.states(fresh))
-        with self.assertRaises(FileExistsError):
-            o.restore(snapshot, fresh)
-        with self.assertRaises(FileExistsError):
-            o.backup(self.folder, snapshot)
-
-    def test_backup_claim_restore_still_requires_reconciliation(self):
-        with o.instance_lock(self.folder), o.ledger(self.folder) as db, db:
-            db.execute('INSERT INTO jobs VALUES (?,?,?,?,?)', (KEY, 'claimed', 1, 0, 1))
-        snapshot = Path(self.temp.name) / 'snapshot.sqlite3'
-        o.backup(self.folder, snapshot)
-        fresh = Path(self.temp.name) / 'fresh'
-        o.restore(snapshot, fresh)
-        o.acknowledge_restore(fresh)
-        report = o.Runner(fresh, FakeIntake(), FakeRouter()).run()
-        self.assertEqual((report.recovered, report.attempted), (1, 0))
-
     def test_foreign_database_not_modified_or_restored(self):
         self.folder.mkdir()
         foreign = self.folder / 'operations.sqlite3'
@@ -229,10 +191,6 @@ with o.instance_lock(sys.argv[1]), o.ledger(sys.argv[1]) as db, db:
         with self.assertRaisesRegex(o.OperationsError, 'invalid_ledger'):
             o.Runner(self.folder, FakeIntake(), FakeRouter()).run()
         self.assertEqual(foreign.read_bytes(), before)
-        fresh = Path(self.temp.name) / 'fresh'
-        with self.assertRaisesRegex(o.OperationsError, 'backup_invalid'):
-            o.restore(foreign, fresh)
-        self.assertFalse(fresh.exists())
 
     def test_notification_failure_does_not_repeat_work(self):
         def bad_notify(report):
@@ -287,37 +245,6 @@ with o.instance_lock(sys.argv[1]), o.ledger(sys.argv[1]) as db, db:
         self.assertTrue(preview['runner']['shadow'])
         self.assertFalse(preview['runner']['remote_delivery'])
 
-    def test_legacy_restore_is_fenced_before_copied_retry_can_dispatch(self):
-        from recovery_guard import RecoveryError
-        runner = o.Runner(self.folder, FakeIntake(), FakeRouter([o.RetryableError('synthetic')]),
-                          config=o.Config(backoff_seconds=0))
-        self.assertEqual(runner.run().deferred, 1)
-        snapshot = Path(self.temp.name) / 'legacy-snapshot.sqlite3'
-        o.backup(self.folder, snapshot)
-        restored = Path(self.temp.name) / 'restored'
-        connect = sqlite3.connect
-        router = FakeRouter()
-        attempts = []
-        test = self
-        class ReadOnlySource:
-            def __init__(self, connection):
-                self.connection = connection
-            def __getattr__(self, name):
-                return getattr(self.connection, name)
-            def backup(self, target):
-                self.connection.backup(target)
-                with test.assertRaises(RecoveryError):
-                    o.Runner(restored, FakeIntake(), router).run()
-                attempts.append('refused_before_acknowledgement')
-        def hooked_connect(*args, **kwargs):
-            connection = connect(*args, **kwargs)
-            return ReadOnlySource(connection) if kwargs.get('uri') else connection
-        with patch.object(o.sqlite3, 'connect', side_effect=hooked_connect):
-            o.restore(snapshot, restored)
-        self.assertEqual(attempts, ['refused_before_acknowledgement'])
-        self.assertEqual(router.calls, 0)
-        o.acknowledge_restore(restored)
-        self.assertEqual(o.Runner(restored, FakeIntake(), router).run().shadow, 1)
 
 
 if __name__ == '__main__':
