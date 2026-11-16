@@ -42,10 +42,13 @@ Existing state is not scanned or migrated automatically.
    idempotent. Write the corresponding `HoldStore` record afterward. A crash
    between them is repaired by re-creating the hold with the same ticket/source.
    `retry(ticket)` explicitly requeues blocked work and fences its old token.
-   Blocked work never requeues itself.
+   It atomically increments `retry_generation`; duplicate retry calls while pending
+   return false without incrementing it. Blocked work never requeues itself.
 
 `work_tickets()` lists only pending/expired opaque tickets. `status(ticket)` returns
-state, attempt count and fixed reason. `private_source(ticket)` is **local-only**
+state, attempt count, fixed reason and retry generation (zero for legacy items).
+The integrated runner uses that generation to reopen known exceptions, never
+uncertain operations. `private_source(ticket)` is **local-only**
 and returns `{source, source_version}`; the latter is the original raw-byte hash
 or None before Gmail fetch. INBOX references retain the existing holds/actions
 shape. Other mailboxes need a mailbox-aware source reader; the built-in CLI only

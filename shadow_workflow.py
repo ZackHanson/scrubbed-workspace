@@ -221,7 +221,8 @@ class ShadowWorkflow:
             # retain their original ticket key and cannot be retried on restart.
             key = ticket if version in (None, self.intake.original_candidate_digest(ticket)) else hashlib.sha256(
                 (ticket + version + routing.VALIDATOR_VERSION).encode()).hexdigest()[:32]
-            items.append(WorkItem(key, (ticket, version)))
+            items.append(WorkItem(key, (ticket, version),
+                                  retry_generation=state['retry_generation'] if state else 0))
 
         class Batch:
             def poll(self, limit, credentials):
@@ -253,8 +254,9 @@ class ShadowWorkflow:
         result = adapter.captured(submission_key)
         payload = {k: snapshot.record[k] for k in ('subject', 'body')}
         from claude_adapter import submission_key as key_for
-        expected_key = key_for(payload)
-        if expected_key != submission_key:
+        # Existing content-only requests may still recover their durable result.
+        # New requests are scoped to the immutable local intake ticket.
+        if submission_key not in (key_for(payload), key_for(payload, request_scope=ticket)):
             raise WorkflowError('result_binding_mismatch')
         if self.candidates.load(ticket).digest != snapshot.digest:
             raise WorkflowError('candidate_changed')
@@ -276,8 +278,11 @@ class ShadowWorkflow:
         if snapshot.digest != expected_candidate_version or decision.outcome != 'WOULD_SEND':
             raise WorkflowError('stale_request')
         payload = {k: snapshot.record[k] for k in ('subject', 'body')}
-        key = submission_key(payload)
+        key = submission_key(payload, request_scope=ticket)
         with closing(sqlite3.connect(self.path)) as db, db:
+            if db.execute('SELECT 1 FROM requests WHERE key=? AND ticket=?',
+                          (submission_key(payload), ticket)).fetchone():
+                raise WorkflowError('legacy_request_requires_reconciliation')
             db.execute('INSERT OR IGNORE INTO requests VALUES (?,?,?)', (key, ticket, snapshot.digest))
             if db.execute('SELECT ticket,version FROM requests WHERE key=?', (key,)).fetchone() != (
                     ticket, snapshot.digest):

@@ -28,6 +28,12 @@ directories without symlink/junction redirection or other concurrent writers.
   retry items. Payloads remain in memory and are never serialized by this runner.
   Respect the poll limit and use bounded source/network timeouts. The runner
   consumes at most the configured batch, including duplicate or deferred items.
+  Optional `retry_generation` defaults to zero and must be a nonnegative integer.
+  A trusted intake adapter increments it only for an explicit blocked-item retry.
+  A newer generation reopens a known `exception` with a fresh bounded attempt
+  budget, once. It cannot reopen `shadow`, `claimed` or `uncertain` work. The
+  consumed generation commits with the claim and survives restart/snapshot;
+  older adapters/stores default to generation zero. It is not release authority.
 - `Router.shadow(item)` performs local shadow processing only, idempotently keyed
   by `item.key`, and returns `shadow` or `exception`. An exception outcome means
   the adapter has durably created its local review exception. No candidate or

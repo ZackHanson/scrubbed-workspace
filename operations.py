@@ -28,10 +28,13 @@ class WorkItem:
     # Random stable local ID, never an address, source path, UID or content hash.
     key: str
     payload: object = field(default=None, repr=False, compare=False)
+    retry_generation: int = 0
 
     def __post_init__(self):
         if not isinstance(self.key, str) or not re.fullmatch(r'[0-9a-f]{32}', self.key):
             raise OperationsError('invalid_operation_id')
+        if type(self.retry_generation) is not int or self.retry_generation < 0:
+            raise OperationsError('invalid_retry_generation')
 
 
 class CredentialProvider(Protocol):
@@ -150,6 +153,7 @@ SCHEMA = """CREATE TABLE IF NOT EXISTS jobs (
     ('claimed','retry','shadow','exception','uncertain')),
     attempts INTEGER NOT NULL, due REAL NOT NULL, updated REAL NOT NULL);
     CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS retry_generation (key TEXT PRIMARY KEY, generation INTEGER NOT NULL);
     PRAGMA user_version=1;
     PRAGMA application_id=1398230864;
 """
@@ -226,20 +230,25 @@ class Runner:
     def _process(self, db, item, report):
         now = self.clock()
         row = db.execute('SELECT state, attempts, due FROM jobs WHERE key=?', (item.key,)).fetchone()
-        if row and row[0] != 'retry':
+        prior = db.execute('SELECT generation FROM retry_generation WHERE key=?', (item.key,)).fetchone()
+        generation = prior[0] if prior else 0
+        explicit_retry = bool(row and row[0] == 'exception' and item.retry_generation > generation)
+        if item.retry_generation < generation or (row and row[0] != 'retry' and not explicit_retry):
             return
-        if row and row[2] > now:
+        if row and not explicit_retry and row[2] > now:
             report.deferred += 1
             return
-        if row and row[1] >= self.config.max_attempts:
+        if row and not explicit_retry and row[1] >= self.config.max_attempts:
             with db:
                 db.execute("UPDATE jobs SET state='exception', updated=? WHERE key=?", (now, item.key))
             report.exceptions += 1
             return
         if not row and db.execute('SELECT count(*) FROM jobs').fetchone()[0] >= self.config.max_ledger_items:
             raise OperationsError('ledger_capacity')
-        attempts = (row[1] if row else 0) + 1
+        attempts = (row[1] if row and not explicit_retry else 0) + 1
         with db:
+            db.execute('INSERT OR REPLACE INTO retry_generation VALUES (?,?)',
+                       (item.key, item.retry_generation))
             db.execute('INSERT OR REPLACE INTO jobs VALUES (?, ?, ?, ?, ?)',
                        (item.key, 'claimed', attempts, 0, now))
         report.attempted += 1

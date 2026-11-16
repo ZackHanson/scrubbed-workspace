@@ -12,7 +12,7 @@ exists. The ledger path must be explicitly provided in approved local state;
 tests use temporary directories. Disabled calls do not create/open that store.
 
 `submit(payload, decision, *, expected_candidate_digest,
-expected_decision_digest)` requires exactly `subject` and `body` strings in the
+expected_decision_digest, request_scope=None)` requires exactly `subject` and `body` strings in the
 payload. No candidate status, ID, routing map, source reference, addresses,
 credential, filename or raw MIME field belongs here. Local identifier patterns
 and routing-header checks provide additional rejection, not de-identification
@@ -40,7 +40,7 @@ and keep the private routing map local.
 An old eligible decision is not invalidated automatically by this standalone module.
 
 Transport signature: `transport(payload, *, timeout_seconds, idempotency_key)`.
-It receives only copied subject/body and an opaque content-derived key, never
+It receives only copied subject/body and an opaque hashed request/content key, never
 decision metadata or local identifiers. It must honor the timeout itself. A
 daemon worker bounds caller waiting; Python cannot cancel an arbitrary callable,
 so timed-out work may still finish. No thread can trigger a second submission.
@@ -74,6 +74,15 @@ SQLite stores submission hashes, statuses, untrusted result JSON and stop reason
 Treat this database as potentially sensitive local state, not content-free telemetry.
 Atomic unique insertion
 reserves a content key before calling transport, across threads/process restarts.
+New integrated requests pass the immutable 32-hex intake ticket as the LOCAL
+`request_scope`; only its hash with content reaches transport as the idempotency
+key. Distinct messages with identical generalizations have distinct keys. Scope
+is trusted caller context, not authorization: never regenerate it for retries,
+policy changes or status edits, and never accept it from model/message text.
+Unscoped callers keep the original content key. An existing legacy reservation
+blocks scoped submissions for that content, and a scoped reservation blocks a
+later unscoped submission. This deliberately requires local reconciliation of
+legacy work rather than using the new key format to bypass uncertain delivery.
 The key is stable across decision changes to prevent policy changes bypassing
 unknown delivery. Duplicate calls return no response, but `captured(key)` reads
 an already durable complete end_turn response without invoking transport. Legacy

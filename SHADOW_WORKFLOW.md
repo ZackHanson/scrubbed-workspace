@@ -62,9 +62,13 @@ than being silently marked successful.
 ## Separate synthetic adapter and result capture
 
 Before fixture submission, `bind_result_request` durably records the ticket,
-exact file version and content-derived submission key. This is correlation only,
+exact file version and ticket/content-derived submission key. This is correlation only,
 never release authorization. `submit_fixture` is the sole supplied submission
 caller and accepts only the constant fixture and built-in fake.
+Distinct tickets with identical scrubbed text do not collide. Repeated calls for
+the same ticket/content keep their key. Existing content-only request bindings
+can still capture durable results; new binding attempts for those legacy requests
+require reconciliation rather than silently resubmitting under a scoped key.
 
 The adapter reserves its key **before** transport, then commits validated response
 bytes before returning. `captured(key)` never submits. Only complete `end_turn`
@@ -107,3 +111,12 @@ authorized release policy, privacy/utility qualification and local operator
 reconciliation remain outstanding. Operations backup covers only its own ledger;
 full private-state backup/restore is not implemented or claimed. Existing backups
 and schedules are unchanged.
+
+Explicit `workflow.intake.retry(ticket)` increments a durable retry generation
+only when it requeues blocked intake. `run` passes that generation to operations,
+which can reopen a known terminal exception once per explicit retry. Restarting
+or repeating a batch does not increment it. Claimed/uncertain and successful
+operations cannot be reopened by a new generation; uncertain work still needs
+explicit proof-based reconciliation. Generation records are local ledger state
+and are included in that ledger's snapshots. This API fix does not connect the
+legacy desktop retry UI or automatically close its existing exception records.

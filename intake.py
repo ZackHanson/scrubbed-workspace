@@ -126,6 +126,8 @@ class IntakeLedger:
                 CREATE TABLE IF NOT EXISTS thread_link (
                     scope TEXT NOT NULL, reference TEXT NOT NULL, thread TEXT NOT NULL,
                     PRIMARY KEY(scope, reference));
+                CREATE TABLE IF NOT EXISTS retry_generation (
+                    ticket TEXT PRIMARY KEY, generation INTEGER NOT NULL);
                 PRAGMA user_version=1;
             ''')
 
@@ -230,8 +232,12 @@ class IntakeLedger:
     def retry(self, ticket):
         """Explicit retry only; blocked items are never automatically requeued."""
         with self._db() as db:
-            return bool(db.execute("UPDATE item SET state='pending',token=NULL WHERE ticket=? AND state='blocked'",
-                                   (ticket,)).rowcount)
+            changed = db.execute("UPDATE item SET state='pending',token=NULL WHERE ticket=? AND state='blocked'",
+                                 (ticket,)).rowcount
+            if changed:
+                db.execute('INSERT INTO retry_generation VALUES (?,1) ON CONFLICT(ticket) '
+                           'DO UPDATE SET generation=generation+1', (ticket,))
+            return bool(changed)
 
     def successful_records(self):
         """Local routing input, not authorization to export or release content."""
@@ -241,7 +247,9 @@ class IntakeLedger:
 
     def status(self, ticket):
         with self._db() as db:
-            row = db.execute('SELECT state,attempts,reason FROM item WHERE ticket=?', (ticket,)).fetchone()
+            row = db.execute('SELECT state,attempts,reason, COALESCE((SELECT generation '
+                             'FROM retry_generation WHERE retry_generation.ticket=item.ticket),0) '
+                             'AS retry_generation FROM item WHERE ticket=?', (ticket,)).fetchone()
             return dict(row) if row else None
 
     def original_candidate_digest(self, ticket):

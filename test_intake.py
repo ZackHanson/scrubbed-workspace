@@ -143,6 +143,7 @@ class IntakeTests(unittest.TestCase):
         self.assertIsNone(self.ledger.claim(ticket))
         self.assertTrue(self.ledger.retry(ticket))
         self.assertFalse(self.ledger.retry(ticket))
+        self.assertEqual(self.ledger.status(ticket)['retry_generation'], 1)
         new = self.ledger.claim(ticket)
         with self.assertRaises(IntakeError):
             self.ledger.complete(old, RECORD)

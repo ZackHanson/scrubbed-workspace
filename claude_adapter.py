@@ -46,9 +46,14 @@ def payload_digest(payload):
     return _digest(_payload(payload))
 
 
-def submission_key(payload):
+def submission_key(payload, *, request_scope=None):
     """Stable local correlation key; never an authorization token."""
-    return _digest({'adapter': 'claude-v1', 'candidate_digest': payload_digest(payload)})
+    value = {'adapter': 'claude-v1', 'candidate_digest': payload_digest(payload)}
+    if request_scope is not None:
+        if type(request_scope) is not str or not re.fullmatch('[0-9a-f]{32}', request_scope):
+            raise ContractError('invalid_request_scope')
+        value['request_scope'] = request_scope
+    return _digest(value)
 
 
 def decision_digest(decision):
@@ -127,18 +132,27 @@ class ClaudeAdapter:
         # No directory creation or store opening on construction/disabled calls.
         self.ledger_path = Path(ledger_path)
 
-    def _reserve(self, key):
+    def _reserve(self, key, legacy_key):
         # Persist BEFORE invoking transport. Crash/timeout reservations are never
         # automatically cleared, including when a new adapter process starts.
         with closing(sqlite3.connect(self.ledger_path, timeout=0.1)) as db, db:
             db.execute('CREATE TABLE IF NOT EXISTS submissions '
                        '(key TEXT PRIMARY KEY, status TEXT NOT NULL)')
             columns = {row[1] for row in db.execute('PRAGMA table_info(submissions)')}
-            for name in ('result', 'stop_reason'):
+            for name in ('result', 'stop_reason', 'content_key'):
                 if name not in columns:
                     db.execute('ALTER TABLE submissions ADD COLUMN ' + name + ' TEXT')
+            # Serialize compatibility checks with the reservation. A legacy
+            # content reservation cannot safely be assigned to a new scope.
+            db.execute('BEGIN IMMEDIATE')
+            if db.execute('SELECT 1 FROM submissions WHERE key=?', (legacy_key,)).fetchone():
+                return False
+            if key == legacy_key and db.execute(
+                    'SELECT 1 FROM submissions WHERE content_key=?', (legacy_key,)).fetchone():
+                return False
             try:
-                db.execute('INSERT INTO submissions(key,status) VALUES (?, ?)', (key, 'unknown'))
+                db.execute('INSERT INTO submissions(key,status,content_key) VALUES (?, ?, ?)',
+                           (key, 'unknown', legacy_key))
             except sqlite3.IntegrityError:
                 return False
         return True
@@ -169,7 +183,8 @@ class ClaudeAdapter:
         except (OSError, sqlite3.Error, ValueError, TypeError):
             raise ContractError('result_unavailable') from None
 
-    def submit(self, payload, decision, *, expected_candidate_digest, expected_decision_digest):
+    def submit(self, payload, decision, *, expected_candidate_digest, expected_decision_digest,
+               request_scope=None):
         if not self.config.enabled:
             return AdapterResult('disabled', 'transport_disabled')
         try:
@@ -184,15 +199,15 @@ class ClaudeAdapter:
                 raise ContractError('digest_mismatch')
             if not bound_decision['eligible'] or bound_decision['mode'] != 'release':
                 raise ContractError('not_eligible')
+            key = submission_key(content, request_scope=request_scope)
         except ContractError as error:
             return AdapterResult('blocked', str(error))
         if not callable(self.transport):
             return AdapterResult('disabled', 'transport_missing')
-        # One submission per content even if a policy decision changes. This
-        # conservative rule prevents a new decision from bypassing an unknown send.
-        key = submission_key(content)
+        # Scope comes from trusted local intake, never a retry/policy/model ID.
+        # The same message and content keep their key across decision changes.
         try:
-            if not self._reserve(key):
+            if not self._reserve(key, submission_key(content)):
                 return AdapterResult('duplicate', 'already_reserved', key)
         except (OSError, sqlite3.Error):
             return AdapterResult('blocked', 'ledger_unavailable')

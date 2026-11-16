@@ -128,6 +128,41 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(result.submission_key, first.submission_key)
         self.assertEqual(len(self.calls), 1)
 
+    def test_scoped_keys_separate_messages_but_preserve_policy_deduplication(self):
+        first = self.submit(request_scope='a' * 32)
+        second = self.submit(request_scope='b' * 32)
+        self.assertEqual((first.status, second.status), ('completed', 'completed'))
+        self.assertNotEqual(first.submission_key, second.submission_key)
+        changed = {**self.decision, 'policy_version': 'synthetic-v2'}
+        duplicate = self.submit(request_scope='a' * 32, decision=changed,
+                                expected_decision_digest=decision_digest(changed))
+        self.assertEqual((duplicate.status, duplicate.submission_key), ('duplicate', first.submission_key))
+        self.assertEqual(len(self.calls), 2)
+        self.assertEqual(set(self.calls[0][1]), {'timeout_seconds', 'idempotency_key'})
+
+    def test_scoped_request_cannot_bypass_legacy_unknown_reservation(self):
+        # Reopen the original status-only schema, including interrupted delivery.
+        from claude_adapter import submission_key
+        with contextlib.closing(sqlite3.connect(self.path)) as db, db:
+            db.execute('CREATE TABLE submissions (key TEXT PRIMARY KEY, status TEXT NOT NULL)')
+            db.execute('INSERT INTO submissions VALUES (?,?)', (submission_key(self.payload), 'unknown'))
+        self.assertEqual(self.submit(request_scope='a' * 32).status, 'duplicate')
+        self.assertEqual(self.calls, [])
+
+    def test_unscoped_request_cannot_bypass_scoped_unknown_reservation(self):
+        def broken(payload, **options):
+            self.calls.append(1)
+            raise OSError('synthetic failure')
+        self.assertEqual(self.submit(self.adapter(broken), request_scope='a' * 32).status, 'unknown')
+        self.assertEqual(self.submit(request_scope='a' * 32).status, 'duplicate')
+        self.assertEqual(self.submit().status, 'duplicate')
+        self.assertEqual(len(self.calls), 1)
+
+    def test_scope_must_be_an_opaque_local_identifier(self):
+        for value in ('synthetic@example.test', '', 'a' * 64, True):
+            self.assertEqual(self.submit(request_scope=value).code, 'invalid_request_scope')
+        self.assertEqual(self.calls, [])
+
     def test_concurrent_submission_and_timeout_never_retry(self):
         entered, release, exited = threading.Event(), threading.Event(), threading.Event()
 

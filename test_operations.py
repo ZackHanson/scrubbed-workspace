@@ -97,6 +97,30 @@ class OperationsTests(unittest.TestCase):
         o.reconcile(self.folder, KEY, 'retry')
         self.assertEqual(runner.run().shadow, 1)
 
+    def test_explicit_generation_reopens_only_exception_once(self):
+        router = FakeRouter(['exception', 'exception', 'shadow'])
+        runner = o.Runner(self.folder, FakeIntake(), router, config=o.Config(max_attempts=1))
+        self.assertEqual(runner.run().exceptions, 1)
+        runner.intake = FakeIntake([o.WorkItem(KEY, retry_generation=1)])
+        self.assertEqual(runner.run().exceptions, 1)
+        self.assertEqual(runner.run().attempted, 0)
+        runner.intake = FakeIntake([o.WorkItem(KEY)])
+        self.assertEqual(runner.run().attempted, 0)  # Stale explicit-retry view.
+        runner.intake = FakeIntake([o.WorkItem(KEY, retry_generation=2)])
+        self.assertEqual(runner.run().shadow, 1)
+        runner.intake = FakeIntake([o.WorkItem(KEY, retry_generation=3)])
+        self.assertEqual(runner.run().attempted, 0)  # Never reopen successful work.
+        self.assertEqual(router.calls, 3)
+
+    def test_retry_generation_cannot_reopen_recovered_claim(self):
+        self.folder.mkdir()
+        with o.instance_lock(self.folder), o.ledger(self.folder) as db, db:
+            db.execute('INSERT INTO jobs VALUES (?,?,?,?,?)', (KEY, 'claimed', 1, 0, 1))
+        router = FakeRouter()
+        report = o.Runner(self.folder, FakeIntake([o.WorkItem(KEY, retry_generation=1)]), router).run()
+        self.assertEqual((report.recovered, report.attempted), (1, 0))
+        self.assertEqual(router.calls, 0)
+
     def test_crash_claim_recovers_to_uncertain(self):
         with o.instance_lock(self.folder), o.ledger(self.folder) as db, db:
             db.execute('INSERT INTO jobs VALUES (?,?,?,?,?)', (KEY, 'claimed', 1, 0, 1))
@@ -239,6 +263,9 @@ with o.instance_lock(sys.argv[1]), o.ledger(sys.argv[1]) as db, db:
                 o.Config(**kwargs)
         with self.assertRaises(o.OperationsError):
             o.WorkItem(PRIVATE)
+        for generation in (-1, True, '1'):
+            with self.assertRaises(o.OperationsError):
+                o.WorkItem(KEY, retry_generation=generation)
         provider = o.MemoryCredentials({'gmail': PRIVATE})
         self.assertNotIn(PRIVATE, repr(provider))
         self.assertEqual(provider.get('gmail'), PRIVATE)

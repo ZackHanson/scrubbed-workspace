@@ -305,3 +305,33 @@ Evaluation success is not privacy certification or release permission. Remaining
 broader local qualification, independent integration review, desktop retry wiring,
 pilot UX, release/provider qualification and private-state recovery. These are
 separate from this task. Subsequent checkpoint changes only result documentation.
+
+### November 16 independent integration review and fixes
+
+Reviewed combined integration/Qwen head 34eda178c90052b733747e24769bbfdcd4cd482e
+with an independent read-only reviewer and synthetic temporary-state reproductions.
+Two confirmed P2 findings: content-only submission keys prevented distinct messages
+with identical generalizations from each obtaining a result; explicit intake retries
+remained suppressed by terminal operations exceptions. No cross-source misbinding
+was observed; the collision failed closed. Interrupted hold persistence was also
+tested: it remains uncertain and is repairable after explicit safe-retry
+reconciliation, as documented. The review is bounded evidence, not certification.
+
+This isolated branch scopes new request keys to the immutable local ticket and
+content, keeping policy/retry keys stable. Only a hash reaches fake transport;
+payload stays subject/body. Legacy content reservations block new scoped sends,
+and existing legacy results can still be recovered. Explicit intake retries now
+atomically increment a local generation; operations consumes it with its claim
+and reopens only a known exception. Unknown/claimed work still requires proof-based
+reconciliation, and completed work stays deduplicated. Additive local ledger
+tables default old items to generation zero; no existing real runtime was opened.
+
+All 194 deterministic tests pass with sockets blocked and temporary LOCALAPPDATA,
+including ten new regressions for distinct-message results, cross-ticket rejection,
+legacy recovery/reservations, retry restart/deduplication and uncertain-work fencing.
+The prior 35-case live-Qwen success is unchanged model-code evidence; this task
+does not modify model prompts or rerun inference. Remaining desktop retry/exception
+closure wiring, pilot UX, release/provider qualification and full private-state
+recovery are separate. No merge, real data, delivery or schedule activation.
+Source fixes are prepared as a stacked PR against feature/qwen-privacy-meaning-fixes;
+publication and remote-head verification are reported at handoff.

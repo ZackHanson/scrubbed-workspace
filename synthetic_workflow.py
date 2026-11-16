@@ -65,7 +65,8 @@ def submit_fixture(workflow, ticket, adapter):
                      'candidate_digest': payload_digest(PAYLOAD)}
     result = adapter.submit(PAYLOAD, authorization,
                             expected_candidate_digest=payload_digest(PAYLOAD),
-                            expected_decision_digest=decision_digest(authorization))
+                            expected_decision_digest=decision_digest(authorization),
+                            request_scope=ticket)
     return key, snapshot.digest, result
 
 

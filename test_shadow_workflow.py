@@ -56,6 +56,65 @@ class WorkflowTests(unittest.TestCase):
             self.assertEqual(self.run_shadow().attempted, 0)
         self.assertEqual(demo()['local_proposals'], 1)
 
+    def test_identical_scrubbed_messages_keep_distinct_results(self):
+        second = self.workflow.register(fixture(self.root / 'second.eml'))
+        self.assertNotEqual(second, self.ticket)
+        self.assertEqual(self.workflow.run([self.ticket, second]).shadow, 2)
+        adapter = self.adapter()
+        keys = []
+        for ticket in (self.ticket, second):
+            key, version, response = submit_fixture(self.workflow, ticket, adapter)
+            self.assertEqual(response.status, 'completed')
+            receipt = self.workflow.capture(ticket, adapter, key, expected_candidate_version=version)
+            self.assertEqual(receipt['candidate_id'], ticket)
+            keys.append(key)
+        self.assertNotEqual(*keys)
+        with self.assertRaises(WorkflowError):
+            self.workflow.capture(second, adapter, keys[0],
+                                  expected_candidate_version=self.workflow.candidates.load(second).digest)
+        restarted = ShadowWorkflow(self.workflow.root)
+        key, _, response = submit_fixture(restarted, second, self.adapter())
+        self.assertEqual((key, response.status), (keys[1], 'duplicate'))
+
+    def test_legacy_bound_result_can_recover_but_cannot_be_resubmitted_with_scope(self):
+        self.run_shadow()
+        snapshot = self.workflow.candidates.load(self.ticket)
+        authorization = {'eligible': True, 'mode': 'release', 'policy_version': 'synthetic-test-v1',
+                         'candidate_digest': payload_digest(PAYLOAD)}
+        adapter = self.adapter()
+        response = adapter.submit(PAYLOAD, authorization,
+                                  expected_candidate_digest=payload_digest(PAYLOAD),
+                                  expected_decision_digest=decision_digest(authorization))
+        with closing(sqlite3.connect(self.workflow.path)) as db, db:
+            db.execute('INSERT INTO requests VALUES (?,?,?)',
+                       (response.submission_key, self.ticket, snapshot.digest))
+        receipt = self.workflow.capture(self.ticket, adapter, response.submission_key,
+                                        expected_candidate_version=snapshot.digest)
+        self.assertEqual(receipt['candidate_id'], self.ticket)
+        with self.assertRaisesRegex(WorkflowError, 'legacy_request_requires_reconciliation'):
+            submit_fixture(self.workflow, self.ticket, adapter)
+
+    def test_explicit_intake_retry_survives_restart_and_runs_once(self):
+        with patch.object(self.workflow, 'check', side_effect=scrubber.Blocked('model_error')):
+            self.assertEqual(self.run_shadow().exceptions, 1)
+        self.assertTrue(self.workflow.intake.retry(self.ticket))
+        self.assertFalse(self.workflow.intake.retry(self.ticket))
+        restarted = ShadowWorkflow(self.workflow.root)
+        report = restarted.run([self.ticket])
+        self.assertEqual((report.attempted, report.shadow), (1, 1))
+        self.assertEqual(restarted.intake.status(self.ticket)['state'], 'completed')
+        self.assertEqual(restarted.run([self.ticket]).attempted, 0)
+
+    def test_intake_retry_cannot_bypass_uncertain_operations(self):
+        # A failed hold save leaves a known blocked intake but uncertain workflow.
+        with patch.object(self.workflow, 'check', side_effect=scrubber.Blocked('model_error')), \
+                patch('shadow_workflow.HoldStore.create', side_effect=OSError('synthetic failure')):
+            self.assertEqual(self.run_shadow().uncertain, 1)
+        self.assertTrue(self.workflow.intake.retry(self.ticket))
+        restarted = ShadowWorkflow(self.workflow.root)
+        self.assertEqual(restarted.run([self.ticket]).attempted, 0)
+        self.assertFalse(restarted.candidates.path(self.ticket).exists())
+
     def test_provenance_and_private_binding_are_separate(self):
         self.run_shadow()
         snapshot, decision = self.workflow.current(self.ticket)
@@ -256,7 +315,8 @@ with patch.object(socket.socket, 'connect', side_effect=AssertionError('no_netwo
         try:
             response = adapter.submit(PAYLOAD, authorization,
                                       expected_candidate_digest=payload_digest(PAYLOAD),
-                                      expected_decision_digest=decision_digest(authorization))
+                                      expected_decision_digest=decision_digest(authorization),
+                                      request_scope=self.ticket)
             self.assertEqual((response.status, response.code), ('unknown', 'timeout'))
         finally:
             release.set()
@@ -264,7 +324,8 @@ with patch.object(socket.socket, 'connect', side_effect=AssertionError('no_netwo
         reopened = self.adapter(transport=slow)
         response = reopened.submit(PAYLOAD, authorization,
                                    expected_candidate_digest=payload_digest(PAYLOAD),
-                                   expected_decision_digest=decision_digest(authorization))
+                                   expected_decision_digest=decision_digest(authorization),
+                                   request_scope=self.ticket)
         self.assertEqual(response.status, 'duplicate')
         self.assertEqual(len(calls), 1)
         with self.assertRaises(ContractError):
