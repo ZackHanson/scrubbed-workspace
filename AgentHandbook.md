@@ -210,3 +210,10 @@ Remote protection inspection still returns 403; no enforcement claim or settings
 change. Source checkpoint and remote SHA verification follow before handoff.
 Final deterministic verification after adding reproductions: 68/68 passed with
 network sockets blocked and temporary LOCALAPPDATA. Final focused tests: 17/17.
+Source follow-up is published as PR #2:
+https://github.com/ZackHanson/scrubbed-workspace/pull/2
+The initial task checkpoint 14eaa3101b3551a91ffd429b4c1e5f663ea1851e was
+verified against the remote branch and PR head, with a clean worktree and nothing
+ahead. GitHub reported no checks and no reviews. This final documentation-only
+checkpoint records that publication; its remote SHA is verified at handoff.
+PR remains open for integration; no merge or combined-head rerun was performed.
