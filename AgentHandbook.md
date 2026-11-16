@@ -453,3 +453,51 @@ no settings were changed and no protection enforcement is claimed. Source draft
 PR targets feature/desktop-workflow-integration; publication and exact clean/pushed
 remote head are verified at handoff. The primary owns integration and combined
 checks. No independent merge or main push is authorized.
+
+### November 16 bounded Claude pilot preparation
+
+Owned host-managed feature/bounded-claude-pilot starts at exact desktop head
+cde70a09a391f5e205d5ba84e14448b967e82c3c. Only claude_pilot.py,
+test_claude_pilot.py, PILOT.md and this Current work record changed. Existing
+adapter, routing, UI, core and recovery files are preserved. Owner explicitly
+selected preparation without submitting requests; no credential was requested,
+account/model selected, spend incurred, or provider request made.
+
+The default-disabled pilot accepts exactly five invented nonclinical fixtures,
+with separate trusted fixture authorization through the unchanged ClaudeAdapter.
+It persists a maximum-five budget before dispatch (unknown attempts count),
+stable request scopes/digests, captured ResultV1 and inert ActionStore proposals
+in one selected private pilot database. Shadow/dry-run never invoke transport.
+Duplicate/restart/config/policy changes cannot resubmit; uncertainty, refusal,
+invalid/truncated output or exhausted budget halts. Explicit start, clean pause
+and terminal stop are local operator actions. Standard-library HTTPS is pinned
+to Anthropic's verified TLS Messages origin with bounded bytes/timeouts, no
+redirects/proxies/retries/tools and memory-only key injection for a future
+separately authorized run. Anthropic primary protocol/model/pricing docs were
+verified November 16; exact links and operator templates are in PILOT.md.
+
+Evidence: python -m unittest test_claude_pilot -q passes 25/25; final
+python verify_synthetic.py passes 240/240 with sockets blocked and temporary
+LOCALAPPDATA. Default CLI returns dry-run/zero attempts; shadow reply returns
+shadow/zero attempts. Existing synthetic_workflow.demo() passes: one shadow
+classification, zero duplicate attempts, one separate fake result/local proposal,
+network_enabled=false and release_enabled=false. No live inference or manual
+desktop visual check was run. Tested module SHA256:
+c3725f15af65dde26b416fc99b286501f544df813f9fd5140b77d2f4b813dc2f;
+test module SHA256:
+9c3b42cbca79fea9cb3b17fe5f76d3ab11970bb33c2345a4c4fb6acc0d3d40fd.
+
+Parent integration: integrate this source branch onto desktop integration with
+history preserved; preserve parallel handbook records. Optional recovery hooks
+already call require_active(root), active_state(root) around every pilot mutation
+and the complete reservation/dispatch/capture path. The sibling module is not yet
+present here; synthetic hooks pass, but actual quarantine/reentrant-lock combined
+verification belongs to the parent after sibling integration. No future provider
+activation until that check and separate account/model/spend approval. CLI stop
+cannot recall an already reserved/dispatched request; timeout workers can finish
+later, with all follow-on dispatch blocked. Budget is per retained local state,
+not an account-wide dollar cap or tamper-resistant quota. Source-only draft PR
+targets feature/desktop-workflow-integration; no main push, merge, release,
+private-state backup, email action, schedule/service or security change. Private
+repository remains private; workflows/hooks/deployments are zero and protection
+inspection returns paid-plan HTTP 403, without an enforcement claim or workaround.
