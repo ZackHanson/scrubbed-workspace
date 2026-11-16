@@ -87,3 +87,67 @@ Lexical checks cannot establish clinical correctness, entailment, unknown
 identifier detection or absence of invented advice. Same-model redactor/auditor
 passes are correlated. Neither a pass nor this report certifies privacy, medical
 safety or compliance, or authorizes automatic Claude delivery.
+
+## Integrated Qwen fix rerun, November 16, 2026
+
+The full 35-case strict live gate **passed** (exit 0) on clean combined code head
+`123c26ef3923078e6016745f8038d94f011e87b5`, based on exact integration head
+`92633ac067ee074b44ee5435f22e0b4ef5923f18`. Later commits record results only.
+Python 3.13.15; fixed numeric loopback and model tag as above. Before inference,
+`/api/tags` selected the fixed local model and `/api/show` rejected remote metadata.
+The verified installed digest was
+`56671c2ab9385f9cfcb404638e32cd62d88e3501d44822208363c010179a3c90`.
+The guarded runner now checks this digest before and after every actual inference,
+failing closed on changes. This verifies the installed model identity reported by
+Ollama, not independent supply-chain attestation of the model's training or bytes.
+
+Privacy containment passed 35/35; all 16 actual-inference useful cases produced
+schema-valid candidates and passed every required meaning group with zero known
+canary matches. Seven input refusals and 12 injected model faults matched their
+exact expected typed reasons. Zero unexpected execution errors occurred. Input
+refusals do not call the model; injected faults do not establish live model
+refusal behavior. All original corpus bytes, lexical groups and thresholds remain
+unchanged. The same-head deterministic mock contract also passes all 35 cases.
+
+The redactor now separates the requested work from distinctive biography and
+preserves all scope, exclusions and negation. The auditor explicitly considers
+combinations of personal traits even without names or locations. Examples in the
+prompts use unrelated invented details, not fixture words or replacements.
+
+An intermediate full run on clean `92f61085294ad5dcf698002672624bc4cf003472`
+still failed: privacy containment 35/35, usefulness 15/16, schema 15/15, exact
+refusals 19/19. Both original reproductions passed, but `quoted-01` was correctly
+blocked by the auditor after the redactor retained an unnecessary visit month
+and relative-employment narrative. The follow-up fixes task extraction from
+quoted history; the auditor was not weakened. That failed receipt is retained.
+
+Final guarded focused replay passed eight candidate cases: both original
+failures, quoted-history regression, and five extra synthetic cases covering
+other rare trait combinations, negative scope and quoted personal history.
+All passed privacy, utility and schema. Three direct auditor probes passed:
+two retained rare-context candidates blocked, one clean scoped request accepted.
+`python -B -m evaluation.focused` runs these built-in probes serially with the
+same exclusive lock, digest checks and temporary STATE; no output text is saved.
+
+Deterministic validation: 36 focused tests and all 184 combined tests passed with
+sockets blocked and temporary LOCALAPPDATA. The final combined suite ran on the
+same clean code head as the final live run. No real messages, candidates, source
+references or private runtime storage were read. No real transport, cloud model,
+action, service, scheduler, infrastructure or access setting was activated.
+
+Content-free receipts remain outside Git/runtime in the operator temporary
+folder: `scrubbed-qwen-focused.json`, `scrubbed-qwen-full-92f6108.json`,
+`scrubbed-qwen-focused-v2.json`, `scrubbed-qwen-full-123c26e.json`, and
+`scrubbed-qwen-provenance.json`. The manifest associates each receipt's SHA-256
+with its exact clean code SHA and verified model digest. Final full receipt hash:
+`91f01ae8ba07320da816a7231753c85263a2237ddb438369e2f0affa17acc2c3`.
+Temporary receipts are not durable backup. Source-only stacked draft PR:
+https://github.com/ZackHanson/scrubbed-workspace/pull/4, targeting
+`feature/integrated-shadow-workflow`. No merge is authorized by this work.
+
+A passing lexical synthetic gate cannot establish unknown-identifier detection,
+clinical correctness, entailment or absence of invented advice. Same-model
+redactor/auditor decisions remain correlated, and live behavior can vary. This
+pass is not privacy certification, release permission or authorization for
+automatic Claude delivery. Broader qualification, desktop retry wiring, pilot UX,
+release/provider qualification and private-state recovery remain separate work.

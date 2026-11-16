@@ -274,7 +274,7 @@ ahead. GitHub reported no checks and no reviews. This final documentation-only
 checkpoint records that publication; its remote SHA is verified at handoff.
 PR remains open for integration; no merge or combined-head rerun was performed.
 
-### November 16 Qwen privacy and meaning fixes (in progress)
+### November 16 Qwen privacy and meaning fixes
 
 This host-managed task worktree starts at exact integrated head
 92633ac067ee074b44ee5435f22e0b4ef5923f18, not main. Evaluation reproduction and
@@ -286,4 +286,22 @@ check residual trait combinations without requiring a name or location. Examples
 use unrelated invented topics. Core corpus and strict thresholds are unchanged.
 The guarded runner now pins the verified model digest across every inference.
 Focused live probes include both reproductions, four independent synthetic cases,
-and separate rare-context/clean auditor probes. Live qualification is pending.
+and separate rare-context/clean auditor probes. Completed qualification follows below.
+
+Completed qualification: clean combined code head
+123c26ef3923078e6016745f8038d94f011e87b5 passed the full 35-case guarded live run:
+privacy containment 35/35, useful candidates and schema 16/16, exact refusals 19/19,
+zero execution errors. Model digest verified before/after each actual inference:
+56671c2ab9385f9cfcb404638e32cd62d88e3501d44822208363c010179a3c90.
+All 184 deterministic tests passed with sockets blocked and temporary storage;
+36 focused deterministic tests passed. Expanded focused live check passed eight
+candidate cases and three auditor probes. An intermediate full run failed on
+quoted history; the auditor correctly blocked residual context, and task
+extraction was fixed without weakening it. Both receipts are retained and
+explained in evaluation/LIVE_RESULTS.md. Corpus/thresholds remain unchanged.
+Source-only stacked draft PR #4 targets feature/integrated-shadow-workflow and
+is linked in T3. Remote main remains 466de50; no merge/release was performed.
+Evaluation success is not privacy certification or release permission. Remaining:
+broader local qualification, independent integration review, desktop retry wiring,
+pilot UX, release/provider qualification and private-state recovery. These are
+separate from this task. Subsequent checkpoint changes only result documentation.

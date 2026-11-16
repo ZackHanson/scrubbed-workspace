@@ -23,6 +23,7 @@ python -B -m evaluation.runner --live-qwen
 
 Live mode calls only the fixed `qwen3.5:9b-q4_K_M` model through
 `http://127.0.0.1:11434`, verifies it is local, rejects other socket destinations,
+pins the verified model digest before and after each inference,
 and uses the core client's disabled proxies/redirects. No server is started.
 Inference is serial; an exclusive temporary lock prevents competing evaluation
 processes. An existing lock fails closed; the runner does not delete a suspected
@@ -72,7 +73,10 @@ canaries cannot exhaust rare identifying combinations. Two passes by the same
 model remain correlated. A pass is not a privacy, medical, or compliance
 certification and is not authorization for automatic Claude release.
 
-`synthetic_check.py` and core prompts are unchanged. Integration requires no core
-edits: run this module against the combined branch. Prompt changes prompted by
-future live failures should be sent to the intake owner with fixture IDs and
-content-free failure dimensions, rather than edited in this track.
+The integrated fix updates core redactor/auditor instructions while retaining
+the original corpus and thresholds. Run `python -B -m evaluation.focused` for
+both reproduced failures, quoted-history regression, five extra synthetic
+generalization cases and three independent auditor probes. This focused run
+uses the same guarded live controls and prints only a content-free JSON receipt.
+See LIVE_RESULTS.md for exact clean code SHAs, verified model digest, the retained
+intermediate failure and final full-run results.
