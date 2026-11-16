@@ -372,3 +372,39 @@ and exact remote head are verified at handoff. No main push, merge, real message
 Claude delivery, email action, service or scheduler activation. Remaining: owner
 synthetic usability rehearsal, broader qualification, provider/release decisions
 and full coordinated private-state recovery (operations-only backup is insufficient).
+
+### November 16 offline exception usability rehearsal
+
+Assigned review UI work starts at integrated desktop head
+`cde70a09a391f5e205d5ba84e14448b967e82c3c`. Read the PR #1 acceptance scenarios at
+`296cfbd3c967f434e85119b13657eb855cdba226` and assessed current managed behavior.
+`python review.py --demo` now uses built-in mock model responses with sockets
+blocked for the entire temporary session; no Ollama is invoked. A DEMO_FAIL draft
+subject injects verifier failure for a repeatable owner rehearsal. The mock returns
+fixed general workflow text and establishes no meaning/privacy performance.
+
+Reload now retains selection and loads the current saved version after explicit
+discard approval; declining discard or encountering a conflict preserves draft
+text. Closed holds, failed-check next actions, demo recovery wording and rejected
+candidate counts are clearer. Five added tests bring `python verify_synthetic.py`
+to 220/220 passing (19.978 seconds), with temporary LOCALAPPDATA and sockets blocked.
+Tests exercise managed preview/correction failure/success/retry/dismissal, stale
+window reload, deleted selection, changed hold reasons and uncertainty guidance.
+Inherited tests cover source changes, concurrent edits, rejection and actual
+uncertain/recovery fencing. No review_workflow/core/provider/pilot changes made.
+
+Native Windows computer-use inspection observed the layout, reason rows, expanded
+guidance, mocked original retry resolving one hold and adding one pending candidate,
+and inert original preview with DOB/phone highlighting. Both synthetic windows
+closed and launched process exited. Other interactions use hidden Tk tests. Final
+wording changes were assertion-tested after the visual pass. No owner trial,
+human usability approval, ten-item comparison, time savings, real model evaluation,
+actual queue, connected Gmail reads or private runtime access is claimed.
+
+See REVIEW_REHEARSAL.md for one-command reproduction, owner walkthrough, evidence
+and limitations. Source draft PR targets feature/desktop-workflow-integration;
+primary owns stack integration and reruns. The sibling recovery guard/API work
+will be applied by primary after this branch; _source binding/compute closures
+are untouched here. Pilot is prepare-only; no submissions or credentials.
+No services, dependencies, infrastructure, security changes, merge or main push.
+Publication and exact remote head verification follow at handoff.

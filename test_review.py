@@ -141,6 +141,29 @@ class WindowTests(unittest.TestCase):
         self.assertIn('checkbox', self.window.notice.get())
         self.assertEqual(self.store.load(self.window.snapshot.ticket).record['status'], 'needs_local_review')
 
+    def test_conflict_keeps_draft_and_reload_loads_selected_current_version(self):
+        ticket = self.window.snapshot.ticket
+        other = self.store.load(ticket)
+        self.store.save(other, 'Other window', 'Newer saved text.', 'needs_local_review')
+        self.window.subject.set('My unsaved draft')
+        self.window.save_edits()
+        self.assertIn('another window', self.window.notice.get())
+        self.assertEqual(self.window.subject.get(), 'My unsaved draft')
+        with patch.object(self.window.messagebox, 'askyesno', return_value=False):
+            self.window.reload()
+        self.assertEqual(self.window.subject.get(), 'My unsaved draft')
+        with patch.object(self.window.messagebox, 'askyesno', return_value=True):
+            self.window.reload()
+        self.assertEqual(self.window.snapshot.ticket, ticket)
+        self.assertEqual(self.window.values(), ('Other window', 'Newer saved text.'))
+        self.assertFalse(self.window.dirty())
+
+    def test_reload_missing_selected_candidate_clears_editor(self):
+        self.store.path(self.window.snapshot.ticket).unlink()
+        self.window.reload()
+        self.assertIsNone(self.window.snapshot)
+        self.assertEqual(self.window.values(), ('', ''))
+
 
 class ExceptionWindowTests(unittest.TestCase):
     def setUp(self):
@@ -231,6 +254,23 @@ class ExceptionWindowTests(unittest.TestCase):
             self.window.change_view()
         self.assertEqual(self.window.view.get(), 'Open exceptions')
         self.assertIn('Unsaved synthetic draft', self.window.values()[1])
+
+    def test_reload_hold_refreshes_reason_and_preserves_selection(self):
+        hold = self.window.hold
+        self.window.holds.update(hold, reason='source_changed')
+        self.window.reload()
+        self.assertEqual(self.window.hold.ticket, hold.ticket)
+        self.assertEqual(self.window.reason.get(), r.REASONS['source_changed'][0])
+        self.assertIn('Re-import', self.window.guidance.get())
+
+    def test_uncertain_worker_keeps_draft_and_explains_no_retry(self):
+        self.window.body.insert('1.0', 'Unsaved invented correction.')
+        with patch.object(r.triage, 'recheck', side_effect=r.HoldError('reconciliation_required')):
+            self.window.check_draft()
+            self.finish()
+        self.assertEqual(self.window.values()[1], 'Unsaved invented correction.')
+        self.assertIn('Do not retry uncertain work', self.window.notice.get())
+        self.assertEqual(self.window.hold.record['status'], 'open')
 
 
 if __name__ == '__main__':
