@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.env*
+*.eml
+*.mbox
+*.json
+!*.example.json
+private/
+data/
+.venv/

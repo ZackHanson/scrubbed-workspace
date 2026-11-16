@@ -1,0 +1,179 @@
+# Agent Handbook - Scrubbed Workspace
+
+## Purpose and success
+
+Help doctors create a separate workspace from locally scrubbed email. Owner: Zack.
+Raw email must never be sent to a cloud AI, agent prompt, Git, or cloud logging.
+The local model is Ollama qwen3.5:9b-q4_K_M on numeric loopback only.
+Owner clarified the product goal: Claude should handle the user's messages to
+save time, with human review rare and reserved for exceptions. The current
+review-every-candidate prototype is a development stage, not the intended routine
+workflow. Raw messages and identifying routing information must remain local;
+automatic release and Claude integration still require implementation and testing.
+
+## Run and verify
+
+Python 3.13, standard library only. `python scrubber.py check` checks the local
+model; `python -m unittest -v` checks synthetic failure and review gates.
+`python scrubber.py gmail --limit 5` prompts locally for source address and a Google
+app password, reads unread messages without marking them read, and scrubs locally.
+`python scrubber.py files <path.eml>` accepts a local export.
+`python synthetic_check.py` runs a fake-inbox batch with real local inference,
+review persistence checks and separate auditor probes. `--diagnose` prints only
+built-in synthetic model outputs. `python review.py --demo` opens an isolated
+synthetic desktop example; `python review.py` or Run Local Review.cmd opens the
+actual local exception/candidate queue. Opening the window does not call Gmail or
+Ollama. Preview/retry of Gmail originals explicitly requests local sign-in; retry
+and edited-draft checks call the fixed loopback model.
+
+## Boundaries
+
+All outputs are unapproved candidates in `%LOCALAPPDATA%\ScrubbedWorkspace`,
+outside the repository. Treat candidates as potentially containing PHI. No sender,
+recipient, routing headers, raw message, attachment or source filename is saved
+in candidate content. Exception records now store private source references in
+the local holds subfolder: absolute .eml path plus content hash, or hashed Gmail
+account plus inbox UID/UIDVALIDITY. Treat these references as private; never put
+them in Git, agent prompts, candidate output or logs. No raw original copies or
+passwords are saved. Source previews are for the owner locally, never cloud agents.
+Attachments, unsupported MIME, oversized input, model errors, uncertain redaction,
+suspected remaining identifiers and invalid output block candidate creation.
+No forwarding, automatic approval or Claude integration exists yet. Local review
+and an appropriate de-identification process remain required before any upload.
+Two passes through the same model are correlated and cannot certify compliance.
+Do not use connected Gmail tools to inspect raw messages in a cloud agent.
+The desktop review tool records needs_local_review, reviewed_locally or
+rejected_locally. These are workflow markers, not de-identification approval.
+Edits must be saved as pending before recording review. Rejection retains files;
+no export/upload action exists. Review content only in the local window, never
+through a cloud agent. Use --demo and temporary stores for automated UI testing.
+
+## Current work
+
+Initial implementation on feature/local-email-scrubber in the existing T3 root.
+Installed local model discovered successfully. All 15 synthetic unit tests passed.
+Live Qwen synthetic email test removed the tested name, date of birth, record number,
+street/city and phone despite an embedded instruction to repeat names. Candidate
+remained marked needs_local_review. This is a smoke test, not a privacy guarantee.
+Gmail trials save a content-free run-status.json (stage, authentication outcome,
+counts and fixed error categories) locally, tested for zero unread, failed sign-in
+and blocked input. The latest trial authenticated and saved one local review
+candidate. On November 14 the content-free receipt confirmed that the prior live
+trial completed: five selected, five saved for local review, zero blocked, no
+reported error. No existing candidate content was inspected through the cloud agent.
+Forwarding remains absent.
+
+November 14 follow-up: diagnosed the original clinical yield of 0/2 using only
+built-in synthetic model outputs. An overbroad ID regex consumed ordinary words
+after policy/record; the redactor retained attack text and identity-only profiles;
+the verifier inferred identifiers from empty placeholder profiles. Narrowed the
+ambiguous label regex (strong MRN/DOB/SSN/patient-id labels still redact alphabetic
+IDs) and made the prompt prioritize generalized useful requests, dropping identity
+profiles and instruction attacks. Audit instructions distinguish placeholders and
+general clinical topics from identifiers; uncertainty/identifier gates remain.
+
+The final five-message live-model batch saves three review candidates (both
+clinical examples plus clean workflow) and blocks attachment/HTML inputs. Separate
+auditor probes block a name with an instruction attack, a written date and age 94.
+Known synthetic identifiers and attack phrases are absent from saved outputs;
+clinical topics are retained. Model-generated candidates also pass local
+review/edit/rejection persistence checks. This is a small smoke test, not a privacy
+guarantee; broader clinical examples and local human evaluation remain needed.
+
+Desktop reviewer implemented in review.py using standard-library Tkinter. It
+supports editing, recording local review and rejection, checkbox confirmation,
+pending status after edits, conflict detection, atomic saves and per-candidate
+writer locks. Existing real candidates were not inspected or modified. All 29
+unit/UI tests pass with temporary synthetic storage. The synthetic desktop demo
+was opened and its candidate selected for the owner to try. It uses temporary
+examples only; no existing candidates were displayed through computer use.
+Exception reviewer implemented next: new blocked inputs create fixed typed reason
+records in local holds storage with source references when available. Open
+exceptions, Candidates and Closed exceptions are separate views. The UI displays
+hold reasons/actions and can preview originals locally as inert text, retry through
+the full model gates, check a newly composed draft, or dismiss an exception. Regex
+highlights cover matching body/subject values but do not detect every identifier.
+Unchecked drafts are never saved; failed checks preserve the in-memory draft.
+Successful checks close the exception and create a new needs_local_review candidate.
+Dismissal retains the original; sequential reimports deduplicate matching sources.
+Gmail reopen uses the exact account hash/UIDVALIDITY/UID, read-only inbox and PEEK;
+credentials come from native local dialogs, never saved. Changed/missing sources
+fail closed. No attachment is opened or remote HTML resource fetched. Source reads
+and inference run in a worker so the local UI remains responsive.
+
+All 51 unit/UI tests pass, including metadata privacy, source mismatch, Gmail read
+semantics, stale decisions, failure recovery, draft preservation and exception
+resolution. The real-model synthetic batch still yields 3 candidates/2 blocked;
+blocked inputs have retrievable fake Gmail references. A synthetic held .eml also
+passes the real retry path and becomes a pending candidate, closing its exception.
+The updated synthetic demo was visually inspected, including local source preview
+and identifier highlighting. Existing real candidates/messages were not opened or
+modified. Old count-only blocked trials cannot be retroactively reconstructed.
+Next: owner tries the exception demo; expand synthetic evaluation and implement
+automatic routing decisions in shadow mode before any real Claude delivery.
+Routine candidates still require local review; the exception UI alone does not
+enable the eventual automatic workflow. Keep local identity/routing separate from
+any content Claude receives. Forwarding remains absent; no automatic release
+policy is activated.
+Existing source destination is private ZackHanson/scrubbed-workspace, with no commits
+on remote main. SSH remote fails host-key verification. User's global instructions
+instead name hanster1 and a canonical Projects path; destination/path reconciliation
+is pending. Git commit also failed because author identity is unset; no identity
+settings were changed. Source files are staged locally, not committed or pushed.
+Preserve the existing T3 view and staged starter files.
+
+
+### November 16 source setup and seven-track coordination
+
+The source-setup thread alone owns writes/Git setup in the existing T3 root until
+an initial local baseline is ready. Preserve this root; do not create replacement
+clones or shell worktrees. The six implementation threads remain read-only here,
+then carry their existing task in the SAME thread into a T3-managed worktree using
+the source owner's exact local baseline SHA, startFromOrigin:false and
+runSetupScript:false. No real email/Claude delivery or scheduler activation.
+
+Implementation thread IDs (common prefix
+`thread:mcp:392f8e06-4950-4c4b-bf69-9e0177a2b114:scrubbed-workspace-seven-tracks-20261116-v1:`):
+- `0`: Reliable email intake.
+- `1`: Automatic routing in shadow mode.
+- `2`: Expanded synthetic evaluation.
+- `3`: Claude connection and result capture.
+- `4`: Actions and reply workflow.
+- `5`: Background operation and recovery.
+
+Source inventory is exactly 15 selected files: .gitignore, AGENTS.md,
+AgentHandbook.md, README.md, both .cmd launchers, assets/icon.svg, scrubber.py,
+holds.py, review.py, triage.py, synthetic_check.py and the three test modules.
+Original index had eight staged files; four staged blobs differ from working
+bytes (handbook, README, scrubber and test_scrubber). Seven source files were
+untracked. Original binary index, every staged blob and all on-disk source bytes
+were copied and byte-verified outside Git under the owner's backups directory,
+source-setup-20261116-144331, before deliberately changing staging. Ignored files
+are generated Python caches only; no ignored authored assets were found.
+
+All 51 deterministic synthetic tests pass with socket connections prohibited and
+LOCALAPPDATA redirected to temporary storage. Source allowlist privacy inspection
+found no credential signatures, raw email, candidates, runtime databases or private
+source-reference records. No private runtime directory was opened. No local
+workflow/deployment files or active Git hooks exist; launchers run Python manually.
+GitHub CLI verifies ZackHanson and its private empty scrubbed-workspace repository;
+the connected GitHub app is hanster1 and cannot access that repository. Author and
+conflicting owner guidance await one bundled owner clarification in source setup.
+No identity, SSH trust, global Git setting or remote URL has been changed.
+
+Remote inspection: no branches, Actions workflows, hooks or deployments; Pages
+lookup returns 404. Ruleset inspection returns 403 (GitHub Pro/public repository
+required), so enforceable remote protection is not established. Do not change
+visibility or security settings to work around this. Remote publication remains
+pending; there is no verified remote source backup yet. This source-only work
+never claims runtime/private-data backup. Source owner sends the exact baseline
+SHA to all six existing threads as soon as author identity permits a checkpoint.
+
+
+Owner resolution, November 16: Zack explicitly approved commit author Zack
+<354641050+ZackHanson@users.noreply.github.com> and the existing private
+ZackHanson/scrubbed-workspace source destination. This project-specific decision
+supersedes the generic hanster1 destination guidance; the existing T3 root stays.
+Only repository-local user.name/user.email were set. SSH trust and global Git
+configuration remain unchanged. Initial baseline captures the verified 15-file
+source allowlist; remote publication is pending at checkpoint creation.
