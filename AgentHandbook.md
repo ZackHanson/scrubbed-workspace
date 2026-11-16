@@ -19,7 +19,8 @@ Checkpoint owned branches and open one coherent draft PR; verify exact remote SH
 and clean tracking. Stored SSH origin fails host-key verification: use explicit
 command-scoped HTTPS and the existing gh credential helper. Do not change stored
 origin, SSH trust, global configuration or repository-local author identity.
-Source publishing is separate from release; no merge is authorized in this task.
+Source publishing is separate from release. Zack authorized merging cleanup PR11
+into PR10; merging the remaining stack or main is not part of this action.
 GitHub checks/deployments are not configured; protection inspection returned 403.
 No protection enforcement is claimed and no settings workaround is authorized.
 
@@ -116,15 +117,17 @@ and operations demos pass. One independent read-only review found stale duplicat
 source reads and timeout continuation; both are fixed with launcher regressions.
 Shared reconciliation now guards imports and review without duplicating its rules.
 Model behavior/corpus/thresholds are unchanged; no live inference was rerun.
-Draft PR publication and exact remote SHA are verified at handoff. Stack parents are PR3/4/5/6/10;
-PR10 already includes PR7/8/9. Preserve them; do not merge, retarget or close yet.
+Cleanup is published as PR11 against PR10. Zack authorized merging PR11 into
+PR10 after confirming unchanged tested code and a clean merge. Stack parents are
+PR3/4/5/6/10; PR10 already includes PR7/8/9. Preserve the remaining stack, branches
+and worktrees; no retargeting, closing or main merge is included.
 
 Owner chose Claude pilot PREPARATION WITHOUT SUBMISSIONS. No credentials,
 account/model choice, provider calls, real messages, private-state access,
 schedules/services, infrastructure, security changes or release are authorized.
 Pilot budget, adapter reservations and action version bindings remain separate.
-Next: review the focused draft and whole stack diff against main, then let Zack
-choose integration. Remaining product limits: owner usability/meaning/time-saving
+Next: complete the authorized PR11 merge into PR10, then let Zack choose
+integration of the remaining stack after reviewing its combined diff to main. Remaining product limits: owner usability/meaning/time-saving
 rehearsal, broader privacy/utility qualification, production private-state recovery,
 and separately approved final-consumer/provider/release work. No automated real
 message eligibility or upstream Claude connection is implied.
