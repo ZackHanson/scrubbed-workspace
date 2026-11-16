@@ -21,6 +21,7 @@ import sqlite3
 import tempfile
 import time
 import uuid
+from state_access import state_context, state_mutation
 
 from holds import HoldError, REASONS, valid_source, validity
 
@@ -103,6 +104,7 @@ def identity(source):
 
 
 class IntakeLedger:
+    @state_mutation(lambda self, folder, **kwargs: folder)
     def __init__(self, folder, *, clock=time.time):
         self.root = Path(folder)
         self.folder = self.root / 'intake'
@@ -131,6 +133,7 @@ class IntakeLedger:
                 PRAGMA user_version=1;
             ''')
 
+    @state_context('root')
     @contextmanager
     def _db(self):
         db = sqlite3.connect(self.path, timeout=10)
@@ -281,6 +284,7 @@ class IntakeLedger:
                 source.pop('mailbox')
             return {'source': source, 'source_version': row['fingerprint']}
 
+    @state_mutation('root')
     def materialize(self, ticket):
         """Repair missing candidate after commit; never overwrite reviewer edits."""
         with self._db() as db:

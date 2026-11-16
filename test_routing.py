@@ -138,7 +138,8 @@ class RoutingTests(unittest.TestCase):
             with patch('routing.os.fsync', side_effect=OSError('synthetic private detail')):
                 with self.assertRaisesRegex(r.RoutingError, '^store_failed$'):
                     store.record('1' * 32, self.candidate, self.evidence)
-            self.assertEqual(list(Path(folder).iterdir()), [])
+            self.assertEqual([p for p in Path(folder).iterdir()
+                              if p.name not in {'.recovery', '.recovery-lock'}], [])
 
 
 if __name__ == '__main__':

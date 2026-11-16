@@ -14,6 +14,7 @@ from unittest.mock import Mock, patch
 
 import claude_pilot as cp
 from claude_adapter import FakeTransport
+from recovery_guard import RecoveryError
 
 
 KEY = 'sk-ant-synthetic-test-key-never-real'
@@ -194,13 +195,16 @@ class PilotTests(unittest.TestCase):
         thread.start()
         self.assertTrue(entered.wait(1))
         try:
-            self.assertEqual(pilot.submit('organize', mode='pilot')['status'], 'halted')
+            with self.assertRaisesRegex(RecoveryError, '^state_busy$'):
+                pilot.submit('organize', mode='pilot')
         finally:
             release.set()
             thread.join(3)
         self.assertFalse(thread.is_alive())
         self.assertEqual(self.rows('SELECT count(*) FROM pilot_attempts'), [(1,)])
-        self.assertEqual(self.rows('SELECT status FROM pilot'), [('halted',)])
+        self.assertEqual(self.rows('SELECT status FROM pilot'), [('active',)])
+        pilot.stop()
+        self.assertEqual(self.rows('SELECT status FROM pilot'), [('stopped',)])
 
     def test_timeout_counts_no_retry_even_if_worker_finishes_later(self):
         release = threading.Event()

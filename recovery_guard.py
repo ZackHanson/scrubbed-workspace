@@ -85,7 +85,7 @@ def state_lock(path):
     root = state_root(path)
     held = getattr(_local, 'held', {})
     _local.held = held
-    key = str(root)
+    key = os.path.normcase(str(root))
     if held.get(key):
         held[key] += 1
         try:

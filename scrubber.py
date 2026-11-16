@@ -14,6 +14,7 @@ from email.parser import BytesParser
 from urllib.request import Request, build_opener, ProxyHandler, HTTPRedirectHandler
 from holds import HoldError, HoldStore, account_hash, file_source, validity
 from intake import IntakeLedger, fetch_gmail
+from state_access import state_mutation
 
 MODEL = 'qwen3.5:9b-q4_K_M'
 ENDPOINT = 'http://127.0.0.1:11434'
@@ -223,6 +224,7 @@ def scrub(raw):
     return {'status': 'needs_local_review', **candidate}
 
 
+@state_mutation(lambda *args, **kwargs: STATE)
 def process(raw, source=None):
     ticket = uuid.uuid4().hex
     ledger = claim = None
@@ -259,6 +261,7 @@ def process(raw, source=None):
     return True
 
 
+@state_mutation(lambda record, folder, ticket=None: folder)
 def save_candidate(record, folder, ticket=None):
     ticket = ticket or uuid.uuid4().hex
     folder = Path(folder)
@@ -269,6 +272,7 @@ def save_candidate(record, folder, ticket=None):
     return ticket
 
 
+@state_mutation(lambda *args, **kwargs: STATE)
 def save_status(report):
     STATE.mkdir(parents=True, exist_ok=True)
     temporary = STATE / 'run-status.tmp'
@@ -276,6 +280,7 @@ def save_status(report):
     temporary.replace(STATE / 'run-status.json')
 
 
+@state_mutation(lambda *args, **kwargs: STATE)
 def gmail(limit, report):
     report['stage'] = 'awaiting_local_sign_in'
     save_status(report)

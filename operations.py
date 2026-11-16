@@ -13,6 +13,7 @@ import sqlite3
 import tempfile
 import time
 from typing import Callable, Iterable, Protocol
+from state_access import state_context, state_mutation, state_read
 
 
 class OperationsError(Exception):
@@ -159,6 +160,7 @@ SCHEMA = """CREATE TABLE IF NOT EXISTS jobs (
 """
 
 
+@state_context(lambda folder: folder)
 @contextmanager
 def ledger(folder):
     path = Path(folder) / 'operations.sqlite3'
@@ -178,6 +180,7 @@ def ledger(folder):
 
 
 class Runner:
+    @state_read(lambda self, folder, *args, **kwargs: folder)
     def __init__(self, folder, intake: Intake, router: Router, *, config=None,
                  credentials=None, notify: Callable[[dict], None] | None = None,
                  clock=time.time, sleep=time.sleep):
@@ -187,6 +190,7 @@ class Runner:
         self.notify = notify
         self.clock, self.sleep = clock, sleep
 
+    @state_mutation('folder')
     def run(self):
         report = Summary()
         with instance_lock(self.folder), ledger(self.folder) as db:
@@ -281,6 +285,7 @@ class Runner:
             report.shadow += 1
 
 
+@state_mutation(lambda folder, *args, **kwargs: folder)
 def reconcile(folder, key, outcome):
     """Local adapter/operator proves committed outcome or explicitly certifies safe retry."""
     WorkItem(key)
@@ -293,6 +298,7 @@ def reconcile(folder, key, outcome):
             raise OperationsError('not_uncertain')
 
 
+@state_mutation(lambda folder, *args, **kwargs: folder)
 def retention_preview(folder, older_than):
     """Counts only. No automatic deletion: retained IDs prevent reimport duplicates."""
     if not math.isfinite(older_than):
@@ -303,6 +309,7 @@ def retention_preview(folder, older_than):
             (older_than,)).fetchone()[0], 'deletion_enabled': False}
 
 
+@state_mutation(lambda folder, *args, **kwargs: folder)
 def backup(folder, destination):
     """Snapshot this ledger only, using SQLite's online backup, under the runner lock."""
     destination = Path(destination)
@@ -320,6 +327,7 @@ def backup(folder, destination):
             raise
 
 
+@state_read(lambda snapshot, destination: Path(destination).parent)
 def restore(snapshot, destination):
     """Fresh local destination only; restored runs require explicit acknowledgement."""
     snapshot, destination = Path(snapshot), Path(destination)
@@ -332,15 +340,31 @@ def restore(snapshot, destination):
             raise OperationsError('backup_invalid')
         # Never overwrite an existing directory, even if empty.
         destination.mkdir(parents=False, exist_ok=False)
-        with closing(sqlite3.connect(destination / 'operations.sqlite3')) as target, target:
-            source.backup(target)
-            target.execute("INSERT OR REPLACE INTO metadata VALUES ('restore_pending','1')")
+        from recovery_guard import _write_state, state_lock
+        _write_state(destination, 'pending')
+        with state_lock(destination):
+            with closing(sqlite3.connect(destination / 'operations.sqlite3')) as target, target:
+                source.backup(target)
+                target.execute("INSERT OR REPLACE INTO metadata VALUES ('restore_pending','1')")
 
 
+@state_read(lambda folder: Path(folder).parent)
 def acknowledge_restore(folder):
     """Explicit local action after adapters/private state have been reconciled."""
-    with instance_lock(folder), ledger(folder) as db, db:
+    from recovery_guard import RecoveryError, _state, _write_state, state_lock
+    folder = Path(folder)
+    if (folder / '.recovery' / 'receipt.json').exists():
+        raise RecoveryError('use_coordinated_restore_acknowledgement')
+    with state_lock(folder), instance_lock(folder), \
+            closing(sqlite3.connect(folder / 'operations.sqlite3')) as db, db:
+        if (db.execute('PRAGMA application_id').fetchone() != (1398230864,)
+                or db.execute('PRAGMA user_version').fetchone() != (1,)
+                or db.execute('PRAGMA integrity_check').fetchone() != ('ok',)):
+            raise OperationsError('invalid_ledger')
         db.execute("DELETE FROM metadata WHERE key='restore_pending'")
+        db.commit()
+        if _state(folder) == 'pending':
+            _write_state(folder, 'active')
 
 
 def schedule_preview(*, enabled=False, interval_minutes=15, config=None):

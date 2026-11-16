@@ -35,6 +35,7 @@ import sqlite3
 from types import MappingProxyType
 
 from holds import valid_source
+from state_access import state_context, state_mutation
 
 
 CAPABILITIES = MappingProxyType({
@@ -55,6 +56,13 @@ class ActionError(Exception):
 
 def _fail(code):
     raise ActionError(code)
+
+
+def _existing_parent(path):
+    parent = Path(path).parent
+    if not parent.is_dir():
+        _fail('store_unavailable')
+    return parent
 
 
 def _id(value):
@@ -95,6 +103,7 @@ def result_digest(result):
 
 
 class ActionStore:
+    @state_mutation(lambda self, path: _existing_parent(path))
     def __init__(self, path):
         self.path = Path(path)
         if self.path.is_symlink():
@@ -118,6 +127,7 @@ class ActionStore:
                     payload TEXT NOT NULL);
             ''')
 
+    @state_context(lambda self: _existing_parent(self.path))
     @contextmanager
     def _transaction(self):
         db = None

@@ -129,7 +129,7 @@ class ScrubberTests(unittest.TestCase):
             {'subject': 'Workflow', 'body': 'General question', 'uncertain': False},
             {'suspected_phi': False, 'uncertain': False}]):
             self.assertTrue(s.process(message().as_bytes()))
-            record = json.loads(next(Path(temp).iterdir()).read_text())
+            record = json.loads(next(Path(temp).glob('*.json')).read_text())
             self.assertEqual(record['status'], 'needs_local_review')
             self.assertNotIn('From', record)
 

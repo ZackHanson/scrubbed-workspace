@@ -16,8 +16,10 @@ from operations import instance_lock
 from review import ReviewError
 import routing
 from shadow_workflow import ShadowWorkflow, WorkflowError
+from state_access import state_read, state_mutation
 
 
+@state_read(lambda folder, ticket: folder)
 def managed(folder, ticket):
     """Do not create a workflow or adopt legacy files just by opening the UI."""
     root = Path(folder)
@@ -50,6 +52,7 @@ def read_original(source, credentials):
         raise HoldError('source_unavailable') from None
 
 
+@state_mutation(lambda folder, *args, **kwargs: folder)
 def invalidate_before_save(folder, snapshot, *, content_changed, rejected=False):
     """Called under the candidate writer lock, BEFORE replacing its bytes.
 
@@ -81,6 +84,7 @@ def invalidate_before_save(folder, snapshot, *, content_changed, rejected=False)
         raise ReviewError('Could not withdraw previous work. Reload before saving.') from None
 
 
+@state_mutation(lambda folder, *args, **kwargs: folder)
 def close_rejected_hold(folder, ticket):
     try:
         if managed(folder, ticket):
@@ -94,6 +98,7 @@ def close_rejected_hold(folder, ticket):
 
 
 class Reviewer:
+    @state_mutation(lambda self, folder, **kwargs: folder)
     def __init__(self, folder, *, reader=read_source):
         self.workflow = ShadowWorkflow(folder, source_reader=reader)
         self.root = Path(folder)
@@ -132,6 +137,7 @@ class Reviewer:
                           (ticket,)).fetchone():
                 raise HoldError('reconciliation_required')
 
+    @state_mutation('root')
     def retry(self, snapshot):
         with instance_lock(self.root / 'review-actions'):
             candidate = self._hold(snapshot)
@@ -160,6 +166,7 @@ class Reviewer:
             self.holds.update(snapshot, status='resolved')
             return snapshot.ticket
 
+    @state_mutation('root')
     def draft(self, snapshot, raw):
         with instance_lock(self.root / 'review-actions'):
             return self._revision(snapshot, raw, 'draft')
@@ -201,8 +208,9 @@ class Reviewer:
                                 'checking', None, None, None))
             if not saved:
                 try:
+                    binding = workflow.intake.private_source(ticket)
                     def compute():
-                        original = workflow._source(ticket, allow_unbound=True)
+                        original = workflow._source(ticket, allow_unbound=True, binding=binding)
                         record, evidence = workflow.check(original if raw is None else raw)
                         return record, evidence, hashlib.sha256(original).hexdigest()
                     record, evidence, fingerprint = workflow._compute(compute)
@@ -226,7 +234,8 @@ class Reviewer:
                                (json.dumps(record), json.dumps(asdict(evidence)), checked, revision))
             # Freeze the original check time during recovery. Reopening cannot
             # freshen old evidence or bypass changed source/model identity.
-            workflow._compute(lambda: workflow._source(ticket))
+            binding = workflow.intake.private_source(ticket)
+            workflow._compute(lambda: workflow._source(ticket, binding=binding))
             if (routing.evaluate(record, evidence).outcome != 'WOULD_SEND'
                     or not 0 <= workflow.clock() - checked <= workflow.max_age
                     or workflow._compute(workflow.model_digest) != evidence.model_digest):
@@ -292,6 +301,7 @@ class Reviewer:
                     db.execute("UPDATE review_revisions SET state='done' WHERE id=?", (revision,))
                 return ticket
 
+    @state_mutation('root')
     def dismiss(self, snapshot):
         with instance_lock(self.root / 'review-actions'):
             candidate = self._hold(snapshot)

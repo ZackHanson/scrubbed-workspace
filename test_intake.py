@@ -1,6 +1,7 @@
 """Deterministic synthetic ledger tests; no Gmail, model or runtime state."""
 import hashlib
 from concurrent.futures import ThreadPoolExecutor
+from recovery_guard import RecoveryError
 import json
 from pathlib import Path
 import tempfile
@@ -83,7 +84,11 @@ class IntakeTests(unittest.TestCase):
     def test_concurrent_workers_only_one_claims(self):
         ticket = self.register()
         def claim(_):
-            return IntakeLedger(self.root, clock=lambda: self.now).claim(ticket)
+            try:
+                return IntakeLedger(self.root, clock=lambda: self.now).claim(ticket)
+            except RecoveryError as error:
+                self.assertEqual(str(error), 'state_busy')
+                return None
         with ThreadPoolExecutor(max_workers=2) as pool:
             results = list(pool.map(claim, range(2)))
         self.assertEqual(sum(c is not None for c in results), 1)

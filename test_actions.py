@@ -11,6 +11,7 @@ import unittest
 from unittest.mock import patch
 
 import actions as a
+from recovery_guard import RecoveryError
 
 
 def digest(text):
@@ -90,9 +91,17 @@ class ActionTests(unittest.TestCase):
         self.assertEqual(again['source_ref']['uid'], '12')
 
     def test_concurrent_exact_retries_create_one_bundle(self):
+        def propose(_):
+            try:
+                return self.propose()
+            except RecoveryError as error:
+                self.assertEqual(str(error), 'state_busy')
+                return None
         with ThreadPoolExecutor(max_workers=4) as workers:
-            receipts = list(workers.map(lambda _: self.propose(), range(8)))
+            receipts = [row for row in workers.map(propose, range(8)) if row is not None]
+        self.assertTrue(receipts)
         self.assertTrue(all(row == receipts[0] for row in receipts))
+        self.assertEqual(self.propose(), receipts[0])
         with closing(sqlite3.connect(self.path)) as db:
             self.assertEqual(db.execute('SELECT count(*) FROM proposals').fetchone()[0], 1)
 

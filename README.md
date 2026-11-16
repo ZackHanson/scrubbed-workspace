@@ -31,9 +31,16 @@ To try the exception reviewer with temporary synthetic originals and held messag
 python review.py --demo
 ```
 
-The demo's three exceptions use temporary managed intake tickets. Opening it
-does not contact Gmail or Ollama; Retry original and Check edited draft use the
-installed local model only when you click them.
+The demo's three invented exceptions use temporary managed intake tickets and
+mocked model responses. The entire rehearsal is offline: no Gmail, Ollama or
+Claude connection is made, even when retrying or checking a draft. See
+[the walkthrough](REVIEW_REHEARSAL.md) for the failure/retry examples.
+
+The Claude pilot is prepared without submitting requests. Run
+`python claude_pilot.py dry-run` to inspect the default behavior; it needs no API
+key and makes zero attempts. [PILOT.md](PILOT.md) documents the separate future
+live-run procedure. [RECOVERY.md](RECOVERY.md) describes explicit local snapshots
+and fresh restores that remain inactive until reconciliation.
 
 To review actual messages locally, double-click **Run Local Review.cmd** or run
 `python review.py`. It starts in **Open exceptions** and shows a fixed hold reason
@@ -67,7 +74,7 @@ withdrawn evidence. Legacy candidates keep their existing local-review behavior;
 opening them does not silently import them into the integrated workflow.
 
 The window opens and displays saved records without needing Ollama or Gmail.
-Retrying/checking drafts requires the local Ollama model. Reopening a Gmail
+Outside the offline demo, retrying/checking drafts requires local Ollama. Reopening a Gmail
 original requires signing in again through native local dialogs with the source
 address and app password; the password is not saved. Gmail is opened read-only
 and messages use BODY.PEEK, so viewing/retrying does not mark them read.

@@ -126,7 +126,7 @@ class ReviewWorkflowTests(unittest.TestCase):
                 triage.recheck(self.state, hold, self.raw)
         check.assert_not_called()
 
-    def test_edit_during_check_is_preserved(self):
+    def test_concurrent_edit_is_refused_while_whole_check_is_guarded(self):
         self.workflow.run([self.ticket])
         store = CandidateStore(self.state)
         old = store.load(self.ticket)
@@ -134,15 +134,20 @@ class ReviewWorkflowTests(unittest.TestCase):
         hold = self.holds.load(self.ticket)
         reviewer = Reviewer(self.state)
         original = reviewer.workflow.check
+        refused = []
         def concurrent_edit(raw):
             current = store.load(self.ticket)
-            store.save(current, 'Concurrent edit', 'Keep this newer draft.', 'needs_local_review')
+            try:
+                store.save(current, 'Concurrent edit', 'Keep this newer draft.', 'needs_local_review')
+            except ReviewError as error:
+                refused.append(str(error))
             return original(raw)
         with patch.object(reviewer.workflow, 'check', side_effect=concurrent_edit):
-            with self.assertRaises(HoldError):
-                reviewer.draft(hold, self.raw)
-        self.assertEqual(store.load(self.ticket).record['body'], 'Keep this newer draft.')
-        self.assertEqual(self.holds.load(self.ticket).record['status'], 'open')
+            self.assertEqual(reviewer.draft(hold, self.raw), self.ticket)
+        self.assertEqual(len(refused), 1)
+        self.assertIn('using this workspace', refused[0])
+        self.assertNotEqual(store.load(self.ticket).record['body'], 'Keep this newer draft.')
+        self.assertEqual(self.holds.load(self.ticket).record['status'], 'resolved')
 
     def test_failed_materialization_recovers_checked_revision_without_inference(self):
         hold = self.block()

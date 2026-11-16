@@ -138,7 +138,8 @@ One request can be reserved at a time. A concurrent second request while another
 is unknown halts the pilot; it does not dispatch a second call. Another process
 trying to start an active session also halts. No process locks are removed by
 timeout. Preserve the entire selected state for local recovery; source publication
-does not back it up. This feature does not activate coordinated state recovery.
+does not back it up. Include its `pilot.sqlite` explicitly as an extra ledger in
+the coordinated snapshot API; it contains pilot, adapter and action/result tables.
 
 ## Protocol and primary-source verification
 
@@ -168,24 +169,24 @@ Provider protocol/model compatibility is **not live-tested** by this source work
 
 ## Recovery integration and evidence
 
-Sibling recovery work is not merged in this worktree. `_active(root)` optionally
-imports `recovery_guard.require_active` and `active_state`; it invokes
-`require_active(root)` before `active_state(root)`. A missing sibling module is the
-only optional case; quarantine, lock and transitive import errors propagate.
+The combined build requires `recovery_guard.require_active` and `active_state`;
+there is no missing-module fallback. Restored pending state blocks construction,
+reads and calls on preexisting pilot objects. Enabled initialization and dispatch
+hold the canonical state lock. Disabled/dry-run calls retain no-files behavior.
 
 Exact integration callsites already prepared:
 
 - `Pilot._db`: active-state guard around every mutation of `root/pilot.sqlite`.
 - `Pilot.submit(mode='pilot')`: outer active-state guard around reservation,
   adapter dispatch, capture, proposal and final receipt. `_db` nests in the same
-  thread, requiring the sibling's documented reentrant lock.
-- `Pilot.start`, `pause`, `stop`: use `_db`; dry run/shadow touch no state.
+  thread, using the shared reentrant lock. Concurrent dispatch is refused busy.
+- `Pilot.start`: read-check before any initialization, then guard the full start.
+  `pause` and `stop` check the fence and guard their complete persistent DB updates;
+  dry run/shadow do not create state.
 
-Parent must integrate the sibling module and run the combined suite, including
-actual ancestor-marker/quarantine and reentrant-lock tests, before any future
-provider activation. This branch tests the hooks with an injected synthetic guard;
-it does not claim combined recovery verification. No existing core/UI/recovery file
-is edited. The `transport=` API is trusted local test injection, not an untrusted
+Any future provider activation still requires its separate account/model/spend
+decision. The combined suite tests the actual recovery guard and
+direct restored workflow/store/pilot entrypoints. The `transport=` API is trusted local test injection, not an untrusted
 plugin or external payload interface.
 
 Validation: new deterministic pilot tests cover five-request exhaustion, restart

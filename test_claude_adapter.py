@@ -6,6 +6,7 @@ import tempfile
 import threading
 import unittest
 from unittest.mock import patch
+from recovery_guard import RecoveryError
 
 from claude_adapter import (AdapterConfig, ClaudeAdapter, ContractError,
                             FakeTransport, decision_digest, payload_digest)
@@ -180,7 +181,8 @@ class AdapterTests(unittest.TestCase):
         caller.start()
         try:
             self.assertTrue(entered.wait(1))
-            self.assertEqual(self.submit().status, 'duplicate')
+            with self.assertRaisesRegex(RecoveryError, '^state_busy$'):
+                self.submit()
             caller.join(1)
             self.assertFalse(caller.is_alive())
             self.assertEqual((result[0].status, result[0].code), ('unknown', 'timeout'))
@@ -237,6 +239,25 @@ class AdapterTests(unittest.TestCase):
     def test_ledger_failure_prevents_transport(self):
         self.path.write_bytes(b'not a sqlite database')
         self.assertEqual(self.submit().code, 'ledger_unavailable')
+        self.assertEqual(self.calls, [])
+
+    def test_missing_parent_stops_before_validation_or_restore_race(self):
+        parent = Path(self.temp.name) / 'not-created'
+        adapter = ClaudeAdapter(parent / 'adapter.sqlite3', config=AdapterConfig(True), transport=self.transport)
+        from recovery_guard import _write_state
+        def restore_during_validation(payload):
+            parent.mkdir()
+            _write_state(parent, 'pending')
+            return payload
+        content_digest = payload_digest(self.payload)
+        authorization_digest = decision_digest(self.decision)
+        with patch('claude_adapter._payload', side_effect=restore_during_validation) as validate:
+            self.assertEqual(adapter.submit(self.payload, self.decision,
+                                           expected_candidate_digest=content_digest,
+                                           expected_decision_digest=authorization_digest).code,
+                             'ledger_unavailable')
+        validate.assert_not_called()
+        self.assertFalse(parent.exists())
         self.assertEqual(self.calls, [])
 
     def test_ledger_update_failure_keeps_reservation(self):

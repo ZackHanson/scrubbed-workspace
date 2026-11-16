@@ -249,6 +249,11 @@ def restore(snapshot_dir, destination):
     manifest = verify_snapshot(source)
     target = _fresh(destination, [source])
     _write_state(target, 'pending')  # Before publishing ANY runtime bytes.
+    with state_lock(target):
+        return _populate_restore(source, target, manifest)
+
+
+def _populate_restore(source, target, manifest):
     for name, receipt in manifest['files'].items():
         path = target / name
         path.parent.mkdir(parents=True, exist_ok=True)

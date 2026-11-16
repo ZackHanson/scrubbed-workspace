@@ -23,6 +23,7 @@ from operations import Config, Runner, WorkItem
 from review import CandidateStore
 import routing
 import scrubber
+from state_access import state_mutation
 
 
 class WorkflowError(Exception):
@@ -56,6 +57,7 @@ def bounded_compute(function, timeout):
 
 
 class ShadowWorkflow:
+    @state_mutation(lambda self, folder, **kwargs: folder)
     def __init__(self, folder, *, source_reader=read_source,
                  check=scrubber.scrub_checked, model_digest=scrubber.ensure_local_model,
                  timeout_seconds=120, clock=time.time, max_evidence_age=3600):
@@ -82,6 +84,7 @@ class ShadowWorkflow:
                        '(key TEXT PRIMARY KEY, ticket TEXT NOT NULL, version TEXT NOT NULL)')
             db.execute('CREATE TABLE IF NOT EXISTS revoked_requests (key TEXT PRIMARY KEY)')
 
+    @state_mutation('root')
     def register(self, source):
         """Local source registration only. No reads, inference or cloud calls."""
         return self.intake.ingest(source)
@@ -96,8 +99,10 @@ class ShadowWorkflow:
                 self.poisoned = True
             raise
 
-    def _source(self, ticket, *, allow_unbound=False):
-        binding = self.intake.private_source(ticket)
+    def _source(self, ticket, *, allow_unbound=False, binding=None):
+        # Callers load bindings before starting a worker. Workers only read
+        # original bytes and model responses; they never acquire the state lock.
+        binding = binding if binding is not None else self.intake.private_source(ticket)
         raw = self.reader(binding['source'])
         if (type(raw) is not bytes or len(raw) > scrubber.MAX_BYTES
                 or (not (allow_unbound and binding['source_version'] is None)
@@ -132,8 +137,9 @@ class ShadowWorkflow:
             if claim is None:
                 raise WorkflowError('intake_busy')
             try:
+                binding = self.intake.private_source(ticket)
                 def compute():
-                    raw = self._source(ticket, allow_unbound=True)
+                    raw = self._source(ticket, allow_unbound=True, binding=binding)
                     record, evidence = self.check(raw)
                     return record, evidence, hashlib.sha256(raw).hexdigest()
                 record, evidence, fingerprint = self._compute(compute)
@@ -169,6 +175,7 @@ class ShadowWorkflow:
         finally:
             path.unlink(missing_ok=True)
 
+    @state_mutation('root')
     def current(self, ticket):
         """Recheck versions/source/model/age immediately before local consumption."""
         with self._candidate_lock(ticket):
@@ -176,7 +183,8 @@ class ShadowWorkflow:
 
     def _current(self, ticket):
         snapshot = self.candidates.load(ticket)
-        evidence = self._compute(lambda: (self._source(ticket), self._evidence(ticket))[1])
+        binding = self.intake.private_source(ticket)
+        evidence = self._compute(lambda: (self._source(ticket, binding=binding), self._evidence(ticket))[1])
         decision = self.decisions.record(ticket, snapshot.record, evidence)
         source = self.intake.private_source(ticket)
         bound_version = self.actions.candidate_version(ticket)
@@ -195,6 +203,7 @@ class ShadowWorkflow:
             raise WorkflowError('candidate_changed')
         return snapshot, decision
 
+    @state_mutation('root')
     def shadow(self, item):
         ticket, expected = item.payload
         if not self._prepare(ticket):
@@ -213,6 +222,7 @@ class ShadowWorkflow:
                                        self.intake.private_source(ticket)['source'])
         return 'shadow' if decision.outcome == 'WOULD_SEND' else 'exception'
 
+    @state_mutation('root')
     def run(self, tickets, *, config=None):
         if type(tickets) not in (list, tuple) or not 1 <= len(tickets) <= 100:
             raise WorkflowError('invalid_batch')
@@ -240,6 +250,7 @@ class ShadowWorkflow:
             raise WorkflowError('batch_exceeds_config')
         return Runner(self.root / 'operations', Batch(), self, config=chosen).run()
 
+    @state_mutation('root')
     def capture(self, ticket, adapter, submission_key, *, expected_candidate_version):
         """Consume only a locally durable complete response; never call submit.
 
@@ -276,6 +287,7 @@ class ShadowWorkflow:
                                     candidate_version=snapshot.digest, result_id=submission_key,
                                     result_version=version)
 
+    @state_mutation('root')
     def bind_result_request(self, ticket, *, expected_candidate_version):
         """Bind a separate authorized test request BEFORE adapter invocation.
 

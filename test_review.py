@@ -59,11 +59,15 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(self.store.load(self.ticket).record['subject'], 'New version')
 
     def test_failed_atomic_replace_preserves_original_and_cleans_up(self):
+        from recovery_guard import active_state
+        with active_state(self.folder):
+            pass
         with patch.object(Path, 'replace', side_effect=OSError('synthetic failure')):
             with self.assertRaises(r.ReviewError):
                 self.store.save(self.snapshot, 'Edit', 'New text', 'needs_local_review')
         self.assertEqual(self.store.load(self.ticket).digest, self.snapshot.digest)
-        self.assertEqual(list(self.folder.iterdir()), [self.store.path(self.ticket)])
+        self.assertEqual([path for path in self.folder.iterdir()
+                          if path.name not in {'.recovery', '.recovery-lock'}], [self.store.path(self.ticket)])
 
     def test_existing_writer_lock_is_preserved(self):
         lock = self.store.path(self.ticket).with_suffix('.review-lock')

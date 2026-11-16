@@ -15,6 +15,8 @@ import uuid
 from scrubber import MAX_BYTES, PATTERNS, STATE
 from holds import HoldError, HoldStore, REASONS, file_source, preview, read_source
 import triage
+from state_access import state_read, state_mutation
+from recovery_guard import RecoveryError
 
 
 STATUSES = {'needs_local_review', 'reviewed_locally', 'rejected_locally'}
@@ -26,6 +28,12 @@ class ReviewError(Exception):
     """Fixed user-facing error text; never include candidate content."""
 
 
+def _recovery_error(error):
+    if str(error) == 'state_busy':
+        return ReviewError('Another local operation is using this workspace. Try again later.')
+    return ReviewError('Workspace recovery needs local reconciliation before review can continue.')
+
+
 @dataclass
 class Snapshot:
     ticket: str
@@ -34,9 +42,11 @@ class Snapshot:
 
 
 class CandidateStore:
+    @state_read(lambda self, folder: folder, on_error=_recovery_error)
     def __init__(self, folder):
         self.folder = Path(folder)
 
+    @state_read('folder', on_error=_recovery_error)
     def path(self, ticket):
         if not re.fullmatch(r'[0-9a-f]{32}', ticket):
             raise ReviewError('Invalid candidate ID.')
@@ -45,6 +55,7 @@ class CandidateStore:
             raise ReviewError('Linked candidate files cannot be reviewed.')
         return path
 
+    @state_read('folder', on_error=_recovery_error)
     def tickets(self):
         return sorted(path.stem for path in self.folder.glob('*.json')
                       if re.fullmatch(r'[0-9a-f]{32}', path.stem)
@@ -61,6 +72,7 @@ class CandidateStore:
         if len(json.dumps(record).encode('utf-8')) > MAX_BYTES:
             raise ReviewError('Candidate is too large. File was left unchanged.')
 
+    @state_read('folder', on_error=_recovery_error)
     def load(self, ticket):
         try:
             with self.path(ticket).open('rb') as source:
@@ -73,6 +85,7 @@ class CandidateStore:
         except (OSError, ValueError):
             raise ReviewError('Candidate could not be read. File was left unchanged.') from None
 
+    @state_mutation('folder', on_error=_recovery_error)
     def save(self, snapshot, subject, body, status):
         record = {'status': status, 'subject': subject, 'body': body}
         self.validate(record)
@@ -421,6 +434,8 @@ class ReviewWindow:
         def run():
             try:
                 self.results.put((operation, action(), None))
+            except RecoveryError:
+                self.results.put((operation, None, 'reconciliation_required'))
             except HoldError as error:
                 self.results.put((operation, None, error.code))
             except Exception:

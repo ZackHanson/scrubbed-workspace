@@ -4,7 +4,7 @@ Only this module knows how to construct a real HTTPS transport. Importing it,
 dry runs and shadow calls never construct one. See PILOT.md before live use.
 """
 import argparse
-from contextlib import contextmanager, nullcontext
+from contextlib import contextmanager
 from dataclasses import dataclass, asdict
 import getpass
 import hashlib
@@ -217,17 +217,9 @@ class AnthropicHTTPS:
 
 @contextmanager
 def _active(root):
-    # Sibling is intentionally optional until integration. Do not mask its failures.
-    try:
-        from recovery_guard import require_active, active_state
-    except ModuleNotFoundError as error:
-        if error.name != 'recovery_guard':
-            raise
-        guard = nullcontext()
-    else:
-        require_active(root)
-        guard = active_state(root)
-    with guard:
+    from recovery_guard import require_active, active_state
+    require_active(root)
+    with active_state(root):
         yield
 
 
@@ -238,6 +230,8 @@ class Pilot:
     A crash while active permanently halts this state; no recovery resends requests.
     """
     def __init__(self, root, config=PilotConfig(), *, transport=None):
+        from recovery_guard import require_active
+        require_active(root)
         self._selected_root = Path(root).absolute()
         self.root = Path(root).resolve()
         self.config = config
@@ -272,6 +266,8 @@ class Pilot:
             raise PilotError('private_state_required')
 
     def start(self):
+        from recovery_guard import require_active
+        require_active(self.root)
         cfg = self.config
         if not cfg.enabled:
             return {'status': 'disabled', 'attempts': 0}
@@ -280,7 +276,12 @@ class Pilot:
             raise PilotError('memory_transport_and_approval_required')
         # Never share an existing application database or create state inside source.
         self._check_path()
-        if not (self.root / 'pilot.sqlite').exists() and any(self.root.iterdir()):
+        with _active(self.root):
+            return self._start(cfg)
+
+    def _start(self, cfg):
+        if not (self.root / 'pilot.sqlite').exists() and any(
+                path.name not in {'.recovery', '.recovery-lock'} for path in self.root.iterdir()):
             raise PilotError('private_state_required')
         with self._db() as db:
             db.execute('CREATE TABLE IF NOT EXISTS pilot '
@@ -304,6 +305,8 @@ class Pilot:
 
     def pause(self):
         """Clean session exit; remaining unused fixtures need a new explicit start."""
+        from recovery_guard import require_active
+        require_active(self.root)
         if self._session is None:
             return
         with self._db() as db:
@@ -314,6 +317,8 @@ class Pilot:
 
     def stop(self):
         """Terminal stop, including another process's active session. No reset API."""
+        from recovery_guard import require_active
+        require_active(self.root)
         if not (self.root / 'pilot.sqlite').is_file():
             raise PilotError('pilot_state_required')
         with self._db() as db:
@@ -322,6 +327,8 @@ class Pilot:
         return {'status': 'stopped'}
 
     def submit(self, request_id, *, mode='dry-run'):
+        from recovery_guard import require_active
+        require_active(self.root)
         payload = fixture(request_id)
         if mode in {'dry-run', 'shadow'}:
             return {'status': mode, 'fixture': request_id, 'attempts': 0}

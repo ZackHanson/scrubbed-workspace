@@ -100,8 +100,8 @@ intent, not an independent provider proof.
 This source PR deliberately edits no existing core, desktop or pilot modules.
 It supplies `recovery_guard.require_active(path)` (read-only) and
 `active_state(path)` (whole-operation context manager). Direct existing runtime
-entrypoints are NOT fenced by merely importing this module. The primary must
-wire the following before treating restore inactivity as an application guarantee:
+entrypoints are not fenced merely by importing this module. The combined build
+now wires the following through state_access decorators/context adapters:
 
 | Module | Guard callsites |
 | --- | --- |
@@ -152,9 +152,15 @@ and process contention, normal/old nested anchors, partial restore failure,
 missing/truncated/unexpected/traversing files, malformed fences, failed fsync,
 and Windows junction rejection. No real state or credentials were opened.
 
-The local guard test explicitly wraps direct runtime invocation to demonstrate
-the fence API. The primary must test unwrapped direct ShadowWorkflow, Reviewer,
-Runner, stores and pilot entrypoints on the combined integrated head. Source
+The module's local guard test explicitly wraps runtime invocation to demonstrate
+the fence API. Combined test_state_access additionally calls unwrapped direct
+ShadowWorkflow, Reviewer, Runner, stores, legacy writers, adapter and pilot APIs,
+including objects created before a pending fence. A full synthetic snapshot and
+restore verifies that direct use stays blocked until acknowledgement, and that
+duplicate work remains suppressed afterward. The legacy operations-only restore
+also publishes a pending recovery fence before any copied DB bytes and holds
+the destination state lock; its acknowledgement cannot clear a coordinated
+restore's ancestor fence. Source
 tests do not prove real operator/provider reconciliation, separate-original
 recoverability, encryption, production permissions, or crash durability of the
 underlying storage hardware. No live-model or provider qualification is claimed.

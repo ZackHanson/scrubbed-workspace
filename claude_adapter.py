@@ -15,6 +15,7 @@ import sqlite3
 import threading
 
 from scrubber import MAX_CHARS, PATTERNS
+from state_access import state_read, state_mutation
 
 
 class ContractError(ValueError):
@@ -124,6 +125,7 @@ class FakeTransport:
 
 
 class ClaudeAdapter:
+    @state_read(lambda self, ledger_path, **kwargs: Path(ledger_path).parent)
     def __init__(self, ledger_path, *, config=AdapterConfig(), transport=None):
         if type(config) is not AdapterConfig:
             raise ContractError('invalid_config')
@@ -163,6 +165,7 @@ class ClaudeAdapter:
                        (result.status, json.dumps(result.result) if result.result else None,
                         result.stop_reason, key))
 
+    @state_read('ledger_path.parent')
     def captured(self, key):
         """LOCAL sensitive result recovery; never invokes or retries transport.
 
@@ -183,8 +186,18 @@ class ClaudeAdapter:
         except (OSError, sqlite3.Error, ValueError, TypeError):
             raise ContractError('result_unavailable') from None
 
+    @state_read('ledger_path.parent')
     def submit(self, payload, decision, *, expected_candidate_digest, expected_decision_digest,
                request_scope=None):
+        if self.config.enabled and callable(self.transport) and not self.ledger_path.parent.is_dir():
+            return AdapterResult('blocked', 'ledger_unavailable')
+        return self._submit(payload, decision, expected_candidate_digest=expected_candidate_digest,
+                            expected_decision_digest=expected_decision_digest, request_scope=request_scope)
+
+    @state_mutation('ledger_path.parent', enabled=lambda self, *args, **kwargs:
+                    self.config.enabled and callable(self.transport))
+    def _submit(self, payload, decision, *, expected_candidate_digest, expected_decision_digest,
+                request_scope=None):
         if not self.config.enabled:
             return AdapterResult('disabled', 'transport_disabled')
         try:

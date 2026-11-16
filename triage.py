@@ -3,6 +3,7 @@ from email.message import EmailMessage
 
 from holds import HoldError, HoldStore
 import scrubber as s
+from state_access import state_mutation
 
 
 def draft_message(subject, body):
@@ -17,6 +18,7 @@ def draft_message(subject, body):
     return mail.as_bytes()
 
 
+@state_mutation(lambda folder, *args, **kwargs: folder)
 def recheck(folder, snapshot, raw, *, credentials=(None, None)):
     from review_workflow import managed, read_original, Reviewer
     if managed(folder, snapshot.ticket):
@@ -42,6 +44,7 @@ def recheck(folder, snapshot, raw, *, credentials=(None, None)):
     return ticket
 
 
+@state_mutation(lambda folder, *args, **kwargs: folder)
 def retry_original(folder, snapshot, credentials=(None, None)):
     from review_workflow import managed, read_original, Reviewer
     if managed(folder, snapshot.ticket):
@@ -50,6 +53,7 @@ def retry_original(folder, snapshot, credentials=(None, None)):
     return recheck(folder, snapshot, read_source(snapshot.record['source'], *credentials))
 
 
+@state_mutation(lambda folder, *args, **kwargs: folder)
 def dismiss(folder, snapshot):
     from review_workflow import managed, Reviewer
     if managed(folder, snapshot.ticket):
@@ -57,6 +61,7 @@ def dismiss(folder, snapshot):
     return HoldStore(folder).update(snapshot, status='dismissed')
 
 
+@state_mutation(lambda folder, *args, **kwargs: folder)
 def preview_original(folder, snapshot, credentials):
     from review_workflow import managed, read_original, Reviewer
     from holds import preview, read_source

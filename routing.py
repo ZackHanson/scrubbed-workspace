@@ -12,6 +12,7 @@ import json
 import os
 from pathlib import Path
 import re
+from state_access import state_mutation, state_read
 
 from scrubber import (AUDIT_SYSTEM, CHECK_SCHEMA, MAX_CHARS, MODEL, PATTERNS,
                       SCHEMA, STATE, SYSTEM)
@@ -162,9 +163,11 @@ class DecisionStore:
     Persisted decisions must always be re-evaluated against current evidence and
     candidate before a preview; no downstream adapter may treat them as approval.
     """
+    @state_read(lambda self, folder=None: Path(folder) if folder is not None else STATE / 'routing')
     def __init__(self, folder=None):
         self.folder = Path(folder) if folder is not None else STATE / 'routing'
 
+    @state_mutation('folder')
     def record(self, ticket, candidate, evidence=None):
         if type(ticket) is not str or not re.fullmatch(r'[0-9a-f]{32}', ticket):
             raise RoutingError('invalid_ticket')

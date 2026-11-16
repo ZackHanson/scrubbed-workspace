@@ -501,3 +501,36 @@ targets feature/desktop-workflow-integration; no main push, merge, release,
 private-state backup, email action, schedule/service or security change. Private
 repository remains private; workflows/hooks/deployments are zero and protection
 inspection returns paid-plan HTTP 403, without an enforcement claim or workaround.
+
+### November 16 final synthetic readiness integration
+
+Zack requested completing the remaining work, then explicitly selected preparing
+the Claude pilot WITHOUT submitting requests. This branch preserves the histories
+of offline exception rehearsal PR #7 (e3233ca), recovery PR #8 (894d1d5), and pilot
+PR #9 (535376f), above desktop head cde70a09. Source records were reconciled without
+discarding evidence. No account/model/spend decision or API key was needed.
+
+Whole-operation state locks and read fences now cover direct workflow, reviewer,
+Runner, store, adapter, pilot and legacy output APIs, including preexisting
+instances. Source bindings load before workers start, avoiding lock reentry from
+model/source workers. Disabled APIs create no state; concurrent writes fail busy
+with safe UI wording. Windows lock identities normalize case. Pilot recovery has
+no missing-module fallback. A bounded independent review reproduced two P1 gaps:
+missing-parent adapter dispatch skipped its guard, and legacy restore published DB
+bytes before its fence. Both are fixed with exact regression tests. Both restores
+fence before DB publication and lock their destination; legacy acknowledgement
+cannot clear the coordinated ancestor fence. Unknown reservations stay unknown.
+
+All 266 deterministic tests pass with sockets blocked and temporary storage,
+including direct restored constructors/calls, old instances, acknowledgement and
+post-restore deduplication. Pilot dry-run/shadow report zero attempts; synthetic CLI
+demo passes. No new live-Qwen or provider calls occurred. The exception rehearsal
+visually checked isolated synthetic retry/preview; windows/process were closed.
+Owner usability/semantic/time-saving approval is not claimed by automation.
+
+REVIEW_REHEARSAL.md, PILOT.md and RECOVERY.md describe concrete operator paths.
+Snapshots exclude originals/credentials and do not establish encryption or full
+production backup coverage. No real runtime/email, credentials, release, schedules,
+services or security settings changed. The final coherent PR targets the desktop
+integration branch; exact remote head/clean tracking are verified at handoff.
+Source remains private and unmerged, with no configured GitHub checks/deployments.
