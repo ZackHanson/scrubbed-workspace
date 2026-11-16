@@ -1,5 +1,6 @@
 """Local exception review with explicit Gmail reads and local checks; no sending/export."""
 import argparse
+from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass
 import hashlib
 import json
@@ -126,6 +127,7 @@ class ReviewWindow:
         from tkinter.scrolledtext import ScrolledText
 
         self.root, self.store = root, store
+        self.demo = demo
         self.holds = HoldStore(store.folder)
         self.messagebox = messagebox
         self.snapshot = None
@@ -143,7 +145,7 @@ class ReviewWindow:
         heading = ttk.Frame(root, padding=12)
         heading.grid(row=0, column=0, sticky='ew')
         ttk.Label(heading, text='Message exceptions', font=('Segoe UI', 16, 'bold')).pack(anchor='w')
-        ttk.Label(heading, text=('Synthetic demo: temporary examples only.' if demo else
+        ttk.Label(heading, text=('Synthetic demo: temporary examples only; mocked checks, network blocked.' if demo else
                                 'Candidates may still contain identifying information.')).pack(anchor='w', pady=(6, 0))
         ttk.Label(heading, text='Local review records your progress. It does not certify de-identification or authorize uploading.').pack(anchor='w')
         self.summary = tk.StringVar()
@@ -166,7 +168,7 @@ class ReviewWindow:
         scroll.grid(row=2, column=1, sticky='ns')
         self.queue.configure(yscrollcommand=scroll.set)
         self.queue.bind('<<ListboxSelect>>', self.select)
-        self.reload_button = ttk.Button(sidebar, text='Reload list', command=self.reload)
+        self.reload_button = ttk.Button(sidebar, text='Reload selected / list', command=self.reload)
         self.reload_button.grid(row=3, column=0, sticky='ew', pady=8)
         pane.add(sidebar, weight=1)
 
@@ -254,7 +256,7 @@ class ReviewWindow:
                 unreadable += 1
         open_count = sum(item.record['status'] == 'open' for item in entries)
         self.summary.set(f'{open_count} open exceptions | {len(entries) - open_count} closed | '
-                         f'{len(self.store.tickets())} pending/reviewed candidates | Nothing sent to Claude'
+                         f'{len(self.store.tickets())} candidates (including rejected) | Nothing sent to Claude'
                          + (f' | {unreadable} unreadable exception records' if unreadable else ''))
         if self.active_view == 'Candidates':
             self.ids = self.store.tickets()
@@ -301,8 +303,13 @@ class ReviewWindow:
     def show_hold(self, hold):
         self.show(None)
         self.hold = hold
-        self.reason.set(REASONS[hold.record['reason']][0])
-        self.guidance.set(REASONS[hold.record['reason']][1] +
+        status = hold.record['status']
+        self.reason.set(('Closed (' + status + '): ' if status != 'open' else '')
+                        + REASONS[hold.record['reason']][0])
+        action = REASONS[hold.record['reason']][1]
+        if self.demo and hold.record['reason'] in ('model_error', 'invalid_model_output'):
+            action = 'Simulated model recovery: Retry original uses mocked checks; Ollama is not contacted.'
+        self.guidance.set(action +
                           ' Original previews stay local. Names and other identifiers may not be highlighted.')
         self.notice.set(f"Exception {hold.ticket[:8]} is {hold.record['status']}. " +
                         ('Use View original locally, or compose a new generalized draft above.'
@@ -351,8 +358,12 @@ class ReviewWindow:
 
     def reload(self):
         if not self.busy and self.leave():
+            ticket = self.snapshot.ticket if self.snapshot else self.hold.ticket if self.hold else None
             self.show(None)
             self.refresh()
+            if ticket in self.ids:
+                self.queue.selection_set(self.ids.index(ticket))
+                self.select()
 
     def save(self, status):
         if self.busy:
@@ -404,7 +415,8 @@ class ReviewWindow:
             return
         self.busy = True
         self.controls()
-        self.notice.set('Working locally. Gmail originals may require a connection; model checks may take a few minutes.')
+        self.notice.set('Running synthetic checks locally; network is blocked.' if self.demo else
+                        'Working locally. Gmail originals may require a connection; model checks may take a few minutes.')
 
         def run():
             try:
@@ -441,7 +453,9 @@ class ReviewWindow:
                     self.body.insert('1.0', draft[1])
                 self.refresh()
                 self.notice.set('Local checks passed. A checked pending candidate is in Candidates; nothing was sent.'
-                                if result else 'Still held: ' + REASONS[self.hold.record['reason']][0])
+                                if result else 'Still held: ' + REASONS[self.hold.record['reason']][0]
+                                + '. ' + REASONS[self.hold.record['reason']][1]
+                                + ' Your draft is still here and has not been saved.')
             except HoldError:
                 self.notice.set('Exception changed or could not be read. Reload the list; any candidate stays pending.')
 
@@ -553,12 +567,31 @@ def demo_exceptions(folder, *, managed=False):
         HoldStore(folder).create(ticket, reason, source)
 
 
+@contextmanager
+def demo_checks():
+    """Process-wide mock limited to the temporary --demo session; no Ollama."""
+    from unittest.mock import patch
+    import scrubber
+    from synthetic_workflow import synthetic_checks
+    original = scrubber.scrub
+
+    def check(raw):
+        if b'DEMO_FAIL' in raw:
+            raise scrubber.Blocked('verifier_flagged')
+        return original(raw)
+
+    with synthetic_checks(), patch.object(scrubber, 'scrub', side_effect=check):
+        yield
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--demo', action='store_true', help='Use temporary synthetic examples only')
+    parser.add_argument('--demo', action='store_true',
+                        help='Temporary invented examples, mocked checks and blocked network; no Ollama')
     args = parser.parse_args()
     import tkinter as tk
-    with tempfile.TemporaryDirectory(prefix='scrubber-review-demo-') as temp:
+    with tempfile.TemporaryDirectory(prefix='scrubber-review-demo-') as temp, \
+            demo_checks() if args.demo else nullcontext():
         store = demo_store(temp) if args.demo else CandidateStore(STATE)
         if args.demo:
             demo_exceptions(temp, managed=True)

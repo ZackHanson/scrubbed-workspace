@@ -259,6 +259,61 @@ class ManagedWindowTests(unittest.TestCase):
     setUp = ReviewWorkflowTests.setUp
     block = ReviewWorkflowTests.block
 
+    def test_offline_demo_rehearsal_failure_success_retry_and_dismissal(self):
+        import tkinter as tk
+        from review import demo_checks, demo_exceptions, demo_store
+        import socket
+        folder = self.root / 'rehearsal'
+        folder.mkdir()
+        store = demo_store(folder)
+        with demo_checks():
+            with self.assertRaises(AssertionError):
+                with socket.socket() as connection:
+                    connection.connect(('127.0.0.1', 11434))
+            demo_exceptions(folder, managed=True)
+            root = tk.Tk()
+            root.withdraw()
+            try:
+                window = ReviewWindow(root, store, demo=True)
+                holds = window.holds
+                by_reason = {holds.load(t).record['reason']: holds.load(t) for t in holds.tickets()}
+                def finish():
+                    deadline = time.monotonic() + 4
+                    while window.busy and time.monotonic() < deadline:
+                        root.update()
+                        time.sleep(.01)
+                    self.assertFalse(window.busy)
+                window.show_hold(by_reason['verifier_flagged'])
+                with patch.object(window, 'open_preview') as display:
+                    window.view_original()
+                    finish()
+                self.assertIn('Mara Velquist', display.call_args.args[0])
+                window.subject.set('DEMO_FAIL')
+                window.body.insert('1.0', 'Keep this invented draft.')
+                window.check_draft()
+                finish()
+                self.assertEqual(window.values(), ('DEMO_FAIL', 'Keep this invented draft.'))
+                self.assertIn('has not been saved', window.notice.get())
+                self.assertEqual(len(store.tickets()), 1)
+                window.subject.set('General request')
+                window.check_draft()
+                finish()
+                self.assertEqual(holds.load(by_reason['verifier_flagged'].ticket).record['status'], 'resolved')
+                window.show_hold(by_reason['model_error'])
+                self.assertIn('Ollama is not contacted', window.guidance.get())
+                window.retry_original()
+                finish()
+                self.assertEqual(holds.load(by_reason['model_error'].ticket).record['status'], 'resolved')
+                self.assertTrue(window.reason.get().startswith('Closed (resolved):'))
+                window.show_hold(by_reason['attachment'])
+                with patch.object(window.messagebox, 'askyesno', return_value=True):
+                    window.dismiss()
+                self.assertEqual(holds.load(by_reason['attachment'].ticket).record['status'], 'dismissed')
+                self.assertEqual(len(store.tickets()), 3)
+                self.assertTrue(all(store.load(t).record['status'] == 'needs_local_review' for t in store.tickets()))
+            finally:
+                root.destroy()
+
     def test_managed_window_retry_and_draft_failure(self):
         import tkinter as tk
         hold = self.block()
