@@ -111,3 +111,11 @@ Forwarding to a second account and connecting Claude remain unimplemented until
 the review and de-identification requirements are established.
 
 Project state and boundaries: [AgentHandbook](AgentHandbook.md).
+
+Development setup and AI-assisted support: [setup](docs/SETUP.md),
+[pasteable prompt draft](docs/AI-SETUP-PROMPT.md),
+[troubleshooting](docs/TROUBLESHOOTING.md), and
+[release sequence](docs/RELEASING.md). Run `python support.py doctor` for offline,
+content-free diagnostics or add `--probe-model` for bounded local model metadata
+checks. `python support.py report` prints a report draft and sends nothing.
+This foundation is not a finished installer or a qualified public release.

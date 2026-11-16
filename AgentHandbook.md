@@ -50,6 +50,26 @@ through a cloud agent. Use --demo and temporary stores for automated UI testing.
 
 ## Current work
 
+November 16 distribution/support track: owner authorized pasteable AI setup,
+versioned repeatable installation/releases, local troubleshooting, safe feedback
+and eventual public distribution. Isolated feature/distribution-support implements
+support.py doctor/report, synthetic privacy/transport tests, docs/SETUP.md,
+docs/AI-SETUP-PROMPT.md, docs/TROUBLESHOOTING.md, docs/RELEASING.md and a GitHub issue
+template. Reports collect only approved fields and fixed codes; no runtime store,
+mail, credentials, arbitrary logs or exception text is read or uploaded. Metadata
+probes are opt-in, bounded and numeric-loopback-only. No inference or account check
+is implied by doctor success. Reporting only prints a draft; submission requires
+explicit user approval. Development version is not an immutable release identity.
+Next after runtime integration: follow docs/RELEASING.md to add component diagnostics,
+implement the actual installer, qualify fresh-machine/repeat/recovery/rollback
+flows, then finalize pinned instructions and prepare public distribution for owner
+approval. No public visibility/release, live activation or scheduler changed here.
+All 59 deterministic tests (51 existing plus 8 support) pass with socket connects
+prohibited and LOCALAPPDATA redirected to temporary storage. No real model/mail
+probe was needed for this change. Remote inspection now finds main at 466de50,
+created outside this track, with no .github/workflows directory; main is reported
+unprotected. Earlier no-main notes below describe historical source setup only.
+
 Initial implementation on feature/local-email-scrubber in the existing T3 root.
 Installed local model discovered successfully. All 15 synthetic unit tests passed.
 Live Qwen synthetic email test removed the tested name, date of birth, record number,
