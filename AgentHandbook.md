@@ -70,7 +70,11 @@ CLI demo passed with one shadow classification, zero duplicate attempts and one
 separately authorized fake result/local proposal. No live model was tested.
 GitHub confirms private source, main/default at the approved base, main unprotected,
 zero Actions workflows, hooks and deployments. Security settings were not changed.
-Source-only draft publication is next; no automatic merge is authorized here.
+Source-only draft PR: https://github.com/ZackHanson/scrubbed-workspace/pull/3,
+linked to this T3 thread. Implementation checkpoint b2a0900 follows history-preserving
+six-track merge 3ff83e5. Branch publication used command-scoped HTTPS pushurl and
+existing gh login after the SSH transport failed; stored origin, SSH trust and
+global configuration were preserved. No automatic merge is authorized here.
 Expanded/live-Qwen evaluation, legacy desktop retry-to-ledger wiring, pilot UX,
 release/provider qualification and full private-state recovery remain dependencies.
 
