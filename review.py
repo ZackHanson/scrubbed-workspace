@@ -95,6 +95,11 @@ class CandidateStore:
             os.close(lock)
             if self.load(snapshot.ticket).digest != snapshot.digest:
                 raise ReviewError('Candidate changed in another window. Reload before saving.')
+            if record != snapshot.record:
+                from review_workflow import invalidate_before_save
+                invalidate_before_save(self.folder, snapshot,
+                                       content_changed=changed or status == 'rejected_locally',
+                                       rejected=status == 'rejected_locally')
             with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8',
                                              dir=self.folder, suffix='.tmp', delete=False) as output:
                 temporary = Path(output.name)
@@ -102,6 +107,9 @@ class CandidateStore:
                 output.flush()
                 os.fsync(output.fileno())
             temporary.replace(path)
+            if status == 'rejected_locally':
+                from review_workflow import close_rejected_hold
+                close_rejected_hold(self.folder, snapshot.ticket)
             return self.load(snapshot.ticket)
         except OSError:
             raise ReviewError('Could not save candidate. Reload to check its current state.') from None
@@ -432,7 +440,7 @@ class ReviewWindow:
                     self.subject.set(draft[0])
                     self.body.insert('1.0', draft[1])
                 self.refresh()
-                self.notice.set('Local checks passed. A new pending candidate is in Candidates; nothing was sent.'
+                self.notice.set('Local checks passed. A checked pending candidate is in Candidates; nothing was sent.'
                                 if result else 'Still held: ' + REASONS[self.hold.record['reason']][0])
             except HoldError:
                 self.notice.set('Exception changed or could not be read. Reload the list; any candidate stays pending.')
@@ -457,8 +465,8 @@ class ReviewWindow:
             return
         credentials = self.credentials()
         if credentials is not None:
-            source = self.hold.record['source']
-            self.start_work('preview', lambda: preview(read_source(source, *credentials)))
+            snapshot = self.hold
+            self.start_work('preview', lambda: triage.preview_original(self.store.folder, snapshot, credentials))
 
     def retry_original(self):
         if self.busy or self.hold is None or self.hold.record['source'] is None or not self.leave():
@@ -466,8 +474,7 @@ class ReviewWindow:
         credentials = self.credentials()
         if credentials is not None:
             snapshot = self.hold
-            self.start_work('retry', lambda: triage.recheck(self.store.folder, snapshot,
-                                                           read_source(snapshot.record['source'], *credentials)))
+            self.start_work('retry', lambda: triage.retry_original(self.store.folder, snapshot, credentials))
 
     def check_draft(self):
         if self.busy or self.hold is None:
@@ -478,7 +485,14 @@ class ReviewWindow:
             self.notice.set(str(error))
             return
         snapshot = self.hold
-        self.start_work('draft', lambda: triage.recheck(self.store.folder, snapshot, raw))
+        credentials = (None, None)
+        from review_workflow import managed
+        if managed(self.store.folder, snapshot.ticket):
+            credentials = self.credentials()
+            if credentials is None:
+                return
+        self.start_work('draft', lambda: triage.recheck(self.store.folder, snapshot, raw,
+                                                       credentials=credentials))
 
     def dismiss(self):
         if self.busy or self.hold is None or self.hold.record['status'] != 'open' or not self.leave():
@@ -487,7 +501,7 @@ class ReviewWindow:
                                    'Record that you will handle or skip this message yourself? The original stays unchanged.',
                                    parent=self.root):
             try:
-                self.show_hold(self.holds.update(self.hold, status='dismissed'))
+                self.show_hold(triage.dismiss(self.store.folder, self.hold))
                 self.refresh()
             except HoldError as error:
                 self.notice.set(str(error))
@@ -509,7 +523,7 @@ def demo_store(folder):
     return store
 
 
-def demo_exceptions(folder):
+def demo_exceptions(folder, *, managed=False):
     """Create originals inside the isolated demo directory, never live storage."""
     from email.message import EmailMessage
     source_folder = Path(folder) / 'synthetic-originals'
@@ -528,7 +542,15 @@ def demo_exceptions(folder):
         raw = mail.as_bytes()
         path = source_folder / f'example-{index}.eml'
         path.write_bytes(raw)
-        HoldStore(folder).create(uuid.uuid4().hex, reason, file_source(path, raw))
+        source = file_source(path, raw)
+        ticket = uuid.uuid4().hex
+        if managed:
+            from shadow_workflow import ShadowWorkflow
+            workflow = ShadowWorkflow(folder)
+            ticket = workflow.register(source)
+            workflow.intake.block(workflow.intake.claim(ticket), reason)
+            source = workflow.intake.private_source(ticket)['source']
+        HoldStore(folder).create(ticket, reason, source)
 
 
 def main():
@@ -539,7 +561,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix='scrubber-review-demo-') as temp:
         store = demo_store(temp) if args.demo else CandidateStore(STATE)
         if args.demo:
-            demo_exceptions(temp)
+            demo_exceptions(temp, managed=True)
         root = tk.Tk()
         ReviewWindow(root, store, demo=args.demo)
         root.mainloop()

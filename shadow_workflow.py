@@ -80,6 +80,7 @@ class ShadowWorkflow:
                        '(ticket TEXT PRIMARY KEY, evidence TEXT NOT NULL, checked REAL NOT NULL)')
             db.execute('CREATE TABLE IF NOT EXISTS requests '
                        '(key TEXT PRIMARY KEY, ticket TEXT NOT NULL, version TEXT NOT NULL)')
+            db.execute('CREATE TABLE IF NOT EXISTS revoked_requests (key TEXT PRIMARY KEY)')
 
     def register(self, source):
         """Local source registration only. No reads, inference or cloud calls."""
@@ -178,10 +179,16 @@ class ShadowWorkflow:
         evidence = self._compute(lambda: (self._source(ticket), self._evidence(ticket))[1])
         decision = self.decisions.record(ticket, snapshot.record, evidence)
         source = self.intake.private_source(ticket)
+        bound_version = self.actions.candidate_version(ticket)
+        if decision.outcome == 'HOLD' and bound_version == snapshot.digest:
+            # A failed desktop save may have withdrawn this exact old version.
+            # Report the hold without reviving an inactive action binding.
+            self.actions.invalidate_candidate(candidate_id=ticket, candidate_version=snapshot.digest)
+            return snapshot, decision
         # Keep exact file-byte versions separate from canonical content digests.
         self.actions.bind_candidate(candidate_id=ticket, candidate_version=snapshot.digest,
                                     source_ref=source['source'], source_version=source['source_version'],
-                                    expected_version=self.actions.candidate_version(ticket))
+                                    expected_version=bound_version)
         if decision.outcome != 'WOULD_SEND':
             self.actions.invalidate_candidate(candidate_id=ticket, candidate_version=snapshot.digest)
         if self.candidates.load(ticket).digest != snapshot.digest:
@@ -247,6 +254,8 @@ class ShadowWorkflow:
         if decision.outcome != 'WOULD_SEND' or snapshot.digest != expected_candidate_version:
             raise WorkflowError('stale_result')
         with closing(sqlite3.connect(self.path)) as db:
+            if db.execute('SELECT 1 FROM revoked_requests WHERE key=?', (submission_key,)).fetchone():
+                raise WorkflowError('request_revoked')
             request = db.execute('SELECT ticket,version FROM requests WHERE key=?',
                                  (submission_key,)).fetchone()
         if request != (ticket, snapshot.digest):
@@ -280,6 +289,8 @@ class ShadowWorkflow:
         payload = {k: snapshot.record[k] for k in ('subject', 'body')}
         key = submission_key(payload, request_scope=ticket)
         with closing(sqlite3.connect(self.path)) as db, db:
+            if db.execute('SELECT 1 FROM revoked_requests WHERE key=?', (key,)).fetchone():
+                raise WorkflowError('request_revoked')
             if db.execute('SELECT 1 FROM requests WHERE key=? AND ticket=?',
                           (submission_key(payload), ticket)).fetchone():
                 raise WorkflowError('legacy_request_requires_reconciliation')

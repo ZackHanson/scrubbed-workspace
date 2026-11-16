@@ -29,6 +29,8 @@ REASONS = {
     'source_unavailable': ('Original could not be read', 'Check the source file or Gmail account, then retry.'),
     'source_changed': ('Original reference no longer matches', 'Re-import the message. The reviewer will not substitute another original.'),
     'processing_failed': ('Processing could not complete', 'Check the original and local model, then retry.'),
+    'needs_recheck': ('Edited candidate needs local checks', 'Check a generalized draft here before using this revision.'),
+    'reconciliation_required': ('Previous work needs local reconciliation', 'Do not retry uncertain work. Reconcile its saved local receipt first.'),
 }
 
 

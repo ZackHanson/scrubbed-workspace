@@ -192,6 +192,21 @@ class ActionStore:
             row = db.execute('SELECT version FROM candidates WHERE id=?', (candidate_id,)).fetchone()
             return row[0] if row else None
 
+    def recheck_candidate(self, *, candidate_id, candidate_version):
+        """Trusted local checker only: revive exact checked bytes, discard current result.
+
+        The caller must hold the candidate writer lock, invalidate old requests,
+        and persist fresh matching model evidence. A review marker cannot call this.
+        """
+        _id(candidate_id)
+        _version(candidate_version)
+        with self._transaction() as db:
+            row = db.execute('SELECT version FROM candidates WHERE id=?', (candidate_id,)).fetchone()
+            if row and row['version'] != candidate_version:
+                _fail('stale_candidate')
+            if row:
+                db.execute('UPDATE candidates SET active=1,result_id=NULL WHERE id=?', (candidate_id,))
+
     @staticmethod
     def _current(db, candidate_id, candidate_version):
         row = db.execute('SELECT * FROM candidates WHERE id=?', (candidate_id,)).fetchone()

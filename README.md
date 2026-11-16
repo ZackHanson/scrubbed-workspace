@@ -31,6 +31,10 @@ To try the exception reviewer with temporary synthetic originals and held messag
 python review.py --demo
 ```
 
+The demo's three exceptions use temporary managed intake tickets. Opening it
+does not contact Gmail or Ollama; Retry original and Check edited draft use the
+installed local model only when you click them.
+
 To review actual messages locally, double-click **Run Local Review.cmd** or run
 `python review.py`. It starts in **Open exceptions** and shows a fixed hold reason
 and suggested next action for each message. Choose an exception, then:
@@ -42,8 +46,9 @@ and suggested next action for each message. Choose an exception, then:
 - **Retry original** fetches the same original and runs all local model gates again.
 - **Check edited draft** checks the generalized subject/body you compose in the
   editor. Unchecked drafts stay in memory only. Failed checks retain your draft
-  in the window and leave the exception open. Passed checks create a new pending
+  in the window and leave the exception open. Passed checks save a pending
   candidate and close the exception; they never release content to Claude.
+  Managed items keep their intake identity and record a separate checked revision.
 - **Dismiss exception** records that you will handle or skip it yourself. The
   original and exception record are retained. The same source is not added to the
   queue again on a later sequential import.
@@ -55,11 +60,22 @@ locally**, or **Reject locally** to retain it as rejected. All statuses remain
 local workflow records; none certifies de-identification or enables uploading,
 forwarding or export. No message content is written to terminal logs.
 
+For managed candidates, saved edits withdraw previous check evidence and result
+requests and open an exception for another local check. Rejection also withdraws
+previous work and closes an open exception. A local-review checkbox cannot restore
+withdrawn evidence. Legacy candidates keep their existing local-review behavior;
+opening them does not silently import them into the integrated workflow.
+
 The window opens and displays saved records without needing Ollama or Gmail.
 Retrying/checking drafts requires the local Ollama model. Reopening a Gmail
 original requires signing in again through native local dialogs with the source
 address and app password; the password is not saved. Gmail is opened read-only
 and messages use BODY.PEEK, so viewing/retrying does not mark them read.
+Checking a managed Gmail draft also requests local sign-in so the exact original
+can be verified. If previous processing is uncertain, the reviewer leaves it
+blocked for local reconciliation rather than creating another retry. Failed saves
+can leave old evidence withdrawn even when the candidate text is unchanged; reload
+and complete a fresh local check.
 
 Only new scrubber runs create exception records. Historical blocked messages
 cannot be reconstructed from old count-only receipts. If a source moved out of

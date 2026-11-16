@@ -98,13 +98,13 @@ rejection, missing/stale/versioned evidence, model replacement, private binding
 isolation, hard process death, timeouts/late completion, restart materialization,
 result replay and uncertain adapter completion. Integration fixtures block socket
 connections and use temporary synthetic state. Mocked success proves contracts
-only; expanded evaluator and live-Qwen qualification remain separate work and were
-not merged here.
+only; expanded live-Qwen outcomes and their exact evaluated revision are recorded
+separately in evaluation/LIVE_RESULTS.md.
 
-Legacy scrubber commands and desktop review retain their behavior. Their candidates
-lack this evidence and HOLD. Desktop exception retry still creates independent
-IDs rather than retrying intake jobs; do not silently bind those IDs to existing
-sources or treat them as integrated successes. No mailbox discovery, automatic
+Legacy scrubber commands and legacy desktop entries retain their local-review
+behavior. Their candidates lack integrated evidence and HOLD; opening the reviewer
+does not adopt them. Managed desktop entries now use the coordinator below.
+No mailbox discovery, automatic
 hold retry, thread-context injection, real-store migration, service, email action
 or Claude delivery is activated. Pilot UX, provider selection, separately
 authorized release policy, privacy/utility qualification and local operator
@@ -118,5 +118,41 @@ which can reopen a known terminal exception once per explicit retry. Restarting
 or repeating a batch does not increment it. Claimed/uncertain and successful
 operations cannot be reopened by a new generation; uncertain work still needs
 explicit proof-based reconciliation. Generation records are local ledger state
-and are included in that ledger's snapshots. This API fix does not connect the
-legacy desktop retry UI or automatically close its existing exception records.
+and are included in that ledger's snapshots.
+
+## Managed desktop review
+
+`review_workflow.Reviewer` coordinates existing managed tickets only; triage
+dispatches legacy entries to the existing local reviewer. The demo now seeds
+managed synthetic exceptions without reading live storage or calling a model.
+
+- Retry keeps the original ticket, source identity and bounded operations receipt.
+  A completed checked item whose exception closure failed can finish closing it
+  without another inference. An uncertain/claimed operation cannot be bypassed
+  by editing a draft or reopening the window.
+- Checking a correction uses the full local model pipeline and source checks.
+  It records a separate random revision ID linked to the existing ticket, expected
+  candidate bytes, hold snapshot and draft digest. Unchecked text stays in memory;
+  only successful checked output/evidence is journaled. Original source references
+  stay local and do not become draft/candidate content. Managed Gmail preview,
+  retry and draft verification require local memory-only sign-in and strict
+  UID/UIDVALIDITY/size checks with readonly INBOX and UID BODY.PEEK.
+- Candidate edits/rejections revoke old requests and action bindings under the
+  same writer lock used for result capture. Edits delete prior check evidence and
+  open a needs-recheck exception; rejection closes it as dismissed. Status markers
+  never manufacture evidence. A failed file save can leave prior work conservatively
+  withdrawn. Historical proposals are retained but cannot be captured as current.
+- Review actions share a nonblocking local lock; model work stays off the Tk thread.
+  Final publication checks source/model/policy/age again and uses candidate/hold
+  compare-and-swap. Stale edits are preserved. The revision journal commits checked
+  output before candidate publication, then records installation before hold
+  closure. Recovery can replay checked output without inference, never refreshes
+  its check timestamp, and rejects stale validators. Completed installation does
+  not strand a later correction after a crash during hold closure.
+
+Interrupted model computation remains checking/unknown and requires explicit local
+operator reconciliation; the UI offers no reset that could bypass it. Do not delete
+receipts or locks to force a retry. Full private-state recovery remains separate:
+the operations-ledger snapshot does not cover review revisions, candidates, holds,
+intake, evidence, revoked requests or action/result stores. No real-store migration,
+production transport, automatic release or scheduled operation is enabled.

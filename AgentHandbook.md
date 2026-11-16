@@ -335,3 +335,40 @@ closure wiring, pilot UX, release/provider qualification and full private-state
 recovery are separate. No merge, real data, delivery or schedule activation.
 Source fixes are prepared as a stacked PR against feature/qwen-privacy-meaning-fixes;
 publication and remote-head verification are reported at handoff.
+
+### November 16 managed desktop workflow integration
+
+Continued step 3 in the existing T3-managed worktree on a new owned branch,
+feature/desktop-workflow-integration, based on step-2 head
+327bea529820b86589f3bffa8ade8e723e3c98f7. Earlier source branches are preserved.
+Managed desktop retries now retain intake tickets, use explicit retry generations,
+and resolve successful exceptions. Checked corrections retain the source binding
+and record separate local revision IDs rather than unrelated candidate identities.
+Candidate edits withdraw old evidence/requests/results before saving; rejection
+also closes an open hold. Legacy entries retain local-only review without silent
+adoption. The synthetic exception demo now seeds managed tickets without inference.
+
+The coordinator journals only checked output/evidence, input digests and local
+version context, never unchecked draft text or credentials. It serializes review
+actions, fences stale candidate/hold snapshots, preserves failed drafts in the UI,
+and replays interrupted publication without repeating inference. Installation is
+recorded before hold closure so a crash during closure cannot strand later edits.
+Recovered output must still pass current policy/model/age/source checks. Unknown
+computations remain blocked for explicit local reconciliation; there is no UI reset.
+Managed Gmail preview/retry/draft verification uses memory-only native local sign-in
+and strict UID/UIDVALIDITY/read-only PEEK checks. Existing real state was not opened.
+
+Independent read-only review reproduced three P2 gaps during implementation:
+missing Gmail draft credentials, closure/journal crash ordering, and missing current
+validator checks on recovery. All three were fixed with regression reproductions.
+Final deterministic suite passes 215/215 with sockets blocked and temporary storage;
+21 new tests cover the coordinator, asynchronous desktop journey, source/privacy
+checks, stale edits/rejection, restart/failure recovery and managed demo setup.
+The synthetic CLI workflow demo also passes. No manual visual demo or live Qwen
+rerun occurred; model prompts and evaluation fixtures/thresholds are unchanged.
+
+Source-only PR is stacked on step-2 feature/integration-review-fixes. Publication
+and exact remote head are verified at handoff. No main push, merge, real message,
+Claude delivery, email action, service or scheduler activation. Remaining: owner
+synthetic usability rehearsal, broader qualification, provider/release decisions
+and full coordinated private-state recovery (operations-only backup is insufficient).

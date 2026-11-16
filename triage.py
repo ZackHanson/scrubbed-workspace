@@ -17,7 +17,10 @@ def draft_message(subject, body):
     return mail.as_bytes()
 
 
-def recheck(folder, snapshot, raw):
+def recheck(folder, snapshot, raw, *, credentials=(None, None)):
+    from review_workflow import managed, read_original, Reviewer
+    if managed(folder, snapshot.ticket):
+        return Reviewer(folder, reader=lambda source: read_original(source, credentials)).draft(snapshot, raw)
     holds = HoldStore(folder)
     current = holds.load(snapshot.ticket)
     if current.digest != snapshot.digest or current.record['status'] != 'open':
@@ -37,3 +40,27 @@ def recheck(folder, snapshot, raw):
     ticket = s.save_candidate(record, folder)
     holds.update(snapshot, status='resolved')
     return ticket
+
+
+def retry_original(folder, snapshot, credentials=(None, None)):
+    from review_workflow import managed, read_original, Reviewer
+    if managed(folder, snapshot.ticket):
+        return Reviewer(folder, reader=lambda source: read_original(source, credentials)).retry(snapshot)
+    from holds import read_source
+    return recheck(folder, snapshot, read_source(snapshot.record['source'], *credentials))
+
+
+def dismiss(folder, snapshot):
+    from review_workflow import managed, Reviewer
+    if managed(folder, snapshot.ticket):
+        return Reviewer(folder).dismiss(snapshot)
+    return HoldStore(folder).update(snapshot, status='dismissed')
+
+
+def preview_original(folder, snapshot, credentials):
+    from review_workflow import managed, read_original, Reviewer
+    from holds import preview, read_source
+    if managed(folder, snapshot.ticket):
+        Reviewer(folder)._hold(snapshot)
+        return preview(read_original(snapshot.record['source'], credentials))
+    return preview(read_source(snapshot.record['source'], *credentials))
