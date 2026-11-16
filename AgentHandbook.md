@@ -408,3 +408,48 @@ will be applied by primary after this branch; _source binding/compute closures
 are untouched here. Pilot is prepare-only; no submissions or credentials.
 No services, dependencies, infrastructure, security changes, merge or main push.
 Publication and exact remote head verification follow at handoff.
+
+### November 16 coordinated private-state recovery source
+
+Owned host-managed branch feature/coordinated-private-state-recovery starts at
+desktop integrated head cde70a09a391f5e205d5ba84e14448b967e82c3c. Only new
+recovery.py, recovery_guard.py, test_recovery.py, RECOVERY.md and this Current
+work record changed. Existing core/UI/pilot modules are owned by the primary and
+other threads; none were edited here.
+
+Explicit local snapshot/restore APIs now inventory intake, candidate/hold JSON,
+workflow checks/requests/revocations/revisions, routing receipts, actions/results,
+operations and explicitly selected external adapter/pilot SQLite ledgers. Shared
+guard locks, existing workflow writer locks and simultaneous SQLite reservations
+coordinate snapshots. Full manifest membership/size/SHA-256 checks and SQLite
+integrity checks reject missing/truncated/unexpected/traversing/symlink/junction
+inputs. Fresh destinations only; partial failures remain private and fenced,
+without cleanup or overwrite. Originals, credentials, locks/journals/temp files
+are excluded. Sensitive original references remain inside private snapshots.
+
+Restoration writes a persistent pending fence before any runtime bytes; explicit
+operator acknowledgement/reconciliation is required. No IDs, unknown reservations,
+completed results, revocations or versions are reset. Unknown provider state
+remains unknown; no provider proof, encryption or production backup is claimed.
+RECOVERY.md records precise primary-owned guard callsites and the worker-thread
+source-binding preload needed before guarding intake DB access. This source branch
+tests the guard API explicitly; the primary must wire and test direct workflow,
+reviewer, runner, stores and pilot entrypoints on the final combined head before
+claiming application-wide restored-runtime inactivity.
+
+Final source verification: 15/15 focused recovery tests and 230/230 deterministic
+tests pass with sockets blocked and temporary LOCALAPPDATA. Synthetic CLI demo
+passes (one shadow classification, zero duplicate attempts, one fake result/inert
+proposal). Fresh synthetic restoration compares every manifest byte and all DB
+logical dumps, preserving source bindings/evidence, edits/revisions, rejection,
+revocations, results and unknown adapter reservations. Windows junction refusal,
+WAL data, locks, partial failure, malformed fences and cross-thread/process lock
+contention are covered. No real runtime, email, credential or source originals
+were opened; no live inference, cloud transfer, schedules/services or release.
+
+GitHub still reports approved private ZackHanson/scrubbed-workspace, default main,
+zero Actions workflows/hooks/deployments. Main protection lookup returns 403;
+no settings were changed and no protection enforcement is claimed. Source draft
+PR targets feature/desktop-workflow-integration; publication and exact clean/pushed
+remote head are verified at handoff. The primary owns integration and combined
+checks. No independent merge or main push is authorized.
