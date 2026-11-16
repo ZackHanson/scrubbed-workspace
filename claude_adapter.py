@@ -59,6 +59,28 @@ def decision_digest(decision):
     return _digest(decision)
 
 
+def _action_result(value):
+    """Project the actions v1 wire contract without importing its local store."""
+    if (type(value) is not dict or set(value) != {'schema_version', 'actions'}
+            or type(value['schema_version']) is not int or value['schema_version'] != 1
+            or type(value['actions']) is not list or not 1 <= len(value['actions']) <= 20):
+        raise ContractError('invalid_response')
+    actions = []
+    for action in value['actions']:
+        if (type(action) is not dict or set(action) != {'kind', 'text'}
+                or type(action['kind']) is not str
+                or action['kind'] not in {'summarize', 'suggest_organization', 'draft_reply'}
+                or type(action['text']) is not str or not action['text'].strip()
+                or len(action['text']) > 128 * 1024):
+            raise ContractError('invalid_response')
+        actions.append(action.copy())
+    result = {'schema_version': 1, 'actions': actions}
+    if len(json.dumps(result, sort_keys=True, ensure_ascii=True,
+                      separators=(',', ':')).encode('ascii')) > 128 * 1024:
+        raise ContractError('invalid_response')
+    return result
+
+
 @dataclass(frozen=True)
 class AdapterConfig:
     enabled: bool = False
@@ -78,7 +100,7 @@ class AdapterResult:
     code: str
     submission_key: str = ''
     # Provider output is untrusted local content, excluded from logs/repr.
-    text: str = field(default='', repr=False)
+    result: dict | None = field(default=None, repr=False)
     stop_reason: str = ''
 
 
@@ -86,7 +108,9 @@ class FakeTransport:
     """Deterministic synthetic response; no external I/O or content echo."""
 
     def __call__(self, payload, *, timeout_seconds, idempotency_key):
-        return {'text': 'Synthetic workflow assistance.', 'stop_reason': 'end_turn'}
+        return {'result': {'schema_version': 1, 'actions': [
+            {'kind': 'summarize', 'text': 'Synthetic workflow assistance.'}]},
+                'stop_reason': 'end_turn'}
 
 
 class ClaudeAdapter:
@@ -148,15 +172,15 @@ class ClaudeAdapter:
             try:
                 response = self.transport(content, timeout_seconds=self.config.timeout_seconds,
                                           idempotency_key=key)
-                if (type(response) is not dict or set(response) != {'text', 'stop_reason'}
-                        or type(response['text']) is not str or not response['text'].strip()
-                        or len(response['text']) > MAX_CHARS
+                if (type(response) is not dict or set(response) != {'result', 'stop_reason'}
                         or type(response['stop_reason']) is not str
                         or response['stop_reason'] not in {'end_turn', 'max_tokens', 'refusal'}):
                     result = AdapterResult('unknown', 'invalid_response', key)
                 else:
                     result = AdapterResult('completed', 'response_received', key,
-                                           response['text'], response['stop_reason'])
+                                           _action_result(response['result']), response['stop_reason'])
+            except ContractError:
+                result = AdapterResult('unknown', 'invalid_response', key)
             except Exception:
                 # Do not propagate transport exceptions, which may contain secrets.
                 result = AdapterResult('unknown', 'transport_error', key)

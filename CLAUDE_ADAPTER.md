@@ -44,13 +44,29 @@ daemon worker bounds caller waiting; Python cannot cancel an arbitrary callable,
 so timed-out work may still finish. No thread can trigger a second submission.
 Transport code must not log payloads, credentials or exception text.
 
-Transport response is exactly `{'text': str, 'stop_reason': str}`. Stop reasons
-are `end_turn`, `max_tokens`, `refusal`. Text is bounded to 16,000 characters.
-`AdapterResult` returns status/code/key plus untrusted response text and stop
-reason; text is excluded from repr, never persisted by the adapter. Completed
+Transport response is exactly `{'result': ResultV1, 'stop_reason': str}`. Stop reasons
+are `end_turn`, `max_tokens`, `refusal`. ResultV1 is exactly
+`{'schema_version': 1, 'actions': [{'kind': KIND, 'text': NONEMPTY_STRING}]}`,
+with 1–20 actions, kinds `summarize`, `suggest_organization`, `draft_reply`, and
+a 128 KiB limit on compact canonical ASCII JSON. Unknown/routing fields are
+rejected at every level. Reply text is body-only; actions validation must also
+check content before proposing it. `AdapterResult` returns status/code/key plus
+the copied untrusted `result` object and stop reason; result is excluded from
+repr, never persisted by the adapter. Completed
 means a valid response was received, not that an action/reply is authorized.
 Truncation/refusal remain explicit for downstream handling. Result consumers must
 keep response content local and validate it before any action.
+
+The local integration caller passes `AdapterResult.result` to
+`ActionStore.capture_result(candidate_id, candidate_version, result_id,
+result_version, result, expected_result_id=None)`. Candidate/result IDs and
+versions must come from the caller's LOCAL request ledger, never model echo.
+The adapter deliberately accepts none of those identifiers in the wire payload.
+`result_digest()` in actions uses the same canonical JSON encoding, but covers
+the ResultV1 object rather than content or eligibility. Response persistence,
+CAS replacement and inert proposals belong to actions; no automatic capture or
+reply is wired here. Only `completed` with `end_turn` should advance to normal
+capture; truncation/refusal/unknown need explicit local exception handling.
 
 SQLite stores only submission hashes and fixed statuses. Atomic unique insertion
 reserves a content key before calling transport, across threads/process restarts.

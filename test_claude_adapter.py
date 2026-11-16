@@ -51,7 +51,8 @@ class AdapterTests(unittest.TestCase):
     def test_synthetic_end_to_end_and_content_free_ledger(self):
         result = self.submit()
         self.assertEqual((result.status, result.stop_reason), ('completed', 'end_turn'))
-        self.assertEqual(result.text, 'Synthetic workflow assistance.')
+        self.assertEqual(result.result, {'schema_version': 1, 'actions': [
+            {'kind': 'summarize', 'text': 'Synthetic workflow assistance.'}]})
         self.assertEqual(self.calls[0][0], self.payload)
         self.assertEqual(set(self.calls[0][1]), {'timeout_seconds', 'idempotency_key'})
         with contextlib.closing(sqlite3.connect(self.path)) as db:
@@ -168,20 +169,35 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(self.submit().status, 'duplicate')
 
     def test_response_whitelist_and_untrusted_text_repr(self):
-        invalid = ({'text': 'synthetic', 'stop_reason': 'end_turn', 'credential': 'synthetic'},
-                   {'text': '', 'stop_reason': 'end_turn'},
-                   {'text': 'x' * 16001, 'stop_reason': 'end_turn'},
-                   {'text': 'synthetic', 'stop_reason': 'tool_use'}, None)
+        good = FakeTransport()(self.payload, timeout_seconds=1, idempotency_key='synthetic')
+        invalid = ({**good, 'credential': 'synthetic'},
+                   {**good, 'result': {'schema_version': True, 'actions': []}},
+                   {**good, 'result': {'schema_version': 1, 'actions': [
+                       {'kind': 'draft_reply', 'text': 'synthetic', 'to': 'synthetic'}]}},
+                   {**good, 'result': {'schema_version': 1, 'actions': [
+                       {'kind': 'draft_reply', 'text': ''}]}},
+                   {**good, 'result': {'schema_version': 1, 'actions': [
+                       {'kind': 'summarize', 'text': 'synthetic'}] * 21}},
+                   {**good, 'result': {'schema_version': 1, 'actions': [
+                       {'kind': 'summarize', 'text': 'x' * (128 * 1024)}]}},
+                   {**good, 'stop_reason': 'tool_use'}, None)
         for index, response in enumerate(invalid):
             with self.subTest(response=index):
                 adapter = ClaudeAdapter(Path(self.temp.name) / f'case-{index}.sqlite',
                                         config=AdapterConfig(True),
                                         transport=lambda *a, **kw: response)
                 self.assertEqual(self.submit(adapter).code, 'invalid_response')
-        result = self.submit(self.adapter(lambda *a, **kw: {
-            'text': 'Untrusted synthetic response', 'stop_reason': 'refusal'}))
+        result = self.submit(self.adapter(lambda *a, **kw: {**good, 'stop_reason': 'refusal'}))
         self.assertEqual(result.stop_reason, 'refusal')
-        self.assertNotIn(result.text, repr(result))
+        self.assertNotIn('Synthetic workflow assistance.', repr(result))
+
+    def test_all_action_kinds_return_without_model_ids(self):
+        response = {'result': {'schema_version': 1, 'actions': [
+            {'kind': kind, 'text': 'Synthetic general assistance.'} for kind in (
+                'summarize', 'suggest_organization', 'draft_reply')]}, 'stop_reason': 'end_turn'}
+        result = self.submit(self.adapter(lambda *a, **kw: response))
+        self.assertEqual(result.result, response['result'])
+        self.assertIsNot(result.result, response['result'])
 
     def test_ledger_failure_prevents_transport(self):
         self.path.write_bytes(b'not a sqlite database')
