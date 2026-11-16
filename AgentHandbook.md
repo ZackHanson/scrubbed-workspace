@@ -234,3 +234,35 @@ from hanster1/<project> to ZackHanson/<project>. Only that text was replaced in
 C:/Users/zackw/.codex/AGENTS.md after preserving its original bytes outside Git.
 Existing explicitly recorded repository destinations are not migrated by this
 local startup-default change. No global Git configuration changed.
+### November 16 guarded live synthetic evaluation
+
+This assigned worktree starts at exact evaluation tip
+292cb40b5fa535d06719179215ae36e1841e6948. Remote main/default verified as
+466de50eee9d7cae10d41c74d9f00672f61ae578. No root or other worktree changed.
+Read evaluation README, runner, corpus, core transport and focused tests. All 15
+focused evaluator tests pass. Privacy guard review confirms fixed numeric loopback,
+fixed local model with remote metadata rejection, proxies/redirects disabled,
+serial exclusive experiment lock, built-in synthetic inputs only, temporary STATE,
+no persistence, and content-free receipts. Guarded live evaluation completed with exit 1;
+receipts are in an operator-selected temporary directory outside private runtime
+and Git. Seven input refusals and twelve injected faults are not live-model proof.
+No inbox/private runtime inspection, delivery, service or security changes.
+
+Live run at 292cb40 completed all 35 cases: privacy 34/35, required meaning 15/16,
+exact refusals 19/19, candidate schema 16/16, unexpected errors 0. context-01
+retained three rare identifying traits despite both model passes accepting it;
+utility-05 lost diagnosis/prescription exclusions. Guarded focused replays
+reproduced both. These are core/model issues, not established evaluator defects;
+core files, corpus and thresholds remain unchanged. Two focused evaluator tests
+preserve these failures. See evaluation/LIVE_RESULTS.md for separate live versus
+injected outcomes, receipt provenance, limitations and the integrated-head rerun.
+Original full deterministic suite passed 66/66 with network prohibited and temp
+LOCALAPPDATA; final focused evaluator suite passes 17/17. No combined-system proof
+or certification is claimed. Integration owner must address the reproductions
+and rerun on the exact combined head; this thread does not wait for integration.
+The task PR targets feature/synthetic-evaluation (existing 292cb40 evaluation tip)
+to exclude pre-existing evaluation commits from this change. No main push/merge.
+Remote protection inspection still returns 403; no enforcement claim or settings
+change. Source checkpoint and remote SHA verification follow before handoff.
+Final deterministic verification after adding reproductions: 68/68 passed with
+network sockets blocked and temporary LOCALAPPDATA. Final focused tests: 17/17.

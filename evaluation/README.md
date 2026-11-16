@@ -30,8 +30,9 @@ stale lock. It never accesses the normal runtime state: `STATE` is temporarily
 redirected to an empty temporary directory, checked for unexpected writes, then
 removed. Model-failure fixtures remain **injected**, even in live mode, and are
 labeled separately; they do not purport to be observed model failures. Input
-refusals run without inference. No live experiment has been performed as part of
-the initial implementation.
+refusals run without inference. The first guarded live run and its two reproduced
+failures are documented in [LIVE_RESULTS.md](LIVE_RESULTS.md); the initial
+implementation had only deterministic verification.
 
 Both commands print one JSON object to stdout; exit 0 means every threshold passed,
 exit 1 means a regression or unavailable evaluation. Core stdout/stderr and exception
