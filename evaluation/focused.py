@@ -24,6 +24,10 @@ def examples():
         Fixture('extra-scope-02', 'scope', message(
             'Prepare a general knee rehabilitation education checklist; do not recommend injections.').as_bytes(),
             (('knee',), ('rehabilitation',), ('do not recommend injections',))),
+        Fixture('extra-quoted-01', 'quoted', message(
+            'Prepare general asthma inhaler education.\n> Earlier: Serina Volcrest visited in April 2024.\n'
+            '> Their cousin works at Meadowfield Pottery.').as_bytes(),
+            (('asthma',), ('inhaler',)), ('Serina', 'Volcrest', 'April', 'cousin', 'Meadowfield', 'Pottery')),
     )
 
 
@@ -32,7 +36,7 @@ def run():
     with tempfile.TemporaryDirectory(prefix='scrubbed-focused-') as folder, ExitStack() as stack:
         stack.enter_context(patch.object(s, 'STATE', Path(folder)))
         digest = stack.enter_context(live_guard())
-        fixtures = tuple(f for f in corpus() if f.id in ('context-01', 'utility-05')) + examples()
+        fixtures = tuple(f for f in corpus() if f.id in ('context-01', 'utility-05', 'quoted-01')) + examples()
         for fixture in fixtures:
             record, reason = None, None
             try:
