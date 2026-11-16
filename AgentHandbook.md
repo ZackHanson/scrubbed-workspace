@@ -206,3 +206,27 @@ from hanster1/<project> to ZackHanson/<project>. Only that text was replaced in
 C:/Users/zackw/.codex/AGENTS.md after preserving its original bytes outside Git.
 Existing explicitly recorded repository destinations are not migrated by this
 local startup-default change. No global Git configuration changed.
+
+### November 16 exception pilot readiness (documentation branch)
+
+On `feature/exception-pilot-readiness`, base `466de50`, read the reviewer and all
+six local feature contracts without modifying implementation or other worktrees.
+README now contains the acceptance scenarios, observed evidence, integration gaps
+and a proposed five-request synthetic-only real Claude pilot requiring later owner
+approval. Routine-message usefulness and rare owner intervention remain product
+acceptance goals, not implemented baseline behavior.
+
+Fresh baseline verification: Python 3.13.15, 51/51 deterministic unit/Tkinter tests
+passed with socket connections blocked, temporary LOCALAPPDATA and demo stores.
+No real queue, model inference, provider delivery or manual UI inspection occurred.
+Feature suites and the combined build were not rerun by this documentation track.
+Integration follow-up: preserve intake identity through reviewer retries; invalidate
+old evidence/results on edits/rejection; reconcile uncertain delivery and complete
+local result capture. Require the README scenarios against the integrated SHA.
+
+GitHub read-only inspection confirmed private ZackHanson/scrubbed-workspace,
+default main at `466de50eee9d7cae10d41c74d9f00672f61ae578`, zero Actions workflows,
+hooks and deployments. Branch-protection inspection returned paid-plan HTTP 403;
+enforceable protection is not verified. Earlier no-main/publication-pending notes
+above are historical. No remote fetch, origin change, SSH/global configuration,
+runtime activation or security change was made. Source PR only; no auto-merge.

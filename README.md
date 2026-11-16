@@ -110,4 +110,92 @@ establish either. See [HHS guidance](https://www.hhs.gov/hipaa/for-professionals
 Forwarding to a second account and connecting Claude remain unimplemented until
 the review and de-identification requirements are established.
 
+## Exception journey and proposed pilot acceptance
+
+November 16 readiness assessment at base `466de50`: the desktop journey exists,
+but routine messages still become pending candidates requiring local review.
+The intended outcome is a useful local Claude result for routine eligible messages,
+with owner attention reserved for exceptions. No automatic delivery is enabled.
+
+Source contracts inspected through local Git (separate feature heads, **not an
+integrated build**):
+
+| Track / inspected head | Exists in that branch | Integration acceptance gap |
+| --- | --- | --- |
+| Intake / `f7eeaf6` | Durable tickets, source fingerprints, leases, repairable candidate publication | Reviewer retry must preserve the intake ticket; edited drafts need distinct derived identities. Initial ledger results do not reflect later edits/rejection. |
+| Shadow routing / `1216b3c` | Typed HOLD/WOULD_SEND, exact content/evidence binding; execution disabled | Pipeline must supply real check/model provenance; old review markers cannot create it. Map policy holds into understandable owner exceptions. |
+| Evaluation / `292cb40` | 35 invented fixtures, separate privacy/utility/refusal/schema/execution checks | Run against the combined build; mock passes do not establish real model quality. |
+| Claude adapter / `266c286` | Disabled default, allowlisted subject/body, fake transport, durable submission reservation | No real client or review wiring. Caller must recheck current eligibility and persist valid results; unknown delivery has no automatic retry. |
+| Actions / `16218b1` | Version-bound local results and inert proposals; provider writes disabled | Wire candidate edit/rejection invalidation and result replacement. Private source binding stays local; old proposals remain history only. |
+| Operations / `8e063f0` | Bounded manual shadow runner, uncertain recovery, ledger-only backup/restore | Intake/router adapters and coordinated state recovery remain separate work. This runner cannot deliver to Claude. |
+
+### Acceptance scenarios
+
+Use temporary synthetic state and fake transports first. The following are required
+integrated observations, not claims that the current baseline passes them all.
+
+| Synthetic scenario | Owner-visible outcome and pass criterion |
+| --- | --- |
+| Routine: "Prepare an asthma education and inhaler technique checklist" (`utility-01`) | One current result retains asthma, inhaler and technique; no compulsory review click in the eventual routine flow. Shadow rehearsal shows WOULD_SEND and zero outbound calls. |
+| Held: demo attachment, possible identifier, model failure | Open exceptions shows a specific reason and safe next action. Attachment handling stays in the mail client; model failure permits local retry; identifier uncertainty permits a generalized draft. Every held item is accounted for, with no delivery. |
+| Correction/retry: demo asthma request after model recovery | Failed check keeps the draft and open hold. Successful full check creates one current pending candidate and resolves the hold; it does not itself authorize release. Two retries/restarts cannot create duplicate current work. |
+| Dismissal: demo attachment handled elsewhere | Confirmation moves it to Closed exceptions, preserves original/history, and a repeated import does not reopen or dispatch it. |
+| Stale work: edit/reject while checks or fake delivery are in flight; replace a result | Old evidence, file version, result and proposal cannot become current. Rejection revokes future use. Two windows cannot overwrite one another. Recheck freshness at commit/capture, not only when work starts. |
+| Inaccessible original: delete synthetic file, change bytes, wrong fake account or mailbox epoch | Explain unavailable/changed source without substituting another message. Keep exception open; offer owner mail-client handling or explicit re-import. No release from a stale reference. |
+| Recovery: fail a save, restart after a claim, fake transport timeout, restore older state | Retain saved work and history; reconcile duplicate/uncertain work before continuing. Unknown delivery never auto-retries. Restore stays inactive until local receipts/mappings are reconciled; ledger-only backup is not full recovery. |
+| Useful meaning: `utility-03` bleeding warning/urgent-help intent; `utility-04` do-not-stop constraint; `context-01` rare identifying context | Preserve requested meaning and negation, remove identifying context, introduce no unsupported advice. Owner judges semantics locally; lexical fixture checks alone cannot establish this. These are evaluation cases, outside the initial remote pilot. |
+
+Observed here: Python 3.13.15 ran all **51 baseline tests successfully**, with
+`socket.socket.connect` blocked and LOCALAPPDATA redirected to temporary storage.
+`test_review` exercises Tkinter with demo stores: three open holds, displayed reasons,
+worker preview, failed-draft preservation, successful pending-candidate creation,
+dismissal and discard cancellation. `test_holds` covers changed originals, wrong
+account/epoch, read-only PEEK, stale decisions and retry failure. Candidate tests
+cover edits resetting review, conflicting windows, locks and failed atomic saves.
+No manual visual inspection, real queue access, live Qwen run, feature-suite rerun
+or combined-build test occurred in this assessment. Prior handbook model receipts
+are historical evidence, not fresh results from this branch.
+
+### Staged acceptance and owner decisions
+
+1. **Integrated synthetic rehearsal:** integration owner runs the scenarios above
+   and the existing 35-fixture evaluator on a named combined SHA. Require zero
+   unexpected sends, identifier-canary leaks, wrong-source bindings, duplicate
+   results or stale-result acceptance; all expected holds must remain contained.
+   Require all 16 useful evaluator fixtures to retain their meaning groups and
+   all 19 expected refusals to return their exact reason. Record mock and live
+   Qwen outcomes separately; injected failures remain labeled injected.
+2. **Rare-exception usability rehearsal:** owner tries `review.py --demo` and the
+   integrated equivalent. Require correct reason/next action for all three demo
+   holds, successful correction/retry/dismissal without assistance, and preserved
+   work after a failed check/reload. In a separately declared ten-item clean
+   routine synthetic batch, target zero mandatory intervention and at least nine
+   useful results. Record wall-clock time and owner handling time against doing
+   the same ten tasks manually; proceed only if handling time is lower. Count
+   deliberate fault/identifier cases separately: their hold rate cannot estimate
+   how rare real exceptions will be.
+3. **Proposed first real Claude pilot, only after separate owner approval:** one
+   manually initiated session, at most five predeclared, owner-checked synthetic
+   nonclinical workflow requests, one request at a time, summaries/organization
+   suggestions only. Use an explicitly approved provider/model/account and
+   transport with bounded timeouts. Keep results local and inert; no mail intake,
+   replies, provider writes, schedules or automatic retries. Require five useful
+   results, zero duplicate submissions, and a local terminal receipt for every
+   attempt (completed, held, refused or unknown). A timeout/unknown ends the pilot
+   pending reconciliation; do not resend to achieve five successes.
+
+Stop either rehearsal/pilot on any unexpected outbound content, identifier/routing
+leak, source mismatch, stale/rejected result use, duplicate dispatch, lost exception,
+unsupported action, unreconciled delivery or meaning-changing output. Pause new
+submissions, retain private local receipts, handle the item locally, fix and rerun
+the synthetic case before proposing another pilot. No destructive cleanup.
+
+Owner decisions before stage 3: acceptable workload/utility and time-saving target,
+provider/model/account and permitted payload, local retention/result access,
+who reconciles unknown delivery, and the explicit start/stop control. A later
+real-message pilot additionally needs an owner-established de-identification and
+release process, eligible message classes, local privacy review and coordinated
+recovery scope. Neither this plan, review markers nor correlated model passes
+certify privacy/compliance or authorize real-message release.
+
 Project state and boundaries: [AgentHandbook](AgentHandbook.md).
