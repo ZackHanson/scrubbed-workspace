@@ -13,6 +13,7 @@ import uuid
 from email.parser import BytesParser
 from urllib.request import Request, build_opener, ProxyHandler, HTTPRedirectHandler
 from holds import HoldError, HoldStore, account_hash, file_source, validity
+from intake import IntakeLedger, fetch_gmail
 
 MODEL = 'qwen3.5:9b-q4_K_M'
 ENDPOINT = 'http://127.0.0.1:11434'
@@ -176,15 +177,36 @@ def scrub(raw):
 
 def process(raw, source=None):
     ticket = uuid.uuid4().hex
+    ledger = claim = None
+    if source is not None:
+        import hashlib
+        ledger = IntakeLedger(STATE)
+        ticket = ledger.ingest(source, fingerprint=hashlib.sha256(raw).hexdigest())
+        state = ledger.status(ticket)['state']
+        if state == 'completed':
+            ledger.materialize(ticket)
+            return True
+        if state == 'blocked':
+            HoldStore(STATE).create(ticket, ledger.status(ticket)['reason'], source)
+            return False
+        claim = ledger.claim(ticket)
+        if claim is None:
+            return False
     try:
         record = scrub(raw)
     except Exception as error:
         # No model text, source headers, credentials or exception payloads in logs.
         reason = error.code if isinstance(error, Blocked) else 'processing_failed'
+        if claim is not None:
+            ledger.block(claim, reason)
         hold = HoldStore(STATE).create(ticket, reason, source)
         print(f'{hold.ticket}: blocked ({reason}); no candidate saved')
         return False
-    save_candidate(record, STATE, ticket)
+    if claim is not None:
+        ledger.complete(claim, record)
+        ledger.materialize(ticket)
+    else:
+        save_candidate(record, STATE, ticket)
     print(f'{ticket}: needs local review')
     return True
 
@@ -239,29 +261,34 @@ def gmail(limit, report):
             source = ({'kind': 'gmail', 'account_hash': account_hash(address),
                        'uidvalidity': uidvalidity, 'uid': uid.decode('ascii')}
                       if uidvalidity is not None else None)
-            status, sizes = client.uid('fetch', uid, '(RFC822.SIZE)')
-            match = re.search(rb'RFC822.SIZE (\d+)', b' '.join(s for s in sizes if isinstance(s, bytes)))
-            if status != 'OK' or not match or int(match[1]) > MAX_BYTES:
-                print('Blocked oversized or unavailable message')
-                reason = 'oversized' if status == 'OK' and match and int(match[1]) > MAX_BYTES else 'source_unavailable'
-                HoldStore(STATE).create(uuid.uuid4().hex, reason, source)
+            if source is None:
+                HoldStore(STATE).create(uuid.uuid4().hex, 'source_unavailable')
                 report['blocked'] += 1
                 save_status(report)
                 continue
-            status, fetched = client.uid('fetch', uid, '(BODY.PEEK[])')
-            if status != 'OK':
-                print('Blocked unavailable message')
-                HoldStore(STATE).create(uuid.uuid4().hex, 'source_unavailable', source)
+            # Epoch registration precedes any message fetch; changed epochs stop.
+            ledger = IntakeLedger(STATE)
+            ticket = ledger.ingest(source)
+            state = ledger.status(ticket)
+            if state['state'] == 'completed':
+                ledger.materialize(ticket)
+                report['saved_for_review'] += 1
+            elif state['state'] == 'blocked':
+                HoldStore(STATE).create(ticket, state['reason'], source)
                 report['blocked'] += 1
-                save_status(report)
-                continue
-            bodies = [item[1] for item in fetched if isinstance(item, tuple)]
-            if len(bodies) == 1:
-                accepted = process(bodies[0], source)
-                report['saved_for_review' if accepted else 'blocked'] += 1
             else:
-                HoldStore(STATE).create(uuid.uuid4().hex, 'source_unavailable', source)
-                report['blocked'] += 1
+                try:
+                    raw = fetch_gmail(client, source, max_bytes=MAX_BYTES)
+                except HoldError as error:
+                    claim = ledger.claim(ticket)
+                    if claim is not None:
+                        ledger.block(claim, error.code)
+                    HoldStore(STATE).create(ticket, error.code, source)
+                    report['blocked'] += 1
+                    save_status(report)
+                    continue
+                accepted = process(raw, source)
+                report['saved_for_review' if accepted else 'blocked'] += 1
             save_status(report)
         report['stage'] = 'logging_out'
         save_status(report)
