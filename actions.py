@@ -185,6 +185,13 @@ class ActionStore:
             db.execute('INSERT OR IGNORE INTO sources VALUES (?,?,?)',
                        (source, source_version, candidate_id))
 
+    def candidate_version(self, candidate_id):
+        """Local compare-and-swap context; no source reference or content."""
+        _id(candidate_id)
+        with self._transaction() as db:
+            row = db.execute('SELECT version FROM candidates WHERE id=?', (candidate_id,)).fetchone()
+            return row[0] if row else None
+
     @staticmethod
     def _current(db, candidate_id, candidate_version):
         row = db.execute('SELECT * FROM candidates WHERE id=?', (candidate_id,)).fetchone()

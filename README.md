@@ -111,3 +111,9 @@ Forwarding to a second account and connecting Claude remain unimplemented until
 the review and de-identification requirements are established.
 
 Project state and boundaries: [AgentHandbook](AgentHandbook.md).
+
+Manual integration demo: `python shadow_workflow.py demo`. This uses a built-in
+synthetic email, mocked local-model responses, temporary storage and blocked
+sockets. Shadow never invokes transport. A separate fake-adapter test captures
+an inert local proposal; real Claude and email delivery remain inactive.
+See [workflow contract and dependencies](SHADOW_WORKFLOW.md).

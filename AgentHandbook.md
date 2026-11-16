@@ -50,6 +50,30 @@ through a cloud agent. Use --demo and temporary stores for automated UI testing.
 
 ## Current work
 
+### November 16 integrated shadow workflow (task worktree)
+
+Work is isolated on feature/integrated-shadow-workflow from owner-approved local
+base 466de50eee9d7cae10d41c74d9f00672f61ae578. All six specified track heads were
+merged with their full histories, including adapter prerequisite 65f5234. No
+unfinished evaluator or UX branch was merged. No remote fetch, origin/trust/global
+configuration change, real mailbox read, live inference or delivery was performed.
+
+The manually invoked integration now connects durable intake, checked model
+provenance, shadow routing and private local action bindings. Shadow never calls
+an adapter. A separate constant-fixture fake adapter test captures durable results
+and produces inert local proposals. Twenty-one integration tests pass,
+covering duplicates, stale evidence/candidates/sources, hard process death,
+timeouts, intake materialization recovery and adapter/result capture restart.
+Final combined verification: `python verify_synthetic.py` passed all 180 tests
+with sockets blocked and LOCALAPPDATA redirected to temporary state. The temporary
+CLI demo passed with one shadow classification, zero duplicate attempts and one
+separately authorized fake result/local proposal. No live model was tested.
+GitHub confirms private source, main/default at the approved base, main unprotected,
+zero Actions workflows, hooks and deployments. Security settings were not changed.
+Source-only draft publication is next; no automatic merge is authorized here.
+Expanded/live-Qwen evaluation, legacy desktop retry-to-ledger wiring, pilot UX,
+release/provider qualification and full private-state recovery remain dependencies.
+
 Initial implementation on feature/local-email-scrubber in the existing T3 root.
 Installed local model discovered successfully. All 15 synthetic unit tests passed.
 Live Qwen synthetic email test removed the tested name, date of birth, record number,

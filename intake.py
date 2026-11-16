@@ -244,6 +244,13 @@ class IntakeLedger:
             row = db.execute('SELECT state,attempts,reason FROM item WHERE ticket=?', (ticket,)).fetchone()
             return dict(row) if row else None
 
+    def original_candidate_digest(self, ticket):
+        """Exact materialized byte version, for local edit/restart detection."""
+        with self._db() as db:
+            row = db.execute("SELECT result FROM item WHERE ticket=? AND state='completed'",
+                             (ticket,)).fetchone()
+            return hashlib.sha256(row[0].encode('utf-8')).hexdigest() if row else None
+
     def work_tickets(self):
         """Opaque pending/expired jobs for local operations; no blocked retries."""
         with self._db() as db:

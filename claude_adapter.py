@@ -46,6 +46,11 @@ def payload_digest(payload):
     return _digest(_payload(payload))
 
 
+def submission_key(payload):
+    """Stable local correlation key; never an authorization token."""
+    return _digest({'adapter': 'claude-v1', 'candidate_digest': payload_digest(payload)})
+
+
 def decision_digest(decision):
     if (type(decision) is not dict
             or set(decision) != {'eligible', 'mode', 'candidate_digest', 'policy_version'}
@@ -71,12 +76,12 @@ def _action_result(value):
                 or type(action['kind']) is not str
                 or action['kind'] not in {'summarize', 'suggest_organization', 'draft_reply'}
                 or type(action['text']) is not str or not action['text'].strip()
-                or len(action['text']) > 128 * 1024):
+                or len(action['text']) > 128_000):
             raise ContractError('invalid_response')
         actions.append(action.copy())
     result = {'schema_version': 1, 'actions': actions}
     if len(json.dumps(result, sort_keys=True, ensure_ascii=True,
-                      separators=(',', ':')).encode('ascii')) > 128 * 1024:
+                      separators=(',', ':')).encode('ascii')) > 128_000:
         raise ContractError('invalid_response')
     return result
 
@@ -128,15 +133,41 @@ class ClaudeAdapter:
         with closing(sqlite3.connect(self.ledger_path, timeout=0.1)) as db, db:
             db.execute('CREATE TABLE IF NOT EXISTS submissions '
                        '(key TEXT PRIMARY KEY, status TEXT NOT NULL)')
+            columns = {row[1] for row in db.execute('PRAGMA table_info(submissions)')}
+            for name in ('result', 'stop_reason'):
+                if name not in columns:
+                    db.execute('ALTER TABLE submissions ADD COLUMN ' + name + ' TEXT')
             try:
-                db.execute('INSERT INTO submissions VALUES (?, ?)', (key, 'unknown'))
+                db.execute('INSERT INTO submissions(key,status) VALUES (?, ?)', (key, 'unknown'))
             except sqlite3.IntegrityError:
                 return False
         return True
 
-    def _finish(self, key, status):
+    def _finish(self, key, result):
         with closing(sqlite3.connect(self.ledger_path, timeout=0.1)) as db, db:
-            db.execute('UPDATE submissions SET status=? WHERE key=?', (status, key))
+            db.execute('UPDATE submissions SET status=?,result=?,stop_reason=? WHERE key=?',
+                       (result.status, json.dumps(result.result) if result.result else None,
+                        result.stop_reason, key))
+
+    def captured(self, key):
+        """LOCAL sensitive result recovery; never invokes or retries transport.
+
+        Legacy ledgers lack result bytes and cannot reconstruct past responses.
+        Only complete end_turn results can become proposals.
+        """
+        if type(key) is not str or not re.fullmatch('[0-9a-f]{64}', key):
+            raise ContractError('invalid_submission')
+        try:
+            with closing(sqlite3.connect(self.ledger_path.resolve().as_uri() + '?mode=ro',
+                                        uri=True)) as db:
+                row = db.execute('SELECT status,result,stop_reason FROM submissions WHERE key=?',
+                                 (key,)).fetchone()
+            if not row or row[0] != 'completed' or row[2] != 'end_turn':
+                raise ContractError('result_unavailable')
+            return AdapterResult('completed', 'response_captured', key,
+                                 _action_result(json.loads(row[1])), row[2])
+        except (OSError, sqlite3.Error, ValueError, TypeError):
+            raise ContractError('result_unavailable') from None
 
     def submit(self, payload, decision, *, expected_candidate_digest, expected_decision_digest):
         if not self.config.enabled:
@@ -159,7 +190,7 @@ class ClaudeAdapter:
             return AdapterResult('disabled', 'transport_missing')
         # One submission per content even if a policy decision changes. This
         # conservative rule prevents a new decision from bypassing an unknown send.
-        key = _digest({'adapter': 'claude-v1', 'candidate_digest': candidate})
+        key = submission_key(content)
         try:
             if not self._reserve(key):
                 return AdapterResult('duplicate', 'already_reserved', key)
@@ -194,7 +225,7 @@ class ClaudeAdapter:
         except RuntimeError:
             result = AdapterResult('unknown', 'worker_unavailable', key)
         try:
-            self._finish(key, result.status)
+            self._finish(key, result)
         except (OSError, sqlite3.Error):
             # The durable reservation still prevents a retry. A response may
             # exist locally, but persistence could not confirm the final state.

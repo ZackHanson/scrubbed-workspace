@@ -98,6 +98,27 @@ def ensure_local_model():
     details = api('/api/show', {'model': MODEL})
     if details.get('remote_host') or details.get('remote_model'):
         raise Blocked('model_error')
+    digest = selected.get('digest')
+    if not isinstance(digest, str) or not re.fullmatch(r'[0-9a-f]{64}', digest):
+        raise Blocked('model_error')
+    return digest
+
+
+def scrub_checked(raw):
+    """Local provenance only, issued after both checks and stable model identity.
+
+    Legacy scrub callers still return candidates without release evidence.
+    Import here avoids the routing/scrubber module dependency during startup.
+    """
+    from routing import CheckEvidence, VALIDATOR_VERSION, content_digest
+    before = ensure_local_model()
+    if type(before) is not str or not re.fullmatch(r'[0-9a-f]{64}', before):
+        raise Blocked('model_error')
+    record = scrub(raw)
+    if ensure_local_model() != before:
+        raise Blocked('model_error')
+    return record, CheckEvidence(content_digest(record), VALIDATOR_VERSION,
+                                 MODEL, before, 'pass', 'pass')
 
 
 def llm(system, data, schema):
