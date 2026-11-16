@@ -121,21 +121,7 @@ class Reviewer:
         return candidate
 
     def _safe(self, ticket, candidate):
-        path = self.root / 'operations' / 'operations.sqlite3'
-        keys = [ticket]
-        if candidate:
-            keys.append(hashlib.sha256((ticket + candidate.digest + routing.VALIDATOR_VERSION)
-                                       .encode()).hexdigest()[:32])
-        if path.exists():
-            with closing(sqlite3.connect(path)) as db:
-                for key in keys:
-                    row = db.execute('SELECT state FROM jobs WHERE key=?', (key,)).fetchone()
-                    if row and row[0] in ('claimed', 'uncertain', 'retry'):
-                        raise HoldError('reconciliation_required')
-        with closing(sqlite3.connect(self.workflow.path)) as db:
-            if db.execute("SELECT 1 FROM review_revisions WHERE ticket=? AND state IN ('checking','unknown')",
-                          (ticket,)).fetchone():
-                raise HoldError('reconciliation_required')
+        self.workflow.require_reconciled(ticket, candidate)
 
     @state_mutation('root')
     def retry(self, snapshot):

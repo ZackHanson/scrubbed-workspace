@@ -33,6 +33,7 @@ from pathlib import Path
 import re
 import sqlite3
 from types import MappingProxyType
+from result_v1 import canonical_result, KINDS, MAX_RESULT_BYTES
 
 from holds import valid_source
 from state_access import state_context, state_mutation
@@ -46,8 +47,6 @@ CAPABILITIES = MappingProxyType({
     'third_party_message': False,
     'medical_care': False,
 })
-KINDS = frozenset({'summarize', 'suggest_organization', 'draft_reply'})
-MAX_RESULT_BYTES = 128_000
 
 
 class ActionError(Exception):
@@ -82,19 +81,10 @@ def _json(value):
 
 
 def _result(result):
-    if (type(result) is not dict or set(result) != {'schema_version', 'actions'}
-            or type(result['schema_version']) is not int or result['schema_version'] != 1
-            or type(result['actions']) is not list or not 1 <= len(result['actions']) <= 20):
-        _fail('invalid_result')
-    for action in result['actions']:
-        if (type(action) is not dict or set(action) != {'kind', 'text'}
-                or type(action['kind']) is not str or action['kind'] not in KINDS
-                or type(action['text']) is not str or not action['text'].strip()):
-            _fail('invalid_result')
-    encoded = _json(result)
-    if len(encoded.encode('utf-8')) > MAX_RESULT_BYTES:
-        _fail('result_too_large')
-    return encoded
+    try:
+        return canonical_result(result)
+    except ValueError as error:
+        _fail(str(error))
 
 
 def result_digest(result):

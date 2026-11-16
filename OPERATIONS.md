@@ -53,8 +53,8 @@ directories without symlink/junction redirection or other concurrent writers.
 Adapters must not log raw messages, identifying routing, credentials or exception
 payloads. Adapter calls are synchronous; cycle/item bounds do not preempt a hung
 adapter. The adapter must implement request timeouts and cancellation. This module
-does not call the baseline global-state `scrubber.gmail()` or `process()` helpers;
-intake/routing adapter wiring is an integration dependency.
+is driven by ShadowWorkflow; file/Gmail commands also use that canonical path.
+There is no independent legacy processing pipeline.
 
 ## Interrupted work
 
@@ -81,37 +81,18 @@ retention and recovery before adding pruning. The ledger has a configured capaci
 and fails closed for new operations when full. Keep backups and operational
 exceptions until the owner establishes a retention policy; do not delete real data.
 
-`backup(folder, destination)` creates an exclusive new SQLite snapshot under the
-runner lock and verifies integrity. It includes only this operations ledger:
-opaque IDs, attempts, due/updated times, fixed states and restore metadata. It
-excludes adjacent files, credentials, lock files and all candidate/message data.
-Keep the snapshot in an approved private local backup destination outside Git;
-this code performs no upload, cloud backup, encryption setup or schedule change.
-Private source mappings, source cursors, candidates, holds, routing/delivery
-receipts and reviewer edits require their owners' coordinated backup mechanisms.
-This snapshot alone cannot restore the full email system. Existing backup policy
-and destinations are unchanged.
+Use `recovery.snapshot`, `recovery.restore` and `recovery.acknowledge_restore`
+from [RECOVERY.md](RECOVERY.md) for coordinated private-state recovery, including
+this operations ledger. The former operations-only SQLite snapshot format and
+its backup/restore/activation APIs are retired. There is no conversion or runtime
+migration. Old `restore_pending` metadata still refuses execution; removing an API
+does not grant permission to activate an old partial recovery.
 
-`restore(snapshot, fresh_directory)` refuses an existing destination, checks the
-database identity/version/integrity, and restores into a fresh directory only.
-The restored runner is blocked by `restore_pending`. Reconcile source/adapter
-receipts and potentially newer outcomes first, then explicitly call
-`acknowledge_restore(folder)`. Claimed records still recover to uncertain after
-acknowledgement. Never acknowledge a restored older ledger against newer sources
-without checking duplicates, including previously terminal IDs absent in the old
-snapshot. A fresh restore test covers ledger integrity, inactivity and preserved
-deduplication using temporary synthetic state; it makes no full-system or real
-private-state recovery claim.
+## Validation
 
-## Validation and source status
-
-Run `PYTHONDONTWRITEBYTECODE=1 python -m unittest -v` (set the environment variable
-using your shell). Tests use temporary synthetic state and fake credentials only.
-Validation on November 16: all 68 tests passed (51 baseline plus 17 operations),
-with sockets blocked and LOCALAPPDATA redirected to temporary storage. The process
-exit test crashes a synthetic child to verify kernel-lock release and durable
-claim recovery; the fresh-restore tests verify default inactivity and deduplication.
-Implementation is based on local baseline
-`c07001746060b4c53054fb42d61c451a4043e2a9`. Shared handbook/publication ownership
-stays with source setup. PR integration awaits its approved base bootstrap.
-No real intake, Claude delivery, notifications, schedules or services are activated.
+`python -B verify_synthetic.py` verifies the combined implementation with sockets
+blocked and temporary state. Operations tests cover bounded batches, retries,
+deduplication, uncertainty, process death and lock release. Coordinated recovery
+tests cover inactivity before acknowledgement, restored operation claims and
+receipts, unknown reservations and all supported state. No real intake, provider,
+notifications, schedules or services are activated.

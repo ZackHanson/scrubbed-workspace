@@ -176,6 +176,26 @@ class ShadowWorkflow:
             path.unlink(missing_ok=True)
 
     @state_mutation('root')
+    def require_reconciled(self, ticket, candidate):
+        path = self.root / 'operations' / 'operations.sqlite3'
+        keys = [ticket]
+        if candidate:
+            keys.append(hashlib.sha256((ticket + candidate.digest + routing.VALIDATOR_VERSION)
+                                       .encode()).hexdigest()[:32])
+        if path.exists():
+            with closing(sqlite3.connect(path)) as db:
+                for key in keys:
+                    row = db.execute('SELECT state FROM jobs WHERE key=?', (key,)).fetchone()
+                    if row and row[0] in ('claimed', 'uncertain', 'retry'):
+                        raise HoldError('reconciliation_required')
+        with closing(sqlite3.connect(self.path)) as db:
+            if not db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='review_revisions'").fetchone():
+                return
+            if db.execute("SELECT 1 FROM review_revisions WHERE ticket=? AND state IN ('checking','unknown')",
+                          (ticket,)).fetchone():
+                raise HoldError('reconciliation_required')
+
+    @state_mutation('root')
     def current(self, ticket):
         """Recheck versions/source/model/age immediately before local consumption."""
         with self._candidate_lock(ticket):

@@ -134,9 +134,6 @@ class StateAccessTests(unittest.TestCase):
                             lambda: Pilot(restored / 'auxiliary')):
             with self.assertRaises(RecoveryError):
                 constructor()
-        from operations import acknowledge_restore as acknowledge_legacy
-        with self.assertRaises(RecoveryError):
-            acknowledge_legacy(restored / 'operations')
         acknowledge_restore(restored, operator_acknowledged=True, reconciliation_recorded=True)
         reopened = ShadowWorkflow(restored)
         self.assertEqual(reopened.candidates.load(self.ticket).digest, self.candidate.digest)

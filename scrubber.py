@@ -13,7 +13,7 @@ import uuid
 from email.parser import BytesParser
 from urllib.request import Request, build_opener, ProxyHandler, HTTPRedirectHandler
 from holds import HoldError, HoldStore, account_hash, file_source, validity
-from intake import IntakeLedger, fetch_gmail
+from intake import fetch_gmail
 from state_access import state_mutation
 
 MODEL = 'qwen3.5:9b-q4_K_M'
@@ -135,7 +135,7 @@ def ensure_local_model():
 def scrub_checked(raw):
     """Local provenance only, issued after both checks and stable model identity.
 
-    Legacy scrub callers still return candidates without release evidence.
+    scrub() is the pure model gate; persistent imports use this checked wrapper.
     Import here avoids the routing/scrubber module dependency during startup.
     """
     from routing import CheckEvidence, VALIDATOR_VERSION, content_digest
@@ -224,41 +224,59 @@ def scrub(raw):
     return {'status': 'needs_local_review', **candidate}
 
 
+def _workflow(source_reader=None):
+    # Runtime import: workflow/reviewer depend on the scrubber's pure model gates.
+    from holds import read_source
+    from shadow_workflow import ShadowWorkflow
+    return ShadowWorkflow(STATE, source_reader=source_reader or read_source,
+                          check=scrub_checked, model_digest=ensure_local_model)
+
+
 @state_mutation(lambda *args, **kwargs: STATE)
-def process(raw, source=None):
-    ticket = uuid.uuid4().hex
-    ledger = claim = None
-    if source is not None:
-        import hashlib
-        ledger = IntakeLedger(STATE)
-        ticket = ledger.ingest(source, fingerprint=hashlib.sha256(raw).hexdigest())
-        state = ledger.status(ticket)['state']
-        if state == 'completed':
-            ledger.materialize(ticket)
-            return True
-        if state == 'blocked':
-            HoldStore(STATE).create(ticket, ledger.status(ticket)['reason'], source)
-            return False
-        claim = ledger.claim(ticket)
-        if claim is None:
-            return False
-    try:
-        record = scrub(raw)
-    except Exception as error:
-        # No model text, source headers, credentials or exception payloads in logs.
-        reason = error.code if isinstance(error, Blocked) else 'processing_failed'
-        if claim is not None:
-            ledger.block(claim, reason)
-        hold = HoldStore(STATE).create(ticket, reason, source)
-        print(f'{hold.ticket}: blocked ({reason}); no candidate saved')
+def process(raw, source=None, *, source_reader=None, workflow=None):
+    """Run the canonical durable shadow pipeline; never authorize submission.
+
+    A source binding is required. Unbound bytes cannot acquire managed evidence.
+    The optional local reader allows an already signed-in Gmail connection (or
+    invented test source) to recheck bytes without another credential flow.
+    """
+    from shadow_workflow import WorkflowError
+    import hashlib
+
+    if source is None:
+        hold = HoldStore(STATE).create(uuid.uuid4().hex, 'source_unavailable')
+        print(f'{hold.ticket}: blocked (source_unavailable); no candidate saved')
         return False
-    if claim is not None:
-        ledger.complete(claim, record)
-        ledger.materialize(ticket)
-    else:
-        save_candidate(record, STATE, ticket)
-    print(f'{ticket}: needs local review')
-    return True
+    workflow = workflow or _workflow(source_reader)
+    if workflow.poisoned:
+        raise WorkflowError('restart_required')
+    ticket = workflow.intake.ingest(source, fingerprint=(
+        hashlib.sha256(raw).hexdigest() if raw is not None else None))
+    source = workflow.intake.private_source(ticket)['source']
+    state = workflow.intake.status(ticket)
+    if state['state'] == 'blocked':
+        # Repair a failed hold publication without repeating computation. An
+        # uncertain operations receipt still requires explicit reconciliation.
+        HoldStore(STATE).create(ticket, state['reason'], source)
+        return False
+    report = workflow.run([ticket])
+    if workflow.poisoned:
+        # A timed-out worker can still own source/model I/O. Stop the batch.
+        raise WorkflowError('restart_required')
+    accepted = (not report.uncertain and not report.deferred and not report.exceptions
+                and not report.intake_errors
+                and workflow.intake.status(ticket)['state'] == 'completed')
+    if accepted:
+        # Includes deduplicated calls: old/rejected/edited/expired candidates
+        # cannot become successful imports by replaying their intake receipt.
+        try:
+            workflow.require_reconciled(ticket, workflow.candidates.load(ticket))
+            accepted = workflow.current(ticket)[1].outcome == 'WOULD_SEND'
+        except HoldError as error:
+            HoldStore(STATE).create(ticket, error.code, source)
+            accepted = False
+    print(f'{ticket}: ' + ('needs local review' if accepted else 'held; inspect local status'))
+    return accepted
 
 
 @state_mutation(lambda record, folder, ticket=None: folder)
@@ -310,6 +328,7 @@ def gmail(limit, report):
         report['stage'] = 'processing'
         save_status(report)
         print(f"Unread: {len(unread)}; selected: {report['selected']}", flush=True)
+        workflow = _workflow(lambda reference: fetch_gmail(client, reference, max_bytes=MAX_BYTES))
         for uid in unread[-limit:]:
             source = ({'kind': 'gmail', 'account_hash': account_hash(address),
                        'uidvalidity': uidvalidity, 'uid': uid.decode('ascii')}
@@ -319,29 +338,10 @@ def gmail(limit, report):
                 report['blocked'] += 1
                 save_status(report)
                 continue
-            # Epoch registration precedes any message fetch; changed epochs stop.
-            ledger = IntakeLedger(STATE)
-            ticket = ledger.ingest(source)
-            state = ledger.status(ticket)
-            if state['state'] == 'completed':
-                ledger.materialize(ticket)
-                report['saved_for_review'] += 1
-            elif state['state'] == 'blocked':
-                HoldStore(STATE).create(ticket, state['reason'], source)
-                report['blocked'] += 1
-            else:
-                try:
-                    raw = fetch_gmail(client, source, max_bytes=MAX_BYTES)
-                except HoldError as error:
-                    claim = ledger.claim(ticket)
-                    if claim is not None:
-                        ledger.block(claim, error.code)
-                    HoldStore(STATE).create(ticket, error.code, source)
-                    report['blocked'] += 1
-                    save_status(report)
-                    continue
-                accepted = process(raw, source)
-                report['saved_for_review' if accepted else 'blocked'] += 1
+            # The workflow registers the epoch before its bounded source read.
+            # Fetch failures become managed intake/hold receipts in the same path.
+            accepted = process(None, source, workflow=workflow)
+            report['saved_for_review' if accepted else 'blocked'] += 1
             save_status(report)
         report['stage'] = 'logging_out'
         save_status(report)
@@ -374,11 +374,13 @@ def main():
         elif args.command == 'gmail':
             gmail(args.limit, report)
         else:
+            workflow = _workflow()
             for path in args.paths:
                 try:
                     with path.open('rb') as original:
                         raw = original.read(MAX_BYTES + 1)
-                    process(raw, file_source(path, raw) if path.suffix.casefold() == '.eml' else None)
+                    process(raw, file_source(path, raw) if path.suffix.casefold() == '.eml' else None,
+                            workflow=workflow)
                 except OSError:
                     HoldStore(STATE).create(uuid.uuid4().hex, 'source_unavailable')
                     print('Blocked unavailable input; see local exceptions.')
@@ -399,4 +401,5 @@ def main():
 
 
 if __name__ == '__main__':
+    sys.modules.setdefault('scrubber', sys.modules[__name__])
     sys.exit(main())

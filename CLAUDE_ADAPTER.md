@@ -50,7 +50,10 @@ Transport response is exactly `{'result': ResultV1, 'stop_reason': str}`. Stop r
 are `end_turn`, `max_tokens`, `refusal`. ResultV1 is exactly
 `{'schema_version': 1, 'actions': [{'kind': KIND, 'text': NONEMPTY_STRING}]}`,
 with 1–20 actions, kinds `summarize`, `suggest_organization`, `draft_reply`, and
-a 128,000-byte limit on compact canonical ASCII JSON, matching actions. Unknown/routing fields are
+a 128,000-byte limit on compact canonical ASCII JSON. `result_v1.canonical_result`
+is the shared pure validator used at both adapter and action-store boundaries.
+Each boundary retains its fixed domain errors; authorization, adapter reservation,
+pilot budget and action version bindings remain separate. Unknown/routing fields are
 rejected at every level. Reply text is body-only; actions validation must also
 check content before proposing it. `AdapterResult` returns status/code/key plus
 the copied untrusted `result` object and stop reason; result is excluded from
@@ -94,6 +97,9 @@ local operator/provider reconciliation workflow and separate release authorizati
 before retries or real delivery can be enabled. This ledger is adapter-specific;
 other schedulers must not automatically retry `unknown` results.
 
-The synthetic harness is the only supplied submission caller. Workflow capture
+The synthetic harness and separately prepared five-fixture pilot are the supplied
+submission callers. The owner selected preparation without requests; Claude
+is only the eventual final consumer of already-scrubbed emails, with no upstream
+connection to intake, validation, review, routing, storage or recovery. Workflow capture
 reads this local ledger without submitting. Remote calls, real releases, reply
 sending and background schedules remain inactive. See [integration](SHADOW_WORKFLOW.md).

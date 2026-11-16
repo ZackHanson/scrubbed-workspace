@@ -17,8 +17,8 @@ The adapter defaults to disabled and has no real provider client.
 ## Local API and durable boundaries
 
 `ShadowWorkflow(private_folder)` creates local stores, so callers must explicitly
-choose approved private storage outside source control. The CLI intentionally
-accepts no live folder/source.
+choose approved private storage outside source control. The demo CLI accepts no live folder/source. Owner-local file/Gmail commands
+use this same workflow, with Gmail supplying its signed-in bounded source reader.
 
 1. `register(source)` durably deduplicates private identity without reading mail.
    `run([ticket, ...])` accepts at most 100 explicitly selected tickets, using the
@@ -27,7 +27,7 @@ accepts no live folder/source.
 2. Intake claims a fenced lease. The reader checks original bytes against the
    private binding; the default reader supports local files. Gmail requires an
    explicitly supplied local reader using intake's bounded UID/PEEK contract and
-   memory-only local sign-in. No Gmail reader is activated here.
+   memory-only local sign-in. The Gmail command supplies its existing readonly connection as that reader.
 3. `scrub_checked` verifies local-only model identity and its SHA-256 digest before
    and after both existing model gates. Evidence is issued only after success,
    bound to exact subject/body and validator version. Failures still block
@@ -101,16 +101,17 @@ connections and use temporary synthetic state. Mocked success proves contracts
 only; expanded live-Qwen outcomes and their exact evaluated revision are recorded
 separately in evaluation/LIVE_RESULTS.md.
 
-Legacy scrubber commands and legacy desktop entries retain their local-review
-behavior. Their candidates lack integrated evidence and HOLD; opening the reviewer
-does not adopt them. Managed desktop entries now use the coordinator below.
-No mailbox discovery, automatic
-hold retry, thread-context injection, real-store migration, service, email action
-or Claude delivery is activated. Pilot UX, provider selection, separately
-authorized release policy, privacy/utility qualification and local operator
-reconciliation remain outstanding. Operations backup covers only its own ledger;
-full private-state backup/restore is not implemented or claimed. Existing backups
-and schedules are unchanged.
+File/Gmail scrubber commands use this canonical workflow, including checked
+provenance and managed reviewer lifecycle. Source-less calls block rather than
+manufacturing a binding. Preexisting legacy candidates retain local-only review;
+missing evidence HOLDs, and opening the UI does not adopt them. No real-store
+migration, automatic hold retry, thread-context injection, service, email action
+or Claude delivery is activated. Claude's only eventual role is the final consumer
+of already-scrubbed email; all upstream work remains local. Pilot preparation
+submits no requests. Provider/release and broader privacy/utility qualification
+remain separate. Use coordinated recovery.py (RECOVERY.md); the operations-only
+snapshot format and activation APIs are retired. Existing backups/schedules stay
+unchanged.
 
 Explicit `workflow.intake.retry(ticket)` increments a durable retry generation
 only when it requeues blocked intake. `run` passes that generation to operations,
@@ -153,6 +154,6 @@ managed synthetic exceptions without reading live storage or calling a model.
 Interrupted model computation remains checking/unknown and requires explicit local
 operator reconciliation; the UI offers no reset that could bypass it. Do not delete
 receipts or locks to force a retry. Full private-state recovery remains separate:
-the operations-ledger snapshot does not cover review revisions, candidates, holds,
-intake, evidence, revoked requests or action/result stores. No real-store migration,
+use recovery.py for coordinated snapshots including review revisions, candidates,
+holds, intake, evidence, revoked requests and action/result stores. No real-store migration,
 production transport, automatic release or scheduled operation is enabled.

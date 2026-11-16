@@ -80,22 +80,27 @@ There is no automatic header linking or context injection into model prompts yet
 
 ## Existing CLI integration and remaining seams
 
-`scrubber.process(raw, source=None)` still returns bool. Source-backed calls now
-deduplicate inference and candidate writes. Source-less legacy calls retain their
-existing behavior. Completed duplicates return True; blocked/busy duplicates
-return False, so existing report counters describe outcomes, not newly created
-files. Gmail retains readonly INBOX selection and requests `(UID BODY.PEEK[])`;
-explicit returned UIDs, sizes, and UIDVALIDITY before/after fetch are checked.
-Missing epochs block before fetching. Failed fetches become durable blocked jobs.
+`scrubber.process(raw, source=None, source_reader=..., workflow=...)` returns bool through
+ShadowWorkflow's single durable shadow path. Source-backed imports persist checked
+model provenance before candidate publication. Missing source bindings create a
+local source-unavailable hold; they cannot produce managed candidates. The optional
+local reader supports an already signed-in Gmail connection and synthetic tests.
+Passing `raw=None` reads through that reader after epoch registration. Supplied
+bytes bind the input digest; every computation/freshness read uses the source
+reader. Launchers retain one workflow per batch; computation timeout stops the
+batch with a fixed restart-required error. A caller-supplied workflow is the same
+implementation, allowing bounded synthetic configuration without another pipeline.
+Completed duplicates recheck current eligibility without repeating inference;
+blocked/busy/uncertain/rejected/edited/missing-evidence items return False. Counters
+describe outcomes, not newly created files. Gmail retains readonly INBOX selection
+and bounded UID/UIDVALIDITY/size/BODY.PEEK checks. Fetch failures become managed
+blocked jobs. No transport is reachable from this path.
 
-`triage.recheck` remains unchanged: it creates a new candidate before resolving
-its hold. The integration owner must replace that seam with an explicit ledger
-retry/completion path, preserve the stable intake ticket, and define separate
-derived identities for edited drafts. Until then reviewer retries do not appear
-as ledger successes, and their pre-existing cross-file crash gap remains. Do not
-bind those independently generated IDs to the original intake source in actions.
-Hold dismissal/rejection also needs operations reconciliation; this module does
-not add UI hooks or auto-release behavior.
+Managed `triage` review uses review_workflow.Reviewer: explicit retries retain
+intake tickets and retry generations, checked corrections use separate revision
+IDs, and edits/rejections revoke evidence/request/action bindings. Legacy entries
+retain local-only review; no existing data is migrated or evidence manufactured.
+Uncertain operations still require proof-based reconciliation.
 
 Schema version is SQLite `user_version=1`: mailbox epoch registry; item identity,
 fingerprint, state, lease token/expiry, attempts, scrubbed result, fixed reason,
