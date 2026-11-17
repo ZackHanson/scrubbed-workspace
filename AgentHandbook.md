@@ -50,11 +50,15 @@ through a cloud agent. Use --demo and temporary stores for automated UI testing.
 
 ## Current work
 
-November 17: Added SETUP-PLAYBOOK.md for another user's assisting model to set up
-an independent installation from approved source. Includes local runtime setup,
-synthetic acceptance checks, owner-only real intake/review, storage boundaries,
-troubleshooting and a copyable handoff prompt. README links to it. Describes the
-existing prototype; no automatic release, Claude delivery or runtime changes.
+November 17: SETUP-PLAYBOOK.md is a complete implementation/installation brief
+for another user's coding model, including automatic intake, local redaction and
+release policy, Claude processing, separate results/chat workspace, actions/replies,
+background operation, secure enrollment and recovery. Owner clarified that the
+playbook must deliver the full independent system, not reproduce this prototype.
+Approved source is optional; the model is instructed to build missing components.
+Includes module contracts, a target operator CLI, full acceptance tests and live
+activation/handoff criteria. README links to it. These documentation changes do
+not implement or activate those components on this machine.
 
 Initial implementation on feature/local-email-scrubber in the existing T3 root.
 Installed local model discovered successfully. All 15 synthetic unit tests passed.

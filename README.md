@@ -7,8 +7,11 @@ remain pending local review; automatic routing and Claude delivery are not enabl
 
 Requires Python 3.13 and the installed local `qwen3.5:9b-q4_K_M` model.
 
-To set up a separate installation with another assisting model, use the
-[setup playbook](SETUP-PLAYBOOK.md), including its copyable handoff prompt.
+To have another coding model build and install a complete independent system,
+use the [full-system playbook](SETUP-PLAYBOOK.md). It covers automatic intake,
+local scrubbing and routing, Claude processing, a separate results workspace,
+actions/replies, background operation and recovery, including components beyond
+this prototype and a copyable implementation prompt.
 
 ```powershell
 python scrubber.py check
