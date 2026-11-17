@@ -60,6 +60,12 @@ Includes module contracts, a target operator CLI, full acceptance tests and live
 activation/handoff criteria. README links to it. These documentation changes do
 not implement or activate those components on this machine.
 
+Owner further clarified that recipient systems/models vary. The playbook now
+requires hardware/OS/workload inspection, measured local-model/runtime selection
+and tuning, native platform integration and a recorded installation profile.
+Reference model tags and Windows/Python/Ollama settings are examples, not universal
+requirements. Privacy and complete-workflow acceptance requirements remain fixed.
+
 Initial implementation on feature/local-email-scrubber in the existing T3 root.
 Installed local model discovered successfully. All 15 synthetic unit tests passed.
 Live Qwen synthetic email test removed the tested name, date of birth, record number,

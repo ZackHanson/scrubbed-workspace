@@ -11,7 +11,9 @@ To have another coding model build and install a complete independent system,
 use the [full-system playbook](SETUP-PLAYBOOK.md). It covers automatic intake,
 local scrubbing and routing, Claude processing, a separate results workspace,
 actions/replies, background operation and recovery, including components beyond
-this prototype and a copyable implementation prompt.
+this prototype and a copyable implementation prompt. The setup model must inspect
+each recipient's system and select/test suitable local models, runtimes and settings;
+the prototype's Windows/Python/Ollama choices are reference details.
 
 ```powershell
 python scrubber.py check

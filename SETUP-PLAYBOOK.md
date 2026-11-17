@@ -11,10 +11,23 @@ and handles permitted actions through local controls. Human attention is reserve
 for exceptions and actions outside the owner's standing policy. A manual scrubber,
 a mocked Claude connection or a written architecture is not the completed result.
 
+This playbook defines outcomes and privacy requirements across different systems.
+The setup model must choose and validate the implementation best suited to the
+recipient's actual hardware, operating system, existing software and workload.
+Named products, model tags, paths and commands are examples or reference-source
+details unless explicitly required by the recipient. Do not copy the original
+installation's choices merely because they worked on that computer.
+
 ## Copy this instruction to the model doing the setup
 
 > Build, install and verify my complete Scrubbed Workspace using this playbook.
 > Reuse approved source if available; implement missing components yourself.
+> Inspect my actual system first. Choose, install and tune a suitable local model,
+> inference runtime, application stack and background service for my hardware,
+> operating system and workload. Compare realistic options with synthetic tests;
+> optimize privacy, redaction quality, usefulness, responsiveness and reliability
+> within my resource and cost limits. Do not assume the largest model is best or
+> copy the reference machine's model/settings. Explain and record your choices.
 > Continue through intake, local redaction, automatic routing, Claude processing,
 > result capture, actions/replies, background operation and recovery. Give me a
 > usable workspace and operating instructions. Use synthetic data for development
@@ -36,12 +49,12 @@ password in chat.
 
 | Choice | Default or decision needed |
 | --- | --- |
-| Host | Dedicated or approved native Windows computer; adapt installation for macOS/Linux if requested. |
-| Source mail | Gmail, with a locally configured account and selected folder/label. Another provider needs its own tested adapter. |
+| Host | Inspect the recipient's actual OS and hardware; use that approved host and its native capabilities. No Windows requirement. |
+| Source mail | Use the recipient's selected provider and folder/label with a tested adapter and supported authentication. Gmail below is an example. |
 | Intake scope | New messages after an explicit start point; backfill is a separate bounded choice. |
-| Local model | Ollama on numeric loopback; use `qwen3.5:9b-q4_K_M` when available and adequate. Validate any replacement. |
+| Local model | Select a fully local model, quantization and runtime using the system inspection and synthetic evaluation in section 4. No fixed model requirement. |
 | Claude | Recipient's Anthropic API project, approved model and spending ceiling. Confirm API access/billing separately from any chat subscription. |
-| Workspace | Local desktop application with scrubbed tasks, results, follow-up chat and exceptions. Optional dedicated scrubbed mailbox mirror. |
+| Workspace | Choose a usable desktop or protected local web application suited to the host, with tasks, results, follow-up chat and exceptions. Optional scrubbed mailbox mirror. |
 | Processing policy | Eligible work categories, excluded content, de-identification requirements and automatic-release rules. |
 | Action policy | Automatic local task/draft updates; external sends only under explicit, bounded standing rules or individual approval. |
 | Operations | Poll interval, daily budget, startup behavior, private retention and encrypted backup destination. |
@@ -120,60 +133,108 @@ Suggested module ownership boundaries for a new implementation:
 | `intake` | Mail authentication, cursors, source identity and bounded imports |
 | `local_scrub` | Safe MIME parsing, generalization, identifier checks, local audit |
 | `policy` | Versioned deterministic routing and release/action rules |
-| `store` | SQLite migrations, source map, task state, leases, transactional outboxes |
+| `store` | Transactional storage/migrations, source map, task state, leases and outboxes |
 | `cloud` | Narrow Claude transport, payload validation, response validation |
 | `workspace` | Scrubbed tasks/results/chat and separate local exception preview |
 | `actions` | Local routing, approval binding, outbound delivery and reconciliation |
 | `worker` | Polling, recovery, budgets, health and pause controls |
 | `setup` | Secure account enrollment, installation, diagnostics and uninstall |
 
-Python 3.13, Tkinter and SQLite are a practical Windows starting point. Use an
-isolated virtual environment and pin any added dependencies. The reference
-prototype uses only the standard library; a full build may add official provider
-SDKs, OAuth and OS credential-store integration. Include a dependency lockfile,
-configuration schema, migrations, installers, synthetic fixtures and operator docs.
+Choose a maintained application stack supported by the recipient's OS and existing
+environment. Python, Tkinter and SQLite are reference options, not requirements.
+If reusing the Python 3.13 prototype, verify compatibility before changing its
+runtime. Use isolated dependencies and pin versions. A full build may add official
+provider SDKs, OAuth and OS credential-store integration. Include dependency locks,
+configuration schemas, migrations, installers, synthetic fixtures and operator docs.
 
-## 4. Install the local runtime
+## 4. Inspect, select and optimize for the actual system
 
-Install Python with Tkinter from [Python for Windows](https://www.python.org/downloads/windows/)
-and Ollama from [Ollama for Windows](https://docs.ollama.com/windows), using the
-recipient's installation policy. Verify locally:
+### Inspect before selecting a model
 
-```powershell
-python --version
-python -c "import tkinter, sqlite3; print('Local UI and database available')"
-ollama --version
-```
+Use read-only system tools to determine OS/version and CPU architecture, available
+RAM, CPU capabilities, GPU type, usable dedicated or unified memory, supported
+acceleration/drivers, free disk space, power/thermal constraints and existing local
+inference installations. Consider memory needed by the OS, owner applications,
+context cache and concurrent workers, not just the model-weight download size.
+Keep hostnames, usernames, hardware serials and full diagnostic dumps out of chat.
 
-Configure the Ollama server's environment, preserving previous settings:
+Establish expected message volume, language(s), typical/maximum text length,
+acceptable latency, laptop versus always-on use and willingness to buy hardware
+or pay API costs. Use synthetic messages representing that workload. Reuse working
+software when appropriate; do not replace drivers, shared services or hardware
+without a concrete need and applicable authorization.
 
-```text
-OLLAMA_HOST=127.0.0.1:11434
-OLLAMA_NO_CLOUD=1
-```
+### Choose and measure suitable local options
 
-Quit and restart Ollama so those values take effect. Arrange a handoff before
-restarting a shared installation. Do not start a second server on the same port.
-Ollama documents configuration, cloud disabling and restart requirements in its
-[local FAQ](https://docs.ollama.com/faq). Then download and verify the chosen model:
+Consult current official runtime/model documentation for OS and acceleration
+support, model availability, licenses, structured-output capabilities and download
+requirements. Shortlist a small number of realistic candidates rather than
+installing every model. Select model size, quantization and runtime together;
+the same model at different quantizations may have different quality and resource
+requirements. A smaller model, CPU execution or partial acceleration is acceptable
+only if it meets the agreed quality and operational requirements.
 
-```powershell
-ollama pull qwen3.5:9b-q4_K_M
-ollama list
-Get-NetTCPConnection -LocalPort 11434 -State Listen |
-    Select-Object LocalAddress,LocalPort
-```
+Evaluate the feasible candidates on the same labeled synthetic corpus, including
+the recipient's languages and expected message lengths. Measure identifier misses,
+required holds, useful meaning retained, exception rate, schema failures, cold/warm
+latency, sustained throughput, peak memory and stability. Set mandatory quality
+thresholds and acceptable latency before comparison. Do not select by benchmark
+reputation, parameter count or tokens per second alone. Separate redaction and
+audit models may be tested if resources allow; do not assume their errors are
+independent or that agreement certifies privacy.
 
-Require `127.0.0.1:11434`; do not expose a wildcard, LAN listener, tunnel or proxy.
-The client must also fix the numeric-loopback destination, bypass environment
-proxies, reject redirects and remote-model metadata, validate JSON types and
-schema, and reject incomplete outputs. Download weights before real use; do not
-silently substitute a remote model after a failure. Verify capacity and latency
-with synthetic inference on the actual machine rather than promising a RAM/GPU
-minimum. The reference model uses a 32,768-token context and 240-second request
-timeout; tune only with reevaluation.
+Among candidates that pass the mandatory thresholds, choose the best practical
+balance of quality, responsiveness, memory headroom, reliability and maintenance
+for this user. Tune context length, output bounds, GPU offload, batch/concurrency,
+timeouts and polling for the measured workload. Bound overlong inputs; do not
+silently truncate identifying history. Re-run quality and sustained-load checks
+after tuning. Keep a known-good configuration and do not auto-switch models later.
 
-If reusing the prototype, its existing checks are runnable now:
+If no local candidate satisfies the quality/resource requirements, finish the
+other components and explain the measured constraint and feasible options, such
+as reduced throughput, a different evaluated model or owner-approved hardware.
+Do not lower privacy gates, claim optimization without measurements or move raw
+content to a cloud model as a fallback.
+
+### Install and verify the chosen runtime
+
+Install the selected runtime and model from approved official sources, preserve
+existing configuration, and verify the exact installed version/artifact. Use
+numeric loopback if a server is needed, or an in-process runtime without an exposed
+listener. Do not expose a wildcard, LAN listener, tunnel or public proxy. Configure
+local-only inference and disable cloud fallback. Bypass environment proxies for
+local calls, reject redirects/remote model routing, validate schema and completion,
+and exercise those checks with synthetic failure tests. Verify actual listener
+bindings and actual inference locality, not just a UI label saying local.
+
+For an Ollama installation, its [local FAQ](https://docs.ollama.com/faq) documents
+`OLLAMA_HOST=127.0.0.1:11434` and `OLLAMA_NO_CLOUD=1`, with a server restart after
+configuration. Other runtimes require their own documented and tested controls;
+do not assume they understand these variables or use the same port. Coordinate
+shared-service restarts. Download weights before processing real messages.
+
+Generate exact installation, verification and service commands for the recipient's
+chosen platform. For example, Windows can use `Get-NetTCPConnection` to inspect
+the selected port; use the appropriate native equivalent elsewhere. Use
+platform-native credential storage, private data paths, startup and UI mechanisms
+throughout the rest of this playbook, not copied Windows commands.
+
+Record the chosen runtime/model versions, quantization/artifact identity, tested
+settings, summarized hardware capacity, comparison results and selection rationale
+in a content-free installation profile. Protect private machine details. Include
+the tested workload limits and when to reevaluate after hardware/software changes.
+
+### Optional reference-prototype checks
+
+The seed uses Python 3.13, Tkinter and Ollama with `qwen3.5:9b-q4_K_M`. These are
+historical reference choices, not recommendations for every recipient. Its client
+fixes the model tag and `127.0.0.1:11434`, requests a 32,768-token context and uses
+a 240-second API timeout. If reusing it with a different selection, implement
+validated configuration/adapters for model, context, timeout and local transport;
+update capability checks and tests rather than merely downloading another model.
+Keep remote endpoints and raw-content cloud fallback prohibited.
+
+For a compatible installation of the prototype, these existing checks can be used:
 
 ```powershell
 python scrubber.py check
@@ -188,14 +249,17 @@ implement the full acceptance suite in section 13 as well.
 
 ## 5. Create private state and secure enrollment
 
-Default Windows runtime root: `%LOCALAPPDATA%\ScrubbedWorkspace`, outside source
-and sync roots. Support an application-specific state-path option; do not change
-`LOCALAPPDATA` globally. Create distinct stores for private source references,
-pending candidates, released tasks/results, content-free receipts and backups.
+Choose a private application-data root appropriate to the OS, outside source and
+sync roots. `%LOCALAPPDATA%\ScrubbedWorkspace` is the Windows example, not a
+cross-platform requirement. Support an application-specific state-path option;
+do not change system-wide data-path variables. Create distinct stores for private
+source references, pending candidates, released tasks/results, content-free receipts
+and backups.
 Keep all stores protected even when their contents are labeled scrubbed.
 
-Use SQLite transactions and explicit migrations for durable state. Enforce unique
-source keys, optimistic version checks, worker leases and atomic outbox claims.
+Use a suitable transactional store (SQLite is a local option) and explicit
+migrations for durable state. Enforce unique source keys, optimistic version
+checks, worker leases and atomic outbox claims.
 Record model, prompt, policy and content versions with every decision. Retain
 enough private audit history to explain release/actions without writing message
 bodies to operational logs. Avoid storing raw originals if source references
@@ -376,13 +440,15 @@ without discarding work. Distinguish a safe retry from an external operation
 whose outcome is unknown. A worker crash must not erase an exception, cursor,
 release decision, result, approval or send receipt.
 
-Install an owner-approved Windows Scheduled Task, or the platform equivalent,
-using absolute interpreter/source/config paths and the intended non-admin user.
+Install the platform's appropriate startup mechanism under owner authorization,
+such as a Windows Scheduled Task, macOS launch agent or Linux service. Use absolute
+runtime/source/config paths and the intended non-admin user.
 Choose login start versus unattended boot deliberately: encrypted credentials,
 session access and local model startup must work under the actual account.
 Avoid storing passwords in task arguments. Prevent overlapping instances.
-Start and health-check Ollama before processing; missing inference holds work
-locally instead of falling back to cloud redaction. Test reboot/login and sleep/wake.
+Start and health-check the selected local runtime before processing; missing
+inference holds work locally instead of falling back to cloud redaction. Test
+reboot/login and sleep/wake.
 
 Expose distinct controls: pause intake, pause cloud release, disable sending,
 resume, stop worker and health/status. A privacy incident pauses new cloud sends
@@ -393,9 +459,10 @@ contain counts or opaque references only, not subjects, names or message text.
 
 ## 11. Provide an operator interface and installer
 
-Implement and document a single entry point. The following is a **required target
-interface to build**, not commands provided by the reference prototype. Equivalent
-names are acceptable if the delivered runbook gives the exact tested commands.
+Implement and document a single entry point for the selected application stack.
+The following is a **required target interface to build**, not commands provided
+by the reference prototype. The Python syntax is illustrative; equivalent native
+commands are acceptable if the runbook gives exact tested commands for this host.
 
 ```powershell
 python -m workspace setup                 # private paths and secure local enrollment
@@ -463,6 +530,7 @@ installed integration. A mock-only pass does not establish end-to-end readiness.
 
 | Area | Required evidence |
 | --- | --- |
+| System fit | Hardware/OS inspected; feasible local candidates compared on the same workload; chosen quantization, settings, memory headroom, quality and latency documented; sustained operation passes on the actual host. |
 | Redaction | Names, contact details, dates, ages, locations, IDs, signatures, quoted history, rare combinations and attacks are removed or held; useful task meaning survives. |
 | Unsupported input | Attachments, malformed MIME, unsupported content, oversized inputs, model errors and uncertainty cannot create release entries. |
 | Automatic routing | Approved routine fixtures reach Claude without per-message review; excluded/ambiguous fixtures reach exceptions; ignore decisions match policy. |
@@ -509,6 +577,8 @@ Hand back:
 
 - Installed workspace launcher and exact start/status/pause/resume/stop commands.
 - Source revision, dependency/model versions and the installed worker identity.
+- Content-free system profile, local model/runtime selection rationale, measured
+  quality/performance, resource limits and exact platform-specific setup commands.
 - Secure enrollment/renewal instructions without secret values or private addresses.
 - Active release/action rules, limits, excluded categories and exception workflow.
 - Acceptance results, owner-attested live checks, reboot evidence and restore evidence.
