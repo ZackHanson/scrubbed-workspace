@@ -6,10 +6,11 @@
 
 1. Open Claude or your preferred coding agent. It needs to edit files and run
    commands on your computer. A chat-only model can help you get that set up first.
-2. Give it [SETUP-PLAYBOOK.md](SETUP-PLAYBOOK.md). Attach the file or open its
-   folder in the agent.
-3. Paste the prompt below.
-4. Answer its questions and follow the local sign-in or installation steps it
+2. Create a local folder called `scrubbed-workspace` and open it as a new
+   project/workspace in your agent. Reuse that folder if you return to setup later.
+3. Save [SETUP-PLAYBOOK.md](SETUP-PLAYBOOK.md) in that folder so the agent can read it.
+4. Start a chat in that project and paste the prompt below.
+5. Answer its questions and follow the local sign-in or installation steps it
    explains. At the end, have it demonstrate the workspace and show you how to
    start, pause and use it.
 
@@ -20,8 +21,9 @@ private email, passwords and API keys out of the chat.
 
 ```text
 Read SETUP-PLAYBOOK.md and follow it to build, install and test my own complete
-scrubbed workspace. Assume only my operating system is installed. Inspect my
-computer, choose suitable local models and software, and install what is missing.
+scrubbed workspace in this project folder. Assume only my operating system is
+installed. Inspect my computer, choose suitable local models and software, and
+install what is missing.
 
 Do the setup work yourself where your tools allow. When you need my input or a
 manual step, explain what I need to do, one step at a time. Keep private email and

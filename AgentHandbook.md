@@ -119,6 +119,11 @@ README now contains only the human setup steps, pasteable prompt, a short protot
 status note and reference links. Existing prototype commands, review behavior and
 privacy details moved unchanged to PROTOTYPE.md as product usage documentation.
 
+README startup now explicitly creates a dedicated local project folder, opens it
+in the coding agent, saves the playbook there and starts the project chat. The
+prompt names that project folder as the build location; later setup resumes reuse
+it. Local tool access remains required rather than implied by a chat project.
+
 Initial implementation on feature/local-email-scrubber in the existing T3 root.
 Installed local model discovered successfully. All 15 synthetic unit tests passed.
 Live Qwen synthetic email test removed the tested name, date of birth, record number,
