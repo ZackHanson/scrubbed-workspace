@@ -87,6 +87,16 @@ requests/results exercised with substituted external HTTP. A separate batch
 repair passed independent discovery of 95 distinct exports over multiple polls
 and restart. These validate targeted synthetic repairs, not full live setup.
 
+Continued November 17 evaluation targeted approximately 9/10 playbook quality.
+Fresh source-free execution (with disclosed mandatory startup-history exposure)
+passed 43 self-tests and independent routine/fidelity/fault checks using actual
+local inference and fake provider HTTP. Portability and adversarial reviews drove
+clearer partial evidence, source rebinding, account renewal, configuration,
+profiles/stops, dirty installed identity, budget settlement and scoped context
+contracts. Clean-context local-model reading passed 34 final decision checks.
+PLAYBOOK-TEST-REPORT.md records a conservative 9.1/10 instruction-quality judgment;
+this does not qualify live deployments or imply new runtime features are installed.
+
 Initial implementation on feature/local-email-scrubber in the existing T3 root.
 Installed local model discovered successfully. All 15 synthetic unit tests passed.
 Live Qwen synthetic email test removed the tested name, date of birth, record number,

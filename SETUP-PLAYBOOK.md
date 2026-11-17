@@ -30,9 +30,19 @@ installation's choices merely because they worked on that computer.
 
 Read sections 1 and 2 before implementation. Read section 13 before designing tests;
 it defines the required evidence. Work through the numbered phases, testing each
-component as it becomes runnable. Keep real cloud dispatch and external sending
+component as it becomes runnable. Keep live-data cloud dispatch and external sending
 disabled until section 14; synthetic integration calls use approved test accounts
 and budgets.
+
+Use separate operating profiles so testing does not depend on premature live
+activation. Build tests use local inference and substitute external services.
+Integration tests may call real providers with synthetic fixtures and separately
+authorized test destinations/budgets, before section 14. Shadow operation may
+process owner-authorized real sources locally while blocking their cloud release
+and sends. Section 14 alone enables the approved live flow. Keep test fixtures,
+private state and destination allowlists isolated; a message claiming to be a
+test cannot enter the synthetic profile. Phase 13 requires applicable integration
+evidence; owner-local live observations are collected during phase 14.
 
 Each phase ends with a **Done when** check. Mark it complete only with the named
 artifact or passing observation. A plan, generated source or mock result alone
@@ -40,6 +50,14 @@ does not prove installation or live operation. Record progress in one secret-fre
 setup receipt: phase, status (`pending`, `in_progress`, `passed`, `blocked`), evidence
 location and unresolved dependency. On resume, read that receipt, verify relevant
 installed state and continue from the first unfinished dependency.
+
+Track each capability inside a phase separately: implementation status,
+verification status, evidence class (`deterministic`, `local_model`,
+`provider_synthetic`, `installed_runtime`, `owner_local` or `tabletop`), and the
+artifact/configuration versions tested. A code-complete, transport-tested adapter
+can coexist with a blocked provider check. Preserve valid subcheck evidence on
+resume; mark the phase passed only when its applicable completion checks pass.
+Tabletop reasoning is planning evidence, never proof of an installed capability.
 
 Distinguish missing implementation from missing access. For each blocked feature,
 record the code still needed, the tests already run and the credential/permission
@@ -171,6 +189,12 @@ runtime. Use isolated dependencies and pin versions. A full build may add offici
 provider SDKs, OAuth and OS credential-store integration. Include dependency locks,
 configuration schemas, migrations, installers, synthetic fixtures and operator docs.
 
+Identify the actual installed source/executable bytes with a manifest/digest,
+including dirty changes and generated artifacts used at runtime. A commit ID alone
+is insufficient. Preserve owner edits and store private manifests locally; receipts
+may refer to their digests without copying private contents. Bind relevant tests
+to this installed identity as well as configuration/model versions.
+
 Start with a working vertical slice: synthetic import, real local inference,
 durable release, cloud adapter, persisted result and an accessible task/draft in
 the workspace. Without API access, substitute only the external transport while
@@ -227,6 +251,11 @@ after tuning. Keep a known-good configuration and do not auto-switch models late
 If no local candidate satisfies the quality/resource requirements, finish the
 other components and explain the measured constraint and feasible options, such
 as reduced throughput, a different evaluated model or owner-approved hardware.
+When execution, weights or downloads are unavailable, distinguish observed host
+limits from unmeasured model quality/performance. Record the missing prerequisite
+and leave actual-inference/optimization checks blocked; deterministic work can
+continue with labeled substitutes. Never invent a failed benchmark or require a
+model measurement that the stated permissions make impossible.
 Do not lower privacy gates, claim optimization without measurements or move raw
 content to a cloud model as a fallback.
 
@@ -286,6 +315,14 @@ values. Never pass secrets in CLI arguments, `.env` committed to source, service
 definitions, chat or screenshots. Test credential retrieval under the actual
 background account, renewal/revocation, and a fixed-error re-enrollment flow.
 
+Bind enrollment to the expected provider account locally. After renewal or
+re-enrollment, verify the authenticated account before reusing its cursor, source
+map or outbound routing. If the account differs, keep affected work paused and
+create a deliberate new account enrollment/start point; never silently replace
+the old account binding. Test renewal into the wrong account with fake identities.
+For API credentials, retain the approved project/destination and spending scope;
+changing that scope requires revalidation rather than resetting budget history.
+
 For Gmail, prefer an implemented OAuth flow appropriate to the recipient's account
 and deployment. Use official [Gmail IMAP/OAuth documentation](https://developers.google.com/workspace/gmail/imap/imap-smtp)
 and [XOAUTH2 protocol](https://developers.google.com/workspace/gmail/imap/xoauth2-protocol).
@@ -327,6 +364,17 @@ owner-only preview without fetching remote resources or opening attachments.
 On network/authentication failure, preserve the cursor and queue, back off with
 jitter, surface a fixed error and permit local credential repair. A missing or
 changed original must never be silently replaced by a different source.
+
+Provide a local source-rebind operation for moved exports. Preserve the immutable
+source identity and history; compare the proposed file with the recorded content
+fingerprint and version before changing its path binding. An identical file may
+be rebound locally under the owner's repair choice. Missing integrity evidence,
+changed bytes or ambiguous matches stay held; use a new source import when the
+content is genuinely different. Never adopt a new file merely because it occupies
+the old path. For provider-side moves, use verified stable provider identity or
+reconciliation instead of guessing from subject/sender. Rebinding must not reset
+release, action or send receipts. Test identical-source relocation, old-path reuse
+by different content and ambiguous/missing matches, including after restore.
 
 Acceptance: repeat an import, interrupt it before/after checkpoint commit, change
 UIDVALIDITY, expire credentials, move a source and restart. No duplicate task,
@@ -417,6 +465,21 @@ results, refusals, provider outages and ambiguous outcomes explicitly. Do not
 blindly retry an unknown completed request or claim provider-wide exactly-once
 execution; record attempts, reconcile and bound possible duplicate charges.
 
+Define and test the budget period (rolling window or calendar boundary with
+timezone), currency, trusted clock behavior and a versioned pricing basis.
+Reserve a conservative maximum cost before each attempt using verified input/
+output bounds and applicable rates; missing price/bounds block new paid work.
+Use finite, nonnegative monetary values and idempotent per-attempt settlement.
+Reconcile trustworthy usage/receipts against the reservation without double
+charging or double releasing it. Unknown outcomes remain outstanding liabilities
+until positively reconciled; midnight, clock rollback, restart, credential renewal
+or a limit change cannot erase them. Carry unsettled liabilities conservatively
+into available-headroom calculations and preserve history on restore. A clock
+anomaly or unexpectedly excessive actual cost pauses new requests for repair.
+Test rollover, backward clock movement, duplicate/late usage receipts and unknown
+requests spanning periods. Describe the local guard's limits separately from any
+provider-side billing controls; it is not a provider-wide billing guarantee.
+
 Install a separate usable workspace showing task status, summaries, completed
 work, draft replies, follow-up chat, errors and exceptions. It may be a desktop
 application; a local web UI needs loopback binding and appropriate authentication,
@@ -428,6 +491,15 @@ output through the same local release boundary before another Claude request.
 Do not automatically include entire mailbox threads, prior tasks or owner profile.
 Validate and locally inspect returned text for unsafe instructions or unexpected
 identifiers before display/reuse/action; no response is executable code.
+
+Support follow-ups within the selected task, not only unrelated standalone
+requests. Resolve references such as "revise the second section" using only that
+task's previously released turns and validated results that remain permitted by
+the current policy. Persist the approved context/version with the conversation;
+apply context limits and revalidation when history, policy or destination changes.
+Unreleased drafts, blocked turns, original mailbox history and other tasks stay
+outside it. Test a context-dependent useful follow-up and an identifying follow-up
+that is held without contaminating later requests.
 
 If the owner wants a dedicated scrubbed mailbox, implement it as an optional
 mirror of released tasks and validated results. Build a fresh message envelope:
@@ -500,6 +572,11 @@ reboot/login and sleep/wake.
 Expose distinct controls: pause intake, pause cloud release, disable sending,
 resume, stop worker and health/status. A privacy incident pauses new cloud sends
 without deleting records; recovery requires a deliberate reviewed resume.
+Persist independent stop reasons, such as owner pause, privacy failure, exhausted
+budget, expired authentication or changed policy/model. Repair clears only the
+reason actually resolved. Resume, activation, credential renewal and restart must
+not clear another outstanding reason or re-enable sending as a side effect. Test
+multiple simultaneous stops and recovery in different orders.
 Show last successful poll, queue counts, exception count, worker heartbeat,
 model/API health, budget remaining and fixed error categories. Notifications must
 contain counts or opaque references only, not subjects, names or message text.
@@ -538,11 +615,25 @@ retention settings. Generate a secret-free example configuration. Provide GUI
 launchers for the owner; they must resolve the installed interpreter correctly.
 Package installation/uninstall must preserve private data and unrelated jobs.
 
+Choose and document one configuration precedence order for supported inputs.
+Produce a validated effective configuration with field provenance and a version
+digest. Diagnostics expose safe roles/flags and errors, never secret values,
+private account identifiers or source paths. Detect incompatible schema, runtime
+endpoint, state root, release policy or send-mode overrides before side effects;
+preserve the old configuration and migrate deliberately. Test rerunning setup
+with an old schema, conflicting profile/environment overrides and an unchanged
+valid configuration. Bind receipts and acceptance evidence to the effective
+configuration so a later override cannot inherit an unrelated pass.
+
 Test the configurable activation path without enabling live operations: valid
 synthetic configuration reaches the real dispatcher with a substituted transport;
 missing enrollment, invalid policy, budget and permissions produce distinct
 blocking reasons. Provide a usable path from repaired configuration to activation.
 A command that always reports blocked regardless of configuration stays incomplete.
+The delivered runbook must show reason-specific resume examples: the selected
+reason, its repair prerequisites, evidence checked and the reasons still active
+afterward. Include a refused attempt to clear an unresolved privacy stop and a
+successful budget/auth repair that leaves an independent owner pause intact.
 
 Include these recovery paths in the delivered UI and runbook:
 
@@ -573,6 +664,15 @@ Perform a restore into an isolated temporary store with cloud/send disabled and
 no installed worker. Verify queue state, source mappings, results and decisions;
 check bytes/counts without exposing content to the coding model. Test with
 synthetic data first; the owner performs private-data checks locally.
+
+Resolve application-owned blob/index paths against the new state root and verify
+they remain inside its approved boundaries. Validate every restored reference;
+external originals use section 6's source-rebind/reconciliation process. A valid
+database or matching counts alone is insufficient: open a restored exception,
+retrieve its synthetic original and resume a pending task without the old runtime
+directory. Test under the intended recovery account; document whether encrypted
+keys/data can be restored on another host or require separate key recovery and
+credential re-enrollment. Preserve unknown-send and spend-reservation records.
 
 Before updates, pause new dispatch, checkpoint state, back up and apply tested
 migrations. Model/prompt/policy changes need reevaluation and must not silently
@@ -618,8 +718,9 @@ as an acceptance failure even if all rejected inputs were safely held.
 | Send recovery | Recipient/body edits invalidate approvals; duplicate submissions and crash-after-send become reconciled or unknown, never blind retries. |
 | Workspace/mirror | Results are usable; optional mirror contains no original envelope and cannot feed itself endlessly. |
 | Operations | Installed worker starts under the real account, accesses credentials, resumes after reboot/sleep, respects pause and prevents overlap. |
-| Budget and privacy stop | Caps halt new API work; invalid release bindings and privacy failures stop outbound processing while preserving queues. |
-| Recovery | An isolated backup restore recreates synthetic state without triggering cloud calls or sends. |
+| Enrollment/configuration | Wrong-account renewal, incompatible overrides and stale evidence are rejected under sections 5 and 11; unaffected valid subchecks survive resume. |
+| Budget and privacy stop | Caps halt new API work; invalid release bindings and privacy failures stop outbound processing while preserving queues; clearing one stop never clears another. |
+| Recovery | Isolated restore works without the old runtime directory, validates source rebinds and resumes synthetic pending work while preserving dispatch stops and external-operation receipts. |
 
 Report corpus size, fixture categories, leakage/hold/usefulness results, exception
 rate, latency and approximate API spend against thresholds agreed before testing.
@@ -636,6 +737,16 @@ the exact source revision, release policy, destination, send rules, budget,
 credential references, worker identity and recovery plan. Use already recorded
 authorization; ask only for unresolved live account, cost or external-action
 decisions. The coding model must not inspect real mail to obtain that confirmation.
+
+Record one private activation manifest binding the installed artifact/config
+digest, model/prompt/release-policy versions, enrolled accounts and worker identity,
+provider/project and budget, selected mirror destination, and action mode/rules.
+Resolve authority for each selected scope independently: API spending permission
+does not authorize a source mailbox, mirror or outbound reply rule. Reuse recorded
+valid authority; ask only for unresolved changes. Configuration, account,
+destination, model or rule changes invalidate affected checks and authority
+bindings, not unrelated completed work. Activation also checks every outstanding
+stop reason from section 10 before dispatch.
 
 Activate with a small bounded batch and conservative concurrency. The owner
 locally verifies the initial real results and that exceptions are recoverable.

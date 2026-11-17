@@ -2,6 +2,11 @@
 
 ## Verdict
 
+Current judgment after continued testing: **around 9/10 for the playbook as
+adaptive setup instructions** (9.1 under the rubric below). This is a conservative
+instruction-quality assessment, not a probability of success, deployment score
+or certification. Live account/service qualification remains outstanding.
+
 The first independent execution trial did **not** qualify the playbook as a reliable
 full-system setup procedure. A fresh model built a runnable synthetic application,
 but independent checks exposed lost work and incomplete production paths. The
@@ -189,3 +194,154 @@ trip, secure enrollment under the installed worker identity, actual startup and
 restart checks, recipient-local live intake/review, and the selected action mode.
 Passing the targeted retest alone will not establish that the whole system is
 ready for real use.
+
+## Continued evaluation: target quality around 9/10
+
+This rating concerns the playbook as instructions for a setup model, not the
+readiness or compliance of an installation generated from it. Use ten equally
+weighted dimensions, each worth one point. A dimension scores zero when absent
+or broken, 0.5 for material ambiguity, 0.8 when usable with a small clarification,
+and one when clear and supported by execution or directly checkable evidence.
+Intermediate scores require a stated reason. Record deductions as well as passes.
+
+| Dimension | Evidence sought |
+| --- | --- |
+| Action clarity | Ordered steps, explicit completion evidence and an unambiguous resume path. |
+| Host adaptation | Actual hardware/workload assessment, measured local selection and an honest infeasible-host branch. |
+| Privacy boundaries | Original data/routing isolation across requests, follow-ups, logs, tools and diagnostics. |
+| Workflow coverage | Intake through returned work, exceptions and the selected action mode. |
+| Implementable contracts | Clear release, configuration, result, state and authority requirements across components. |
+| Acceptance evidence | Useful positive traffic, unseen cases, failure injection and correctly labeled mock/local/live evidence. |
+| Operations/recovery | Credential repair, pause/resume, startup, restore/source identity and safe updates. |
+| Dependency/autonomy handling | Missing access separated from missing code; independent work continues without invented approval. |
+| Portability | Platform/provider examples remain conditional and recipient choices are retained. |
+| Owner handoff | Runnable artifacts, tested commands, active rules, operating/recovery instructions and truthful remaining gaps. |
+
+Qualification for an approximately nine-point documentation rating requires no
+unresolved high-severity instruction defect, independent review near that level,
+and corroborating behavioral checks. Simulated platforms are labeled tabletop
+tests; real local-model reads are not installation tests. No score substitutes
+for the live checks listed above.
+
+The continued fresh-source execution run was exposed to historical trial summaries
+through mandatory project startup guidance. It remains useful execution evidence
+but is not an uncontaminated blind test. A separate local-model reader receives
+only the frozen document and simulated scenarios, with no project history.
+
+### What the additional rounds found and changed
+
+The first portability review scored the then-current document 8.93/10. Its three
+simulated hosts covered macOS/unified memory/non-Gmail, Linux CPU-only with no
+model or download permission, and Windows with dirty source/OAuth/mirror/reply
+choices. Twelve continuation challenges covered recovery and authorization. The
+reference scenario runner checks the reviewer's interpretation; it is not an
+application or proof that prose enforces policy.
+
+Findings led to capability-level receipts/evidence classes, identity-preserving
+source rebinding, wrong-account renewal rejection, effective-configuration
+precedence/provenance, independent persistent stop reasons and a scope-bound
+activation manifest. Separate build/integration/shadow/live profiles clarify when
+real-provider synthetic tests may occur without prematurely activating real mail.
+
+An interim reviewer scored that revision 8.8/10 and identified budget-period and
+reservation-settlement ambiguity. The next revision defines period/clock policy,
+conservative pre-attempt cost bounds, idempotent settlement, outstanding unknown
+liabilities across rollover/restart/renewal, and explicit budget guard limits.
+It also identifies actual dirty installed bytes, distinguishes unmeasured hosts
+from failed tests, and requires reason-specific resume demonstrations.
+
+A final independent document reviewer found no substantive gap and scored its
+reviewed snapshot 10/10. That was a tabletop instruction review, not executed
+integration evidence, and it disclosed the mandatory startup-history exposure.
+The primary does **not** adopt a perfect score: real recipient variation and the
+limits of the execution evidence justify the deductions below. A subsequent
+context-scoping clarification requires useful same-task follow-ups using only
+released/validated history; it was checked by the primary and final local-reader
+probe, not by another full deployment trial.
+
+### New source-free execution and independent assessment
+
+The execution model built new application source from the frozen earlier
+playbook, without reusing prior application code or parent fixtures. Mandatory
+startup guidance exposed earlier high-level findings, as noted above. Its own
+report scored that snapshot 8.75/10 and recorded all partial capabilities and
+interpretation choices. Several deductions were addressed in the later document
+revisions; others concerned deliberately delegated implementation choices.
+
+Self-test evidence: 43 deterministic checks, twelve actual-local corpus outcomes,
+a screened follow-up, a 7,999-character request, CLI controls, native Tk rendering
+and encrypted backup/in-memory restore checks. The generated application still
+lacked full startup registration/uninstall, relocated restore/update rollback and
+retention enforcement. These were recorded as code gaps, not concealed as missing
+credentials or counted as complete.
+
+The parent then exercised that frozen application with twelve independent exports:
+
+- All six required routine cases released; all four required meaning checks passed.
+- Known identifiers were absent from all eight captured requests. One attack-bearing
+  input was generalized to its benign office request with the attack removed;
+  it was not counted as an attack rejection.
+- Attachment, HTML-only, oversized and unsupported multipart inputs stayed held.
+- Imports progressed ten, two, zero; no source duplication occurred.
+- Eight results and sixteen local task/draft actions persisted through substituted
+  provider HTTP. Twenty-four actual local-model calls included output audits.
+- Separate deterministic fault tests verified unknown-outcome reservation retention
+  without blind retry, privacy pause surviving activation, changed-source rejection
+  before transport and budget-cap rejection before transport.
+
+Source hashes stayed unchanged. The run took about 39 seconds on this host, not an
+isolated performance benchmark. It made no actual provider call and established
+neither real Claude work quality nor live startup/recovery. Later document-only
+contracts, including stateful approved conversation context and detailed rollover
+semantics, were not retroactively claimed as implemented in that frozen build.
+
+### Clean-context local-model reading tests
+
+The existing local Qwen model received only a playbook snapshot and declared
+simulated scenarios, with fresh message history and no project handbooks. It
+passed 32 basic decision checks on the earlier snapshot, then eighteen mixed
+positive/negative operational decisions on the intermediate revision. A later
+probe passed thirty checks including budget settlement and actual installed-byte
+identity. The delivery snapshot passed **34/34**, adding task-context boundaries.
+
+These are real local inference/reading tests over hypothetical situations, not
+installations on macOS/Linux or application enforcement tests. The counts overlap
+between revisions and are not a statistical confidence estimate. They corroborate
+readability and decision consistency alongside the code execution evidence.
+
+### Final conservative rating
+
+| Dimension | Points out of 1 | Remaining deduction |
+| --- | ---: | --- |
+| Action clarity | 0.90 | Long multi-stage document still requires disciplined receipt use. |
+| Host adaptation | 0.90 | Actual execution used one host/model; other resource profiles were simulated. |
+| Privacy boundaries | 0.95 | Strong explicit controls; finite known-identifier tests cannot cover every private combination. |
+| Workflow coverage | 0.90 | Full route specified; real provider work and the newest context contract remain unqualified. |
+| Implementable contracts | 0.90 | Invariants are explicit; provider-specific concurrency/reconciliation still needs implementation judgment. |
+| Acceptance evidence | 0.95 | Multiple evidence classes and independent tests; coding trials have startup-history contamination. |
+| Operations/recovery | 0.85 | Concrete repair requirements now exist, but full installed-account/reboot/relocated-restore execution is absent. |
+| Dependency/autonomy handling | 0.95 | Independent progress is clear; every recipient still needs accurate scope/account decisions. |
+| Portability | 0.90 | General choices and native integration required; no actual non-Windows installation was performed. |
+| Owner handoff | 0.90 | Deliverables and active authority are explicit; usability across real recipients remains unobserved. |
+| **Total** | **9.10 / 10** | **Primary judgment of instruction quality, rounded to about nine.** |
+
+No unresolved high-severity instruction finding remains from these reviews. The
+score is not an average of reviews of different revisions and does not turn any
+blocked installation or simulated result into a completed capability.
+
+### Continued-trial provenance
+
+Artifacts remain under the local agent-cache run `rating-20261117-154425`:
+`fresh/REPORT.md`, `fresh/FREEZE-MANIFEST.json`, `assessment/verify_fresh.py`,
+`assessment/fresh-independent-results.json`, the portability/recheck/final-review
+reports, and `reader/reader-baseline.json`, `reader/contracts-revised.json`,
+`reader/contracts-final.json`, `reader/contracts-delivery.json`.
+
+Reviewed final snapshot before the last context clarification:
+`dbbed1dd452b7d6a5e8eef6683bd8e7976bf539583887a329aafb297cb6c9d46`.
+Delivery playbook SHA-256, checked by the 34-decision reader probe:
+`8bf23f82c53a93fba5d855336fa706351a101dbf76d70b56080cf3746af15a91`.
+
+The repository changes are documentation only. Real mail, secret credentials,
+paid provider requests, installed startup jobs and live external replies were
+not used to obtain this rating.
