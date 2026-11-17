@@ -11,6 +11,8 @@ Give the [setup instructions](SETUP-PLAYBOOK.md) to the model building a separat
 installation. The file addresses that model directly and requires it to build,
 install and test the full system, including components beyond this prototype.
 It must choose local models, runtimes and settings for the user's own system.
+It assumes only the OS is present and requires the model to install and verify
+all selected software, dependencies and model weights.
 
 Observed trial results and remaining validation gaps are recorded in the
 [playbook execution test report](PLAYBOOK-TEST-REPORT.md).

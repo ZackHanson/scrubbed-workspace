@@ -103,6 +103,13 @@ explicit setup/user/local-model/Claude roles and direct implementation commands.
 Kept the fourteen phases, privacy rules, adaptive model selection and completion
 checks. README now points to the file as the model's task instructions.
 
+Owner further clarified the starting point: assume no required software or models
+are installed. The playbook now requires OS-native prerequisite discovery and
+bootstrap, dependency-ordered installation, runtime and weight downloads before
+evaluation, new-process path checks and a fresh-machine installer/test path.
+Existing compatible installs can be reused only after verification. No software,
+models or services were installed on this machine for this documentation change.
+
 Initial implementation on feature/local-email-scrubber in the existing T3 root.
 Installed local model discovered successfully. All 15 synthetic unit tests passed.
 Live Qwen synthetic email test removed the tested name, date of birth, record number,

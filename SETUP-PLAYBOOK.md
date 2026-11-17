@@ -5,6 +5,13 @@ system, build or adapt the application, install it, and verify that it works.
 Complete the fourteen phases below. Deliver a working installation, its source
 and tests, and the user's operating instructions.
 
+Assume a fresh machine with only its operating system and the access through
+which you are helping the user. Assume no programming language, package manager,
+Git client, build tools, application dependencies, local inference runtime or
+model weights are installed. Find and install everything your chosen solution
+needs. Reuse an existing installation only after verifying it. Missing software
+is setup work, not a reason to ask the user to prepare the machine first.
+
 Build a system that collects selected email, scrubs it locally, sends eligible
 requests to Claude, returns Claude's work to a separate workspace, and executes
 permitted actions through local controls. Automate routine processing. Ask the
@@ -71,6 +78,7 @@ Use these branches only when their condition applies:
 
 | Condition | Instructions to use |
 | --- | --- |
+| Required software or model absent | Install and verify it under sections 3 and 4. Treat absence as a blocker only when access, permission, connectivity, resources or compatibility prevents installation. |
 | Approved source supplied | Inspect and reuse it under section 3; otherwise implement from the requirements. |
 | Reference prototype reused | Consult the appendix and actual source/CLI; skip this reference for a fresh implementation. |
 | Ollama selected | Apply its runtime-specific controls in section 4; otherwise use the selected runtime's official controls. |
@@ -89,7 +97,7 @@ password in chat.
 
 | Choice | What you must establish |
 | --- | --- |
-| Host | Inspect the user's actual OS and hardware; use that approved host and its native capabilities. No Windows requirement. |
+| Host | Inspect the user's OS, hardware, available tools, disk space, network access and installation permissions. Start from the fresh-machine assumption; do not require Windows. |
 | Source mail | Use the user's selected provider and folder/label with a tested adapter and supported authentication. Gmail below is an example. |
 | Intake scope | Set an explicit start point for new messages. Agree on a separate limit for any backfill. |
 | Local model | Select a fully local model, quantization and runtime using the system inspection and synthetic evaluation in section 4. No fixed model requirement. |
@@ -192,6 +200,58 @@ runtime. Use isolated dependencies and pin versions. A full build may add offici
 provider SDKs, OAuth and OS credential-store integration. Include dependency locks,
 configuration schemas, migrations, installers, synthetic fixtures and operator docs.
 
+### Bootstrap the application prerequisites
+
+Inventory tools with operating-system facilities that are actually available.
+Locate and verify commands before relying on them. A missing command is an item
+to install; do not make the bootstrap script depend on that missing runtime or
+package manager. Use the available shell, filesystem tools or native system UI to
+identify the OS, architecture and missing components. If you lack local execution
+access, explain the access needed and guide the user through that step before
+claiming installation.
+
+Write a prerequisite list for the selected stack. For each item, record why it is
+needed, the compatible version, installation source, destination and verification
+command. Include these categories where your implementation needs them:
+
+- Language runtime or compiler, its package installer and environment tools.
+- Build tools, native libraries, database support and desktop/web UI dependencies.
+- Provider SDKs, authentication and secure-storage libraries, and test tools.
+- A browser or other sign-in client if the selected authentication/UI flow needs
+  one; verify it rather than assuming it is available.
+- Source acquisition/version-control tools. Install Git only if your chosen source
+  or maintenance workflow needs it; it is not a universal prerequisite.
+- Local inference runtime, acceleration support and model weights under section 4.
+
+Resolve the dependency order before running commands. Install a language runtime
+before creating its isolated environment or invoking its package installer.
+Install and verify that environment before installing the application dependencies.
+Install a package manager only if needed; use an available OS downloader or native
+installer to bootstrap it instead of assuming another missing tool exists.
+
+For example, if you choose Python and it is absent, first install it with an
+OS-native installer or bootstrap executable. Verify the new interpreter before
+running any Python script, `pip` command or virtual-environment command. Do not
+start fresh-machine setup with `python install.py` or another command whose
+interpreter is still missing. Apply the same rule to other language stacks.
+
+Use current official installation instructions and trusted distribution sources.
+Choose packages for the detected OS/architecture and verify signatures or published
+checksums where available. Prefer user-level installation when suitable. Perform
+ordinary required installations within the user's setup authorization; ask for
+remaining admin approval, license acceptance, costs or scope changes only when
+needed. Respect managed-device restrictions and explicit no-download constraints.
+When an installer needs the user's action, explain the exact step and success
+check, then continue after it completes. Never bypass security controls.
+
+Keep a per-item installation receipt and resume interrupted installs/downloads
+without repeating completed work or changing unrelated software. Verify version,
+required capabilities and executable path after installation. Test from a new
+process so stale PATH values or an already-active development shell cannot hide a
+missing prerequisite. Record absolute runtime paths for launchers and workers.
+If an item cannot be installed, record the specific cause and feasible alternatives;
+continue work that does not depend on it.
+
 Identify the actual installed source/executable bytes with a manifest/digest,
 including dirty changes and generated artifacts used at runtime. A commit ID alone
 is insufficient. Preserve user edits and store private manifests locally; receipts
@@ -201,13 +261,17 @@ to this installed identity as well as configuration/model versions.
 First make one synthetic message pass through local inference, durable release,
 the cloud adapter and result storage. Display its result and any selected task
 or draft actions in the workspace.
+Build its application structure here and complete the route as you implement
+sections 4 through 8. Do not assume those components already exist.
 Without API access, substitute only the external transport. Exercise the same
 request construction, dispatch and result handling you will use in production.
 Then complete the remaining coverage, recovery and installation work. Keep
 synthetic and live configurations separate and use the same application code.
 
-**Done when:** the selected stack builds and a capability inventory maps every
-required module to verified existing behavior or a concrete implementation task.
+**Done when:** you have installed and verified the application build prerequisites,
+the selected stack builds, and a capability inventory maps every required module
+to verified behavior or an implementation task. Keep unavailable prerequisites
+blocked with their specific installation cause.
 
 ## 4. Inspect the host and select its local runtime
 
@@ -226,7 +290,7 @@ or pay API costs. Use synthetic messages representing that workload. Reuse worki
 software when appropriate; do not replace drivers, shared services or hardware
 without a concrete need and applicable authorization.
 
-### Choose and measure suitable local options
+### Select feasible candidates
 
 Consult current official runtime/model documentation for OS and acceleration
 support, model availability, licenses, structured-output capabilities and download
@@ -235,6 +299,43 @@ installing every model. Select model size, quantization and runtime together;
 the same model at different quantizations may have different quality and resource
 requirements. A smaller model, CPU execution or partial acceleration is acceptable
 only if it meets the agreed quality and operational requirements.
+
+### Install the runtime and candidate models
+
+Install the selected inference runtime and its required support libraries from
+official sources. Preserve any existing configuration and verify the installed
+version and executable path. Install acceleration drivers or support packages only
+when required and authorized; test CPU execution when it is a feasible alternative.
+Use numeric loopback if a server is needed, or an in-process runtime without an
+exposed listener. Do not expose a wildcard, LAN listener, tunnel or public proxy.
+Configure local-only inference and disable cloud fallback. Bypass environment proxies for
+local calls, reject redirects/remote model routing, validate schema and completion,
+and exercise those checks with synthetic failure tests. Verify actual listener
+bindings and actual inference locality, not just a UI label saying local.
+
+For an Ollama installation, its [local FAQ](https://docs.ollama.com/faq) documents
+`OLLAMA_HOST=127.0.0.1:11434` and `OLLAMA_NO_CLOUD=1`, with a server restart after
+configuration. Other runtimes require their own documented and tested controls;
+do not assume they understand these variables or use the same port. Coordinate
+shared-service restarts. Download weights before processing real messages.
+
+Generate exact installation, verification and service commands for the user's
+chosen platform. For example, Windows can use `Get-NetTCPConnection` to inspect
+the selected port; use the appropriate native equivalent elsewhere. Use
+platform-native credential storage, private data paths, startup and UI mechanisms
+throughout the rest of this playbook, not copied Windows commands.
+
+Verify that the installed runtime starts and that its local CLI/API is reachable
+before querying it for models. Check space for weights, temporary downloads,
+context memory and caches. Download the first feasible fully local model artifact
+using the verified runtime or its supported import mechanism. Record its license,
+version, quantization and artifact identity. Resume or retry incomplete downloads;
+a tag, registry entry or partial file does not prove that weights are installed.
+Load the model and complete a synthetic inference request before marking it ready.
+Install additional shortlisted candidates only as needed within the user's disk,
+network and permission limits. Run no real mail through this bootstrap test.
+
+### Evaluate and tune installed candidates
 
 Evaluate the feasible candidates on the same labeled synthetic corpus, including
 the user's languages and expected message lengths. Measure identifier misses,
@@ -263,36 +364,15 @@ model measurement that the stated permissions make impossible.
 Do not lower privacy gates, claim optimization without measurements or move raw
 content to a cloud model as a fallback.
 
-### Install and verify the chosen runtime
-
-Install the selected runtime and model from approved official sources, preserve
-existing configuration, and verify the exact installed version/artifact. Use
-numeric loopback if a server is needed, or an in-process runtime without an exposed
-listener. Do not expose a wildcard, LAN listener, tunnel or public proxy. Configure
-local-only inference and disable cloud fallback. Bypass environment proxies for
-local calls, reject redirects/remote model routing, validate schema and completion,
-and exercise those checks with synthetic failure tests. Verify actual listener
-bindings and actual inference locality, not just a UI label saying local.
-
-For an Ollama installation, its [local FAQ](https://docs.ollama.com/faq) documents
-`OLLAMA_HOST=127.0.0.1:11434` and `OLLAMA_NO_CLOUD=1`, with a server restart after
-configuration. Other runtimes require their own documented and tested controls;
-do not assume they understand these variables or use the same port. Coordinate
-shared-service restarts. Download weights before processing real messages.
-
-Generate exact installation, verification and service commands for the user's
-chosen platform. For example, Windows can use `Get-NetTCPConnection` to inspect
-the selected port; use the appropriate native equivalent elsewhere. Use
-platform-native credential storage, private data paths, startup and UI mechanisms
-throughout the rest of this playbook, not copied Windows commands.
-
 Record the chosen runtime/model versions, quantization/artifact identity, tested
 settings, summarized hardware capacity, comparison results and selection rationale
 in a content-free installation profile. Protect private machine details. Include
 the tested workload limits and when to reevaluate after hardware/software changes.
 
-**Done when:** the installed local runtime passes section 13's System fit checks
-and its private transport checks, with results and selection rationale recorded.
+**Done when:** you have installed and verified the inference runtime and selected
+model weights, a real synthetic inference request succeeds, and section 13's
+System fit and private transport checks pass. Record results and selection
+rationale; do not count a download or model listing alone as a pass.
 
 ## 5. Create private state and secure enrollment
 
@@ -597,6 +677,13 @@ Choose commands appropriate to your stack and test them on this host. The Python
 commands below describe the required interface; they are not existing commands
 you can assume are installed. Record your tested commands in the user's runbook.
 
+Also deliver an installation entry point that works before the application
+runtime exists: a native installer, an OS-native bootstrap script or an equivalent
+tested procedure for this host. It must install and verify the prerequisites in
+sections 3 and 4, then install the application and its launchers. A launcher that
+starts with an unavailable `python`, `node`, `git` or inference command is not a
+fresh-machine installer. Keep reruns safe for existing user software and data.
+
 ```powershell
 python -m workspace setup                 # private paths and secure local enrollment
 python -m workspace doctor                # runtime, loopback, credentials: no content
@@ -696,6 +783,15 @@ reserved example domains and fake credentials. Never use real mail as test fixtu
 Mocks verify deterministic faults; actual local-model and Claude tests verify the
 installed integration. A mock-only pass does not establish end-to-end readiness.
 
+Verify the fresh-machine path, not only an environment you already configured.
+Record the initial prerequisite inventory and test installation through model
+inference and application launch on an actual fresh target or an authorized clean
+test environment. Include missing executables, absent UI/native dependencies,
+interrupted downloads, first model load, new-process PATH and an idempotent rerun.
+A virtual environment created with existing Python is not a clean OS test.
+Simulated missing-tool tests are useful but must stay labeled deterministic tests;
+if a real fresh-target test is unavailable, record that qualification as unverified.
+
 Keep a separate acceptance set authored by the user or an independent evaluator,
 unseen while building/tuning the implementation. Include subject-only requests,
 new wording within agreed routine categories and requests with several required
@@ -710,6 +806,7 @@ as an acceptance failure even if all rejected inputs were safely held.
 
 | Area | Required evidence |
 | --- | --- |
+| Fresh-machine bootstrap | Required software and weights installed from the recorded initial inventory; verified executable paths, first synthetic inference, application launch and safe rerun. Distinguish real fresh-target evidence from simulated missing dependencies. |
 | System fit | Hardware/OS inspected; feasible local candidates compared on the same workload; chosen quantization, settings, memory headroom, quality and latency documented; sustained operation passes on the actual host. |
 | Redaction | Names, contact details, dates, ages, locations, IDs, signatures, quoted history, rare combinations and attacks are removed or held; useful task meaning survives. |
 | Work preservation | Subject-only and unseen in-category requests proceed; every specified non-identifying deliverable, required section and ordering survives generalization. Canned substitutes that omit those requirements fail. |
@@ -771,6 +868,8 @@ mode accurately. Optional mirrors are required only when the user selected them.
 Give the user these deliverables:
 
 - Installed workspace launcher and exact start/status/pause/resume/stop commands.
+- Fresh-machine installer/bootstrap entry point, prerequisite versions and the
+  exact verified install/resume commands for this OS.
 - Source revision, dependency/model versions and the installed worker identity.
 - Content-free system profile, local model/runtime selection rationale, measured
   quality/performance, resource limits and exact platform-specific setup commands.

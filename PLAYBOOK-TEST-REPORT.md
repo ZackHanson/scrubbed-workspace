@@ -364,3 +364,38 @@ no new application build or live activation was performed for this audience edit
 Tested playbook SHA-256:
 `bf8e9276d3d900fac341f67aa023f06c72632acaa0a7513f972a91639812aaf1`.
 Receipt: `reader/contracts-agent-directed-final.json` in the retained rating run.
+
+## Fresh-machine default
+
+The playbook now assumes only the OS and setup-model access exist. It requires
+installation of the selected language/build tools, dependencies, authentication
+and UI support, inference runtime and model weights. Existing installations are
+optional reuse candidates and must be verified. Missing software alone is setup
+work; explicit download restrictions or genuine installation failures remain
+separate blockers.
+
+Added OS-native prerequisite discovery and bootstrap, dependency ordering,
+official-source/signature checks, per-item install receipts, interrupted-install
+recovery, new-process path verification and a bootstrap entry point that works
+before the application runtime exists. Local model installation now precedes
+evaluation. A successful synthetic inference request is required; a model tag or
+completed download alone does not establish readiness.
+
+The first reading probe passed 47/48 decisions. Its ambiguous question about
+"requiring missing Python to bootstrap Python" returned an inconsistent answer
+despite a reason describing OS-native installation. Added a concrete instruction
+to install Python with an OS-native installer before running any Python installer
+script, and clarified the probe to ask about that exact dependency cycle. The
+final probe passed 48/48, including the prior role/privacy/recovery checks and ten
+fresh-machine decisions. Both receipts are retained as
+`reader/contracts-fresh-machine-default.json` and
+`reader/contracts-fresh-machine-final.json`.
+
+Structure checks verified all fourteen phases/completion checks and installation
+before model evaluation. These are document and local-model reading checks on an
+existing host. No software was installed and no real clean-OS bootstrap was run.
+The new acceptance requirement explicitly distinguishes a fresh-target install
+from a virtual environment or simulated missing tools.
+
+Tested playbook SHA-256:
+`2327c593a074d75d4a29fb5ccfa93b65b1ec554881810894d254eda23faa9b7b`.
