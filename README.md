@@ -2,17 +2,42 @@
 
 # scrubbed-workspace
 
+## Start here
+
+1. Open Claude or your preferred coding agent. It needs to edit files and run
+   commands on your computer. A chat-only model can help you get that set up first.
+2. Give it [SETUP-PLAYBOOK.md](SETUP-PLAYBOOK.md). Attach the file or open its
+   folder in the agent.
+3. Paste the prompt below.
+4. Answer its questions and follow the local sign-in or installation steps it
+   explains. At the end, have it demonstrate the workspace and show you how to
+   start, pause and use it.
+
+You do not need to install the required software or models beforehand. Keep
+private email, passwords and API keys out of the chat.
+
+### Prompt to paste
+
+```text
+Read SETUP-PLAYBOOK.md and follow it to build, install and test my own complete
+scrubbed workspace. Assume only my operating system is installed. Inspect my
+computer, choose suitable local models and software, and install what is missing.
+
+Do the setup work yourself where your tools allow. When you need my input or a
+manual step, explain what I need to do, one step at a time. Keep private email and
+credentials out of this chat; help me enter them through secure local setup.
+
+Finish with a working workspace, a demonstration and simple operating instructions.
+If you cannot work on my computer yet, first help me get a coding agent with the
+local access needed to do this.
+```
+
+## Existing prototype
+
 Local email redaction with Ollama and a desktop exception reviewer. Candidates
 remain pending local review; automatic routing and Claude delivery are not enabled.
 
 Requires Python 3.13 and the installed local `qwen3.5:9b-q4_K_M` model.
-
-Give the [setup instructions](SETUP-PLAYBOOK.md) to the model building a separate
-installation. The file addresses that model directly and requires it to build,
-install and test the full system, including components beyond this prototype.
-It must choose local models, runtimes and settings for the user's own system.
-It assumes only the OS is present and requires the model to install and verify
-all selected software, dependencies and model weights.
 
 Observed trial results and remaining validation gaps are recorded in the
 [playbook execution test report](PLAYBOOK-TEST-REPORT.md).

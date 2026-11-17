@@ -110,6 +110,11 @@ evaluation, new-process path checks and a fresh-machine installer/test path.
 Existing compatible installs can be reused only after verification. No software,
 models or services were installed on this machine for this documentation change.
 
+Added a short human Start here section to README with four steps and a pasteable
+prompt for Claude or another coding agent. It supplies the model-directed playbook,
+assumes no prerequisites, asks for stepwise help with human actions and keeps
+private mail/credentials out of chat. Existing prototype instructions remain below.
+
 Initial implementation on feature/local-email-scrubber in the existing T3 root.
 Installed local model discovered successfully. All 15 synthetic unit tests passed.
 Live Qwen synthetic email test removed the tested name, date of birth, record number,
