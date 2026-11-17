@@ -15,6 +15,9 @@ this prototype and a copyable implementation prompt. The setup model must inspec
 each recipient's system and select/test suitable local models, runtimes and settings;
 the prototype's Windows/Python/Ollama choices are reference details.
 
+Observed trial results and remaining validation gaps are recorded in the
+[playbook execution test report](PLAYBOOK-TEST-REPORT.md).
+
 ```powershell
 python scrubber.py check
 python -m unittest -v

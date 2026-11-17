@@ -41,6 +41,13 @@ setup receipt: phase, status (`pending`, `in_progress`, `passed`, `blocked`), ev
 location and unresolved dependency. On resume, read that receipt, verify relevant
 installed state and continue from the first unfinished dependency.
 
+Distinguish missing implementation from missing access. For each blocked feature,
+record the code still needed, the tests already run and the credential/permission
+needed for live verification. Missing account access blocks live execution; keep
+building and testing its enrollment, configuration and production code path with
+fake credentials and an in-process transport substitute. An unconditional refusal
+or placeholder command is unfinished implementation, not an account dependency.
+
 Use these branches only when their condition applies:
 
 | Condition | Instructions to use |
@@ -163,6 +170,13 @@ If reusing the Python 3.13 prototype, verify compatibility before changing its
 runtime. Use isolated dependencies and pin versions. A full build may add official
 provider SDKs, OAuth and OS credential-store integration. Include dependency locks,
 configuration schemas, migrations, installers, synthetic fixtures and operator docs.
+
+Start with a working vertical slice: synthetic import, real local inference,
+durable release, cloud adapter, persisted result and an accessible task/draft in
+the workspace. Without API access, substitute only the external transport while
+exercising the same request-building, dispatch and result-handling path intended
+for production. Then expand coverage, recovery and installation. Keep synthetic
+and live configurations separate while sharing the functional implementation.
 
 **Done when:** the selected stack builds and a capability inventory maps every
 required module to verified existing behavior or a concrete implementation task.
@@ -289,10 +303,20 @@ Support folder/label selection, bounded initial import, repeated polling and
 restart. Read messages without changing read status; use read-only IMAP and
 BODY.PEEK for intake. Do not use only the unread flag as a durable cursor.
 
+Process the subject and supported body together: either may contain the actual
+work request or identifying details. Discard identifying envelope/routing headers
+from processing output while retaining their required mapping locally. A polite
+or empty body must not cause a substantive subject request to be ignored.
+
 For IMAP, source identity includes local account reference, mailbox, UIDVALIDITY
 and UID. A UIDVALIDITY change triggers controlled reconciliation, never blind
 reuse of old UIDs. For another provider, use its stable identity and cursor
 semantics. Advance checkpoints only after the source is durably recorded.
+
+Progress through collections larger than one batch. Already imported items must
+not repeatedly consume the batch limit and starve later messages or files. Test
+at least one full batch plus additional sources, repeated polling and restart
+until every eligible source is discovered exactly once.
 
 Deduplicate repeated polls and retries with a unique source key. Bound batch
 size, bytes, nesting and decoded text before inference. Fail closed on malformed
@@ -320,6 +344,14 @@ Use deterministic patterns, local-model generalization and an audit pass; preser
 the useful work request without inventing facts. Check names, contacts, locations,
 dates, IDs, ages, rare events and identifying combinations, including in history.
 Reject uncertain, incomplete or invalid output and suspected remaining identifiers.
+
+Establish routine categories from the recipient's representative work scenarios.
+Test varied wording and new examples within each category. Preserve requested
+deliverables, distinctions, ordering and non-identifying constraints during
+generalization. Locally compare the retained work with the source request; hold
+uncertain meaning rather than silently substituting a generic task. Fixed
+templates are appropriate only for explicitly template-based tasks whose required
+meaning they preserve; a small keyword list is not evidence of general coverage.
 
 Implement three routing outcomes after those checks:
 
@@ -506,6 +538,12 @@ retention settings. Generate a secret-free example configuration. Provide GUI
 launchers for the owner; they must resolve the installed interpreter correctly.
 Package installation/uninstall must preserve private data and unrelated jobs.
 
+Test the configurable activation path without enabling live operations: valid
+synthetic configuration reaches the real dispatcher with a substituted transport;
+missing enrollment, invalid policy, budget and permissions produce distinct
+blocking reasons. Provide a usable path from repaired configuration to activation.
+A command that always reports blocked regardless of configuration stays incomplete.
+
 Include these recovery paths in the delivered UI and runbook:
 
 | Failure | Required operator path |
@@ -552,15 +590,28 @@ reserved example domains and fake credentials. Never use real mail as test fixtu
 Mocks verify deterministic faults; actual local-model and Claude tests verify the
 installed integration. A mock-only pass does not establish end-to-end readiness.
 
+Keep a separate acceptance set authored by the owner or an independent evaluator,
+unseen while building/tuning the implementation. Include subject-only requests,
+new wording within agreed routine categories and requests with several required
+non-identifying details. Check their meaning as well as release counts. After a
+failure, retain it as a regression and rerun both that case and additional unseen
+examples; record whether a run used mocks, actual inference or provider access.
+
+Require positive traffic: at least one expected routine task must generate a
+captured cloud request and a persisted, displayed result. Privacy and persistence
+assertions over an empty release set do not qualify. Report missing useful work
+as an acceptance failure even if all rejected inputs were safely held.
+
 | Area | Required evidence |
 | --- | --- |
 | System fit | Hardware/OS inspected; feasible local candidates compared on the same workload; chosen quantization, settings, memory headroom, quality and latency documented; sustained operation passes on the actual host. |
 | Redaction | Names, contact details, dates, ages, locations, IDs, signatures, quoted history, rare combinations and attacks are removed or held; useful task meaning survives. |
+| Work preservation | Subject-only and unseen in-category requests proceed; every specified non-identifying deliverable, required section and ordering survives generalization. Canned substitutes that omit those requirements fail. |
 | Unsupported input | Attachments, malformed MIME, unsupported content, oversized inputs, model errors and uncertainty cannot create release entries. |
 | Automatic routing | Approved routine fixtures reach Claude without per-message review; excluded/ambiguous fixtures reach exceptions; ignore decisions match policy. |
 | Cloud boundary | Captured request bodies/metadata contain only allowlisted released fields; raw headers, routing, source paths, identifiers and private timestamps never cross. |
 | Hostile instructions | Mail, follow-ups and cloud responses cannot alter policy, discover originals, change destinations or invoke unauthorized tools/actions. |
-| Intake durability | Repeated polling, UIDVALIDITY changes, credential expiration, cursor crashes and concurrent workers neither lose nor multiply tasks. |
+| Intake durability | More than one full batch is eventually discovered; repeated polling, UIDVALIDITY changes, credential expiration, cursor crashes and concurrent workers neither lose nor multiply tasks. |
 | Claude integration | A real synthetic request returns useful work, persists it, displays it and supports a screened follow-up; truncation/refusal/429/timeouts produce recoverable states. |
 | Exceptions | Owner can inspect a synthetic original locally, retry/edit, resolve/reject; all new content passes gates and stale decisions fail. |
 | Actions | Automatic allowed local actions work; approved/standing-rule replies reach an owner-controlled test mailbox with correct local routing; disallowed actions are held. |

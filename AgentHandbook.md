@@ -72,6 +72,21 @@ phase completion evidence, execution/resume rules, conditional reference lookup
 and one optional prototype appendix. Kept the shareable playbook self-contained;
 the external skill was read for this edit, not installed as a project dependency.
 
+November 17 playbook execution trial: a fresh native model received only a frozen
+playbook and synthetic-only setup choices, building in local agent-cache storage
+without project source. Independent real-local-model checks found lost task
+details, a valid routine request blocked by a narrow keyword policy and a
+subject-only request ignored. Playbook now requires work-preservation checks,
+unseen acceptance cases, a working vertical slice and separate accounting for
+unimplemented code versus unavailable live access. Trial evidence and retest
+results are recorded in PLAYBOOK-TEST-REPORT.md; no real mail/API spend, startup
+job installation or production activation is authorized by this documentation test.
+Qualifying targeted retest: 12 independent messages, 15 actual local-model calls,
+all six required routine cases handled with retained meaning; seven configured
+requests/results exercised with substituted external HTTP. A separate batch
+repair passed independent discovery of 95 distinct exports over multiple polls
+and restart. These validate targeted synthetic repairs, not full live setup.
+
 Initial implementation on feature/local-email-scrubber in the existing T3 root.
 Installed local model discovered successfully. All 15 synthetic unit tests passed.
 Live Qwen synthetic email test removed the tested name, date of birth, record number,
