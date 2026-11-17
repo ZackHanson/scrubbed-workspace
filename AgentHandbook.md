@@ -115,6 +115,10 @@ prompt for Claude or another coding agent. It supplies the model-directed playbo
 assumes no prerequisites, asks for stepwise help with human actions and keeps
 private mail/credentials out of chat. Existing prototype instructions remain below.
 
+README now contains only the human setup steps, pasteable prompt, a short prototype
+status note and reference links. Existing prototype commands, review behavior and
+privacy details moved unchanged to PROTOTYPE.md as product usage documentation.
+
 Initial implementation on feature/local-email-scrubber in the existing T3 root.
 Installed local model discovered successfully. All 15 synthetic unit tests passed.
 Live Qwen synthetic email test removed the tested name, date of birth, record number,
