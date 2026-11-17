@@ -19,8 +19,9 @@ Checkpoint owned branches and open one coherent draft PR; verify exact remote SH
 and clean tracking. Stored SSH origin fails host-key verification: use explicit
 command-scoped HTTPS and the existing gh credential helper. Do not change stored
 origin, SSH trust, global configuration or repository-local author identity.
-Source publishing is separate from release. Zack authorized merging cleanup PR11
-into PR10; merging the remaining stack or main is not part of this action.
+Source integration is separate from release. Zack authorized consolidating PR10
+into main and closing incorporated/superseded proposals, preserving branches and
+worktrees. This does not activate email processing, Claude, services or schedules.
 GitHub checks/deployments are not configured; protection inspection returned 403.
 No protection enforcement is claimed and no settings workaround is authorized.
 
@@ -107,27 +108,26 @@ Model prompts, clinical corpus and thresholds stay unchanged in this cleanup.
 
 ## Current work
 
-Owner approved four focused cleanups on exact PR10 baseline
-`cd8bdc81a5c592cbd83f16641fa95c0dbe590601` (266 deterministic tests). Main remains
-`466de50eee9d7cae10d41c74d9f00672f61ae578`. This T3 worktree implements one
-canonical import path, removes operations-only recovery, shares strict ResultV1
-validation and replaces obsolete chronological documentation. Final `python -B verify_synthetic.py` passes 277/277 tests (65.165s), sockets
-blocked and temporary state. Pilot dry-run/shadow report zero attempts; workflow
-and operations demos pass. One independent read-only review found stale duplicate
-source reads and timeout continuation; both are fixed with launcher regressions.
-Shared reconciliation now guards imports and review without duplicating its rules.
-Model behavior/corpus/thresholds are unchanged; no live inference was rerun.
-Cleanup is published as PR11 against PR10. Zack authorized merging PR11 into
-PR10 after confirming unchanged tested code and a clean merge. Stack parents are
-PR3/4/5/6/10; PR10 already includes PR7/8/9. Preserve the remaining stack, branches
-and worktrees; no retargeting, closing or main merge is included.
+PR10 is the consolidated development baseline, including cleanup PR11 and all
+earlier implementation branches. It has one canonical file/Gmail processing path,
+coordinated recovery, shared strict ResultV1 validation and the offline reviewer.
+A fresh verification of its cleanup tree passed 277/277 deterministic tests with
+sockets blocked and temporary state; pilot dry-run/shadow made zero attempts and
+the workflow demo passed. Model prompts/corpus/thresholds are unchanged. Review
+findings for stale duplicate-source reads and timeout continuation are fixed.
+
+Zack authorized retargeting PR10 to main, merging its exact verified head with
+history preserved, and closing older proposals already included or superseded by
+the current implementation/operator guides. GitHub records the exact merge SHA.
+Preserve all source branches/worktrees and unique work. No new live inference or
+private-runtime access is needed for source integration.
 
 Owner chose Claude pilot PREPARATION WITHOUT SUBMISSIONS. No credentials,
 account/model choice, provider calls, real messages, private-state access,
 schedules/services, infrastructure, security changes or release are authorized.
 Pilot budget, adapter reservations and action version bindings remain separate.
-Next: complete the authorized PR11 merge into PR10, then let Zack choose
-integration of the remaining stack after reviewing its combined diff to main. Remaining product limits: owner usability/meaning/time-saving
-rehearsal, broader privacy/utility qualification, production private-state recovery,
-and separately approved final-consumer/provider/release work. No automated real
-message eligibility or upstream Claude connection is implied.
+Next product work: owner offline usability rehearsal, a deliberate invented-email
+qualification of the unified importer with local Qwen, then the final digest
+experience. Broader privacy/utility qualification and production private-state
+recovery remain pending. Final-consumer/provider/release work needs its own scope;
+no automated real-message eligibility or upstream Claude connection is implied.
