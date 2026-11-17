@@ -10,6 +10,7 @@ from pathlib import Path
 import re
 import ssl
 import tempfile
+from state_access import state_read, state_mutation
 
 
 MAX_BYTES = 512_000
@@ -29,6 +30,8 @@ REASONS = {
     'source_unavailable': ('Original could not be read', 'Check the source file or Gmail account, then retry.'),
     'source_changed': ('Original reference no longer matches', 'Re-import the message. The reviewer will not substitute another original.'),
     'processing_failed': ('Processing could not complete', 'Check the original and local model, then retry.'),
+    'needs_recheck': ('Edited candidate needs local checks', 'Check a generalized draft here before using this revision.'),
+    'reconciliation_required': ('Previous work needs local reconciliation', 'Do not retry uncertain work. Reconcile its saved local receipt first.'),
 }
 
 
@@ -82,9 +85,11 @@ class HoldSnapshot:
 
 
 class HoldStore:
+    @state_read(lambda self, folder: folder)
     def __init__(self, folder):
         self.folder = Path(folder) / 'holds'
 
+    @state_read('folder.parent')
     def path(self, ticket):
         if not re.fullmatch(r'[0-9a-f]{32}', ticket):
             raise HoldError('source_unavailable')
@@ -93,11 +98,13 @@ class HoldStore:
             raise HoldError('source_unavailable')
         return path
 
+    @state_read('folder.parent')
     def tickets(self):
         return sorted(path.stem for path in self.folder.glob('*.json')
                       if re.fullmatch(r'[0-9a-f]{32}', path.stem)
                       and path.is_file() and not path.is_symlink())
 
+    @state_read('folder.parent')
     def load(self, ticket):
         try:
             with self.path(ticket).open('rb') as source:
@@ -113,6 +120,7 @@ class HoldStore:
         except (OSError, ValueError, TypeError):
             raise HoldError('source_unavailable') from None
 
+    @state_mutation('folder.parent')
     def create(self, ticket, reason, source=None):
         if reason not in REASONS or not valid_source(source):
             raise HoldError('processing_failed')
@@ -131,6 +139,7 @@ class HoldStore:
             json.dump(record, output, indent=2)
         return self.load(ticket)
 
+    @state_mutation('folder.parent')
     def update(self, snapshot, *, status=None, reason=None):
         record = {**snapshot.record}
         if status is not None:

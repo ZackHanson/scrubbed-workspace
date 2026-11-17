@@ -54,10 +54,10 @@ def main():
         if command == 'search':
             return 'OK', [b'1 2 3 4 5']
         body = raw[int(args[0]) - 1]
-        if args[1] == '(RFC822.SIZE)':
-            return 'OK', [f'1 (RFC822.SIZE {len(body)})'.encode()]
-        if args[1] == '(BODY.PEEK[])':
-            return 'OK', [(b'1 (BODY[]', body), b')']
+        if args[1] == '(UID RFC822.SIZE)':
+            return 'OK', [f'1 (UID {args[0]} RFC822.SIZE {len(body)})'.encode()]
+        if args[1] == '(UID BODY.PEEK[])':
+            return 'OK', [(f'1 (UID {args[0]} BODY[]'.encode(), body), b')']
         raise AssertionError('Unexpected fetch operation')
 
     client.uid.side_effect = uid

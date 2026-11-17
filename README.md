@@ -31,6 +31,17 @@ To try the exception reviewer with temporary synthetic originals and held messag
 python review.py --demo
 ```
 
+The demo's three invented exceptions use temporary managed intake tickets and
+mocked model responses. The entire rehearsal is offline: no Gmail, Ollama or
+Claude connection is made, even when retrying or checking a draft. See
+[the walkthrough](REVIEW_REHEARSAL.md) for the failure/retry examples.
+
+The Claude pilot is prepared without submitting requests. Run
+`python claude_pilot.py dry-run` to inspect the default behavior; it needs no API
+key and makes zero attempts. [PILOT.md](PILOT.md) documents the separate future
+live-run procedure. [RECOVERY.md](RECOVERY.md) describes explicit local snapshots
+and fresh restores that remain inactive until reconciliation.
+
 To review actual messages locally, double-click **Run Local Review.cmd** or run
 `python review.py`. It starts in **Open exceptions** and shows a fixed hold reason
 and suggested next action for each message. Choose an exception, then:
@@ -42,8 +53,9 @@ and suggested next action for each message. Choose an exception, then:
 - **Retry original** fetches the same original and runs all local model gates again.
 - **Check edited draft** checks the generalized subject/body you compose in the
   editor. Unchecked drafts stay in memory only. Failed checks retain your draft
-  in the window and leave the exception open. Passed checks create a new pending
+  in the window and leave the exception open. Passed checks save a pending
   candidate and close the exception; they never release content to Claude.
+  Managed items keep their intake identity and record a separate checked revision.
 - **Dismiss exception** records that you will handle or skip it yourself. The
   original and exception record are retained. The same source is not added to the
   queue again on a later sequential import.
@@ -55,11 +67,22 @@ locally**, or **Reject locally** to retain it as rejected. All statuses remain
 local workflow records; none certifies de-identification or enables uploading,
 forwarding or export. No message content is written to terminal logs.
 
+For managed candidates, saved edits withdraw previous check evidence and result
+requests and open an exception for another local check. Rejection also withdraws
+previous work and closes an open exception. A local-review checkbox cannot restore
+withdrawn evidence. Legacy candidates keep their existing local-review behavior;
+opening them does not silently import them into the integrated workflow.
+
 The window opens and displays saved records without needing Ollama or Gmail.
-Retrying/checking drafts requires the local Ollama model. Reopening a Gmail
+Outside the offline demo, retrying/checking drafts requires local Ollama. Reopening a Gmail
 original requires signing in again through native local dialogs with the source
 address and app password; the password is not saved. Gmail is opened read-only
 and messages use BODY.PEEK, so viewing/retrying does not mark them read.
+Checking a managed Gmail draft also requests local sign-in so the exact original
+can be verified. If previous processing is uncertain, the reviewer leaves it
+blocked for local reconciliation rather than creating another retry. Failed saves
+can leave old evidence withdrawn even when the candidate text is unchanged; reload
+and complete a fresh local check.
 
 Only new scrubber runs create exception records. Historical blocked messages
 cannot be reconstructed from old count-only receipts. If a source moved out of
@@ -83,7 +106,9 @@ The Gmail command reads up to five unread inbox messages without marking them re
 It also saves `run-status.json` in the local review folder, containing only run
 stage, counts, sign-in success and fixed error categories. This lets us diagnose
 a run after its terminal closes without reading email content or credentials.
-Running it again can process the same messages. Headers are discarded; plain-text
+Repeated imports deduplicate source identities and inference. New file/Gmail
+imports share durable checked provenance, shadow routing and managed exception
+review. Existing candidates are not silently adopted or given evidence. Headers are discarded; plain-text
 bodies and subjects pass through pattern redaction, Qwen generalization/redaction
 and Qwen review. Identifying profiles and irrelevant instruction attacks are
 removed while useful clinical/work requests are retained. This generalization may
@@ -107,7 +132,14 @@ This is a prototype, not a HIPAA compliance certification. The second pass uses
 the same model and can share its mistakes. HHS describes Safe Harbor and Expert
 Determination as de-identification methods; redaction by an LLM alone does not
 establish either. See [HHS guidance](https://www.hhs.gov/hipaa/for-professionals/special-topics/de-identification/index.html).
-Forwarding to a second account and connecting Claude remain unimplemented until
-the review and de-identification requirements are established.
+Claude is solely the eventual LAST consumer of already-scrubbed email. Intake,
+scrubbing, validation, routing, exception review, storage and recovery stay local.
+No real requests are enabled; the owner selected prepare-only pilot work.
 
 Project state and boundaries: [AgentHandbook](AgentHandbook.md).
+
+Manual integration demo: `python shadow_workflow.py demo`. This uses a built-in
+synthetic email, mocked local-model responses, temporary storage and blocked
+sockets. Shadow never invokes transport. A separate fake-adapter test captures
+an inert local proposal; real Claude and email delivery remain inactive.
+See [workflow contract and dependencies](SHADOW_WORKFLOW.md).

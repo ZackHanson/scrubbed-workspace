@@ -3,6 +3,7 @@ from email.message import EmailMessage
 
 from holds import HoldError, HoldStore
 import scrubber as s
+from state_access import state_mutation
 
 
 def draft_message(subject, body):
@@ -17,7 +18,11 @@ def draft_message(subject, body):
     return mail.as_bytes()
 
 
-def recheck(folder, snapshot, raw):
+@state_mutation(lambda folder, *args, **kwargs: folder)
+def recheck(folder, snapshot, raw, *, credentials=(None, None)):
+    from review_workflow import managed, read_original, Reviewer
+    if managed(folder, snapshot.ticket):
+        return Reviewer(folder, reader=lambda source: read_original(source, credentials)).draft(snapshot, raw)
     holds = HoldStore(folder)
     current = holds.load(snapshot.ticket)
     if current.digest != snapshot.digest or current.record['status'] != 'open':
@@ -37,3 +42,30 @@ def recheck(folder, snapshot, raw):
     ticket = s.save_candidate(record, folder)
     holds.update(snapshot, status='resolved')
     return ticket
+
+
+@state_mutation(lambda folder, *args, **kwargs: folder)
+def retry_original(folder, snapshot, credentials=(None, None)):
+    from review_workflow import managed, read_original, Reviewer
+    if managed(folder, snapshot.ticket):
+        return Reviewer(folder, reader=lambda source: read_original(source, credentials)).retry(snapshot)
+    from holds import read_source
+    return recheck(folder, snapshot, read_source(snapshot.record['source'], *credentials))
+
+
+@state_mutation(lambda folder, *args, **kwargs: folder)
+def dismiss(folder, snapshot):
+    from review_workflow import managed, Reviewer
+    if managed(folder, snapshot.ticket):
+        return Reviewer(folder).dismiss(snapshot)
+    return HoldStore(folder).update(snapshot, status='dismissed')
+
+
+@state_mutation(lambda folder, *args, **kwargs: folder)
+def preview_original(folder, snapshot, credentials):
+    from review_workflow import managed, read_original, Reviewer
+    from holds import preview, read_source
+    if managed(folder, snapshot.ticket):
+        Reviewer(folder)._hold(snapshot)
+        return preview(read_original(snapshot.record['source'], credentials))
+    return preview(read_source(snapshot.record['source'], *credentials))

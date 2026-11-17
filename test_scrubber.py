@@ -17,6 +17,18 @@ def message(text='General clinical workflow question.'):
 
 
 class ScrubberTests(unittest.TestCase):
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        self.source_path = Path(temp.name) / 'synthetic.eml'
+        self.raw = message().as_bytes()
+        self.source_path.write_bytes(self.raw)
+        self.source = s.file_source(self.source_path, self.raw)
+        from synthetic_workflow import synthetic_checks
+        from intake import identity
+        self.source = identity(self.source)
+        self.enterContext(synthetic_checks())
+
     def run_gmail_mock(self, client):
         with tempfile.TemporaryDirectory() as temp, patch.object(s, 'STATE', Path(temp)), patch.object(s, 'ensure_local_model'), patch.object(s.imaplib, 'IMAP4_SSL') as connection, patch('builtins.input', return_value='synthetic@example.com'), patch.object(s.getpass, 'getpass', return_value='synthetic-secret'), patch.object(s.sys, 'argv', ['scrubber.py', 'gmail']):
             connection.return_value.__enter__.return_value = client
@@ -89,10 +101,10 @@ class ScrubberTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp, patch.object(s, 'STATE', Path(temp)), patch.object(s, 'llm', side_effect=[
             {'subject': 'Workflow', 'body': 'Name remains', 'uncertain': False},
             {'suspected_phi': True, 'uncertain': False}]):
-            self.assertFalse(s.process(message().as_bytes()))
+            self.assertFalse(s.process(self.raw, self.source))
             self.assertEqual(list(Path(temp).glob('*.json')), [])
             hold = s.HoldStore(temp).load(s.HoldStore(temp).tickets()[0]).record
-            self.assertEqual(hold, {'status': 'open', 'reason': 'verifier_flagged', 'source': None})
+            self.assertEqual(hold, {'status': 'open', 'reason': 'verifier_flagged', 'source': self.source})
 
     def test_identifier_blocks_before_verifier(self):
         with patch.object(s, 'llm', return_value={'subject': 'a@example.com', 'body': 'text', 'uncertain': False}) as model:
@@ -118,18 +130,18 @@ class ScrubberTests(unittest.TestCase):
                 self.assertNotIn(identifier, data)
 
     def test_error_does_not_save_source(self):
-        with tempfile.TemporaryDirectory() as temp, patch.object(s, 'STATE', Path(temp)), patch.object(s, 'llm', side_effect=RuntimeError('private text')):
-            self.assertFalse(s.process(message().as_bytes()))
+        with tempfile.TemporaryDirectory() as temp, patch.object(s, 'STATE', Path(temp)), patch.object(s, 'api', side_effect=RuntimeError('private text')), patch.object(s, 'ensure_local_model', return_value='a' * 64):
+            self.assertFalse(s.process(self.raw, self.source))
             self.assertEqual(list(Path(temp).glob('*.json')), [])
             hold = s.HoldStore(temp).load(s.HoldStore(temp).tickets()[0]).record
-            self.assertEqual(hold, {'status': 'open', 'reason': 'processing_failed', 'source': None})
+            self.assertEqual(hold, {'status': 'open', 'reason': 'model_error', 'source': self.source})
 
     def test_candidate_always_requires_review(self):
         with tempfile.TemporaryDirectory() as temp, patch.object(s, 'STATE', Path(temp)), patch.object(s, 'llm', side_effect=[
             {'subject': 'Workflow', 'body': 'General question', 'uncertain': False},
             {'suspected_phi': False, 'uncertain': False}]):
-            self.assertTrue(s.process(message().as_bytes()))
-            record = json.loads(next(Path(temp).iterdir()).read_text())
+            self.assertTrue(s.process(self.raw, self.source))
+            record = json.loads(next(Path(temp).glob('*.json')).read_text())
             self.assertEqual(record['status'], 'needs_local_review')
             self.assertNotIn('From', record)
 

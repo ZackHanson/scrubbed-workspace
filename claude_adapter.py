@@ -1,0 +1,247 @@
+"""Opt-in synthetic Claude boundary; no provider client, credentials or networking.
+
+See CLAUDE_ADAPTER.md for the trust/configuration contract. Digests bind data;
+they do not authenticate a decision or prove that content is de-identified.
+"""
+from dataclasses import dataclass, field
+from contextlib import closing
+import hashlib
+import json
+import math
+from pathlib import Path
+import queue
+import re
+import sqlite3
+import threading
+
+from scrubber import MAX_CHARS, PATTERNS
+from state_access import state_read, state_mutation
+from result_v1 import canonical_result
+
+
+class ContractError(ValueError):
+    """Fixed error categories only; never embed rejected data."""
+
+
+def _digest(value):
+    return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=True,
+                                     separators=(',', ':')).encode('ascii')).hexdigest()
+
+
+def _payload(value):
+    if (type(value) is not dict or set(value) != {'subject', 'body'}
+            or any(type(v) is not str for v in value.values())):
+        raise ContractError('invalid_payload')
+    value = value.copy()
+    if not value['body'].strip() or len(value['subject']) + len(value['body']) > MAX_CHARS:
+        raise ContractError('invalid_payload')
+    if any(re.search(pattern, text) for pattern in PATTERNS for text in value.values()):
+        raise ContractError('identifier_detected')
+    if any(re.search(r'(?im)^\s*(?:from|to|cc|bcc|reply-to|message-id|received):', text)
+           for text in value.values()):
+        raise ContractError('routing_detected')
+    return value
+
+
+def payload_digest(payload):
+    """Canonical content digest, distinct from CandidateStore's file-byte digest."""
+    return _digest(_payload(payload))
+
+
+def submission_key(payload, *, request_scope=None):
+    """Stable local correlation key; never an authorization token."""
+    value = {'adapter': 'claude-v1', 'candidate_digest': payload_digest(payload)}
+    if request_scope is not None:
+        if type(request_scope) is not str or not re.fullmatch('[0-9a-f]{32}', request_scope):
+            raise ContractError('invalid_request_scope')
+        value['request_scope'] = request_scope
+    return _digest(value)
+
+
+def decision_digest(decision):
+    if (type(decision) is not dict
+            or set(decision) != {'eligible', 'mode', 'candidate_digest', 'policy_version'}
+            or type(decision['eligible']) is not bool
+            or type(decision['mode']) is not str or decision['mode'] not in {'shadow', 'release'}
+            or type(decision['candidate_digest']) is not str
+            or not re.fullmatch('[0-9a-f]{64}', decision['candidate_digest'])
+            or type(decision['policy_version']) is not str
+            or not re.fullmatch('[a-z0-9][a-z0-9._-]{0,63}', decision['policy_version'])):
+        raise ContractError('invalid_decision')
+    return _digest(decision)
+
+
+def _action_result(value):
+    try:
+        return json.loads(canonical_result(value))
+    except ValueError:
+        raise ContractError('invalid_response') from None
+
+
+@dataclass(frozen=True)
+class AdapterConfig:
+    enabled: bool = False
+    timeout_seconds: float = 30.0
+
+    def __post_init__(self):
+        if (type(self.enabled) is not bool
+                or type(self.timeout_seconds) not in {int, float}
+                or not math.isfinite(self.timeout_seconds)
+                or not 0 < self.timeout_seconds <= 120):
+            raise ContractError('invalid_config')
+
+
+@dataclass(frozen=True)
+class AdapterResult:
+    status: str
+    code: str
+    submission_key: str = ''
+    # Provider output is untrusted local content, excluded from logs/repr.
+    result: dict | None = field(default=None, repr=False)
+    stop_reason: str = ''
+
+
+class FakeTransport:
+    """Deterministic synthetic response; no external I/O or content echo."""
+
+    def __call__(self, payload, *, timeout_seconds, idempotency_key):
+        return {'result': {'schema_version': 1, 'actions': [
+            {'kind': 'summarize', 'text': 'Synthetic workflow assistance.'}]},
+                'stop_reason': 'end_turn'}
+
+
+class ClaudeAdapter:
+    @state_read(lambda self, ledger_path, **kwargs: Path(ledger_path).parent)
+    def __init__(self, ledger_path, *, config=AdapterConfig(), transport=None):
+        if type(config) is not AdapterConfig:
+            raise ContractError('invalid_config')
+        self.config = config
+        self.transport = transport
+        # No directory creation or store opening on construction/disabled calls.
+        self.ledger_path = Path(ledger_path)
+
+    def _reserve(self, key, legacy_key):
+        # Persist BEFORE invoking transport. Crash/timeout reservations are never
+        # automatically cleared, including when a new adapter process starts.
+        with closing(sqlite3.connect(self.ledger_path, timeout=0.1)) as db, db:
+            db.execute('CREATE TABLE IF NOT EXISTS submissions '
+                       '(key TEXT PRIMARY KEY, status TEXT NOT NULL)')
+            columns = {row[1] for row in db.execute('PRAGMA table_info(submissions)')}
+            for name in ('result', 'stop_reason', 'content_key'):
+                if name not in columns:
+                    db.execute('ALTER TABLE submissions ADD COLUMN ' + name + ' TEXT')
+            # Serialize compatibility checks with the reservation. A legacy
+            # content reservation cannot safely be assigned to a new scope.
+            db.execute('BEGIN IMMEDIATE')
+            if db.execute('SELECT 1 FROM submissions WHERE key=?', (legacy_key,)).fetchone():
+                return False
+            if key == legacy_key and db.execute(
+                    'SELECT 1 FROM submissions WHERE content_key=?', (legacy_key,)).fetchone():
+                return False
+            try:
+                db.execute('INSERT INTO submissions(key,status,content_key) VALUES (?, ?, ?)',
+                           (key, 'unknown', legacy_key))
+            except sqlite3.IntegrityError:
+                return False
+        return True
+
+    def _finish(self, key, result):
+        with closing(sqlite3.connect(self.ledger_path, timeout=0.1)) as db, db:
+            db.execute('UPDATE submissions SET status=?,result=?,stop_reason=? WHERE key=?',
+                       (result.status, json.dumps(result.result) if result.result else None,
+                        result.stop_reason, key))
+
+    @state_read('ledger_path.parent')
+    def captured(self, key):
+        """LOCAL sensitive result recovery; never invokes or retries transport.
+
+        Legacy ledgers lack result bytes and cannot reconstruct past responses.
+        Only complete end_turn results can become proposals.
+        """
+        if type(key) is not str or not re.fullmatch('[0-9a-f]{64}', key):
+            raise ContractError('invalid_submission')
+        try:
+            with closing(sqlite3.connect(self.ledger_path.resolve().as_uri() + '?mode=ro',
+                                        uri=True)) as db:
+                row = db.execute('SELECT status,result,stop_reason FROM submissions WHERE key=?',
+                                 (key,)).fetchone()
+            if not row or row[0] != 'completed' or row[2] != 'end_turn':
+                raise ContractError('result_unavailable')
+            return AdapterResult('completed', 'response_captured', key,
+                                 _action_result(json.loads(row[1])), row[2])
+        except (OSError, sqlite3.Error, ValueError, TypeError):
+            raise ContractError('result_unavailable') from None
+
+    @state_read('ledger_path.parent')
+    def submit(self, payload, decision, *, expected_candidate_digest, expected_decision_digest,
+               request_scope=None):
+        if self.config.enabled and callable(self.transport) and not self.ledger_path.parent.is_dir():
+            return AdapterResult('blocked', 'ledger_unavailable')
+        return self._submit(payload, decision, expected_candidate_digest=expected_candidate_digest,
+                            expected_decision_digest=expected_decision_digest, request_scope=request_scope)
+
+    @state_mutation('ledger_path.parent', enabled=lambda self, *args, **kwargs:
+                    self.config.enabled and callable(self.transport))
+    def _submit(self, payload, decision, *, expected_candidate_digest, expected_decision_digest,
+                request_scope=None):
+        if not self.config.enabled:
+            return AdapterResult('disabled', 'transport_disabled')
+        try:
+            content = _payload(payload)
+            # Copy validated inputs before any asynchronous execution.
+            bound_decision = dict(decision) if type(decision) is dict else decision
+            digest = decision_digest(bound_decision)
+            candidate = _digest(content)
+            if (candidate != expected_candidate_digest
+                    or bound_decision['candidate_digest'] != candidate
+                    or digest != expected_decision_digest):
+                raise ContractError('digest_mismatch')
+            if not bound_decision['eligible'] or bound_decision['mode'] != 'release':
+                raise ContractError('not_eligible')
+            key = submission_key(content, request_scope=request_scope)
+        except ContractError as error:
+            return AdapterResult('blocked', str(error))
+        if not callable(self.transport):
+            return AdapterResult('disabled', 'transport_missing')
+        # Scope comes from trusted local intake, never a retry/policy/model ID.
+        # The same message and content keep their key across decision changes.
+        try:
+            if not self._reserve(key, submission_key(content)):
+                return AdapterResult('duplicate', 'already_reserved', key)
+        except (OSError, sqlite3.Error):
+            return AdapterResult('blocked', 'ledger_unavailable')
+
+        output = queue.Queue(maxsize=1)
+
+        def invoke():
+            try:
+                response = self.transport(content, timeout_seconds=self.config.timeout_seconds,
+                                          idempotency_key=key)
+                if (type(response) is not dict or set(response) != {'result', 'stop_reason'}
+                        or type(response['stop_reason']) is not str
+                        or response['stop_reason'] not in {'end_turn', 'max_tokens', 'refusal'}):
+                    result = AdapterResult('unknown', 'invalid_response', key)
+                else:
+                    result = AdapterResult('completed', 'response_received', key,
+                                           _action_result(response['result']), response['stop_reason'])
+            except ContractError:
+                result = AdapterResult('unknown', 'invalid_response', key)
+            except Exception:
+                # Do not propagate transport exceptions, which may contain secrets.
+                result = AdapterResult('unknown', 'transport_error', key)
+            output.put(result)
+
+        try:
+            threading.Thread(target=invoke, daemon=True).start()
+            result = output.get(timeout=self.config.timeout_seconds)
+        except queue.Empty:
+            result = AdapterResult('unknown', 'timeout', key)
+        except RuntimeError:
+            result = AdapterResult('unknown', 'worker_unavailable', key)
+        try:
+            self._finish(key, result)
+        except (OSError, sqlite3.Error):
+            # The durable reservation still prevents a retry. A response may
+            # exist locally, but persistence could not confirm the final state.
+            return AdapterResult('unknown', 'ledger_update_failed', key)
+        return result

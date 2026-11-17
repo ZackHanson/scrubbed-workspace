@@ -1,5 +1,6 @@
 """Local exception review with explicit Gmail reads and local checks; no sending/export."""
 import argparse
+from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass
 import hashlib
 import json
@@ -14,6 +15,8 @@ import uuid
 from scrubber import MAX_BYTES, PATTERNS, STATE
 from holds import HoldError, HoldStore, REASONS, file_source, preview, read_source
 import triage
+from state_access import state_read, state_mutation
+from recovery_guard import RecoveryError
 
 
 STATUSES = {'needs_local_review', 'reviewed_locally', 'rejected_locally'}
@@ -25,6 +28,12 @@ class ReviewError(Exception):
     """Fixed user-facing error text; never include candidate content."""
 
 
+def _recovery_error(error):
+    if str(error) == 'state_busy':
+        return ReviewError('Another local operation is using this workspace. Try again later.')
+    return ReviewError('Workspace recovery needs local reconciliation before review can continue.')
+
+
 @dataclass
 class Snapshot:
     ticket: str
@@ -33,9 +42,11 @@ class Snapshot:
 
 
 class CandidateStore:
+    @state_read(lambda self, folder: folder, on_error=_recovery_error)
     def __init__(self, folder):
         self.folder = Path(folder)
 
+    @state_read('folder', on_error=_recovery_error)
     def path(self, ticket):
         if not re.fullmatch(r'[0-9a-f]{32}', ticket):
             raise ReviewError('Invalid candidate ID.')
@@ -44,6 +55,7 @@ class CandidateStore:
             raise ReviewError('Linked candidate files cannot be reviewed.')
         return path
 
+    @state_read('folder', on_error=_recovery_error)
     def tickets(self):
         return sorted(path.stem for path in self.folder.glob('*.json')
                       if re.fullmatch(r'[0-9a-f]{32}', path.stem)
@@ -60,6 +72,7 @@ class CandidateStore:
         if len(json.dumps(record).encode('utf-8')) > MAX_BYTES:
             raise ReviewError('Candidate is too large. File was left unchanged.')
 
+    @state_read('folder', on_error=_recovery_error)
     def load(self, ticket):
         try:
             with self.path(ticket).open('rb') as source:
@@ -72,6 +85,7 @@ class CandidateStore:
         except (OSError, ValueError):
             raise ReviewError('Candidate could not be read. File was left unchanged.') from None
 
+    @state_mutation('folder', on_error=_recovery_error)
     def save(self, snapshot, subject, body, status):
         record = {'status': status, 'subject': subject, 'body': body}
         self.validate(record)
@@ -95,6 +109,11 @@ class CandidateStore:
             os.close(lock)
             if self.load(snapshot.ticket).digest != snapshot.digest:
                 raise ReviewError('Candidate changed in another window. Reload before saving.')
+            if record != snapshot.record:
+                from review_workflow import invalidate_before_save
+                invalidate_before_save(self.folder, snapshot,
+                                       content_changed=changed or status == 'rejected_locally',
+                                       rejected=status == 'rejected_locally')
             with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8',
                                              dir=self.folder, suffix='.tmp', delete=False) as output:
                 temporary = Path(output.name)
@@ -102,6 +121,9 @@ class CandidateStore:
                 output.flush()
                 os.fsync(output.fileno())
             temporary.replace(path)
+            if status == 'rejected_locally':
+                from review_workflow import close_rejected_hold
+                close_rejected_hold(self.folder, snapshot.ticket)
             return self.load(snapshot.ticket)
         except OSError:
             raise ReviewError('Could not save candidate. Reload to check its current state.') from None
@@ -118,6 +140,7 @@ class ReviewWindow:
         from tkinter.scrolledtext import ScrolledText
 
         self.root, self.store = root, store
+        self.demo = demo
         self.holds = HoldStore(store.folder)
         self.messagebox = messagebox
         self.snapshot = None
@@ -135,7 +158,7 @@ class ReviewWindow:
         heading = ttk.Frame(root, padding=12)
         heading.grid(row=0, column=0, sticky='ew')
         ttk.Label(heading, text='Message exceptions', font=('Segoe UI', 16, 'bold')).pack(anchor='w')
-        ttk.Label(heading, text=('Synthetic demo: temporary examples only.' if demo else
+        ttk.Label(heading, text=('Synthetic demo: temporary examples only; mocked checks, network blocked.' if demo else
                                 'Candidates may still contain identifying information.')).pack(anchor='w', pady=(6, 0))
         ttk.Label(heading, text='Local review records your progress. It does not certify de-identification or authorize uploading.').pack(anchor='w')
         self.summary = tk.StringVar()
@@ -158,7 +181,7 @@ class ReviewWindow:
         scroll.grid(row=2, column=1, sticky='ns')
         self.queue.configure(yscrollcommand=scroll.set)
         self.queue.bind('<<ListboxSelect>>', self.select)
-        self.reload_button = ttk.Button(sidebar, text='Reload list', command=self.reload)
+        self.reload_button = ttk.Button(sidebar, text='Reload selected / list', command=self.reload)
         self.reload_button.grid(row=3, column=0, sticky='ew', pady=8)
         pane.add(sidebar, weight=1)
 
@@ -246,7 +269,7 @@ class ReviewWindow:
                 unreadable += 1
         open_count = sum(item.record['status'] == 'open' for item in entries)
         self.summary.set(f'{open_count} open exceptions | {len(entries) - open_count} closed | '
-                         f'{len(self.store.tickets())} pending/reviewed candidates | Nothing sent to Claude'
+                         f'{len(self.store.tickets())} candidates (including rejected) | Nothing sent to Claude'
                          + (f' | {unreadable} unreadable exception records' if unreadable else ''))
         if self.active_view == 'Candidates':
             self.ids = self.store.tickets()
@@ -293,8 +316,13 @@ class ReviewWindow:
     def show_hold(self, hold):
         self.show(None)
         self.hold = hold
-        self.reason.set(REASONS[hold.record['reason']][0])
-        self.guidance.set(REASONS[hold.record['reason']][1] +
+        status = hold.record['status']
+        self.reason.set(('Closed (' + status + '): ' if status != 'open' else '')
+                        + REASONS[hold.record['reason']][0])
+        action = REASONS[hold.record['reason']][1]
+        if self.demo and hold.record['reason'] in ('model_error', 'invalid_model_output'):
+            action = 'Simulated model recovery: Retry original uses mocked checks; Ollama is not contacted.'
+        self.guidance.set(action +
                           ' Original previews stay local. Names and other identifiers may not be highlighted.')
         self.notice.set(f"Exception {hold.ticket[:8]} is {hold.record['status']}. " +
                         ('Use View original locally, or compose a new generalized draft above.'
@@ -343,8 +371,12 @@ class ReviewWindow:
 
     def reload(self):
         if not self.busy and self.leave():
+            ticket = self.snapshot.ticket if self.snapshot else self.hold.ticket if self.hold else None
             self.show(None)
             self.refresh()
+            if ticket in self.ids:
+                self.queue.selection_set(self.ids.index(ticket))
+                self.select()
 
     def save(self, status):
         if self.busy:
@@ -396,11 +428,14 @@ class ReviewWindow:
             return
         self.busy = True
         self.controls()
-        self.notice.set('Working locally. Gmail originals may require a connection; model checks may take a few minutes.')
+        self.notice.set('Running synthetic checks locally; network is blocked.' if self.demo else
+                        'Working locally. Gmail originals may require a connection; model checks may take a few minutes.')
 
         def run():
             try:
                 self.results.put((operation, action(), None))
+            except RecoveryError:
+                self.results.put((operation, None, 'reconciliation_required'))
             except HoldError as error:
                 self.results.put((operation, None, error.code))
             except Exception:
@@ -432,8 +467,10 @@ class ReviewWindow:
                     self.subject.set(draft[0])
                     self.body.insert('1.0', draft[1])
                 self.refresh()
-                self.notice.set('Local checks passed. A new pending candidate is in Candidates; nothing was sent.'
-                                if result else 'Still held: ' + REASONS[self.hold.record['reason']][0])
+                self.notice.set('Local checks passed. A checked pending candidate is in Candidates; nothing was sent.'
+                                if result else 'Still held: ' + REASONS[self.hold.record['reason']][0]
+                                + '. ' + REASONS[self.hold.record['reason']][1]
+                                + ' Your draft is still here and has not been saved.')
             except HoldError:
                 self.notice.set('Exception changed or could not be read. Reload the list; any candidate stays pending.')
 
@@ -457,8 +494,8 @@ class ReviewWindow:
             return
         credentials = self.credentials()
         if credentials is not None:
-            source = self.hold.record['source']
-            self.start_work('preview', lambda: preview(read_source(source, *credentials)))
+            snapshot = self.hold
+            self.start_work('preview', lambda: triage.preview_original(self.store.folder, snapshot, credentials))
 
     def retry_original(self):
         if self.busy or self.hold is None or self.hold.record['source'] is None or not self.leave():
@@ -466,8 +503,7 @@ class ReviewWindow:
         credentials = self.credentials()
         if credentials is not None:
             snapshot = self.hold
-            self.start_work('retry', lambda: triage.recheck(self.store.folder, snapshot,
-                                                           read_source(snapshot.record['source'], *credentials)))
+            self.start_work('retry', lambda: triage.retry_original(self.store.folder, snapshot, credentials))
 
     def check_draft(self):
         if self.busy or self.hold is None:
@@ -478,7 +514,14 @@ class ReviewWindow:
             self.notice.set(str(error))
             return
         snapshot = self.hold
-        self.start_work('draft', lambda: triage.recheck(self.store.folder, snapshot, raw))
+        credentials = (None, None)
+        from review_workflow import managed
+        if managed(self.store.folder, snapshot.ticket):
+            credentials = self.credentials()
+            if credentials is None:
+                return
+        self.start_work('draft', lambda: triage.recheck(self.store.folder, snapshot, raw,
+                                                       credentials=credentials))
 
     def dismiss(self):
         if self.busy or self.hold is None or self.hold.record['status'] != 'open' or not self.leave():
@@ -487,7 +530,7 @@ class ReviewWindow:
                                    'Record that you will handle or skip this message yourself? The original stays unchanged.',
                                    parent=self.root):
             try:
-                self.show_hold(self.holds.update(self.hold, status='dismissed'))
+                self.show_hold(triage.dismiss(self.store.folder, self.hold))
                 self.refresh()
             except HoldError as error:
                 self.notice.set(str(error))
@@ -509,7 +552,7 @@ def demo_store(folder):
     return store
 
 
-def demo_exceptions(folder):
+def demo_exceptions(folder, *, managed=False):
     """Create originals inside the isolated demo directory, never live storage."""
     from email.message import EmailMessage
     source_folder = Path(folder) / 'synthetic-originals'
@@ -528,18 +571,45 @@ def demo_exceptions(folder):
         raw = mail.as_bytes()
         path = source_folder / f'example-{index}.eml'
         path.write_bytes(raw)
-        HoldStore(folder).create(uuid.uuid4().hex, reason, file_source(path, raw))
+        source = file_source(path, raw)
+        ticket = uuid.uuid4().hex
+        if managed:
+            from shadow_workflow import ShadowWorkflow
+            workflow = ShadowWorkflow(folder)
+            ticket = workflow.register(source)
+            workflow.intake.block(workflow.intake.claim(ticket), reason)
+            source = workflow.intake.private_source(ticket)['source']
+        HoldStore(folder).create(ticket, reason, source)
+
+
+@contextmanager
+def demo_checks():
+    """Process-wide mock limited to the temporary --demo session; no Ollama."""
+    from unittest.mock import patch
+    import scrubber
+    from synthetic_workflow import synthetic_checks
+    original = scrubber.scrub
+
+    def check(raw):
+        if b'DEMO_FAIL' in raw:
+            raise scrubber.Blocked('verifier_flagged')
+        return original(raw)
+
+    with synthetic_checks(), patch.object(scrubber, 'scrub', side_effect=check):
+        yield
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--demo', action='store_true', help='Use temporary synthetic examples only')
+    parser.add_argument('--demo', action='store_true',
+                        help='Temporary invented examples, mocked checks and blocked network; no Ollama')
     args = parser.parse_args()
     import tkinter as tk
-    with tempfile.TemporaryDirectory(prefix='scrubber-review-demo-') as temp:
+    with tempfile.TemporaryDirectory(prefix='scrubber-review-demo-') as temp, \
+            demo_checks() if args.demo else nullcontext():
         store = demo_store(temp) if args.demo else CandidateStore(STATE)
         if args.demo:
-            demo_exceptions(temp)
+            demo_exceptions(temp, managed=True)
         root = tk.Tk()
         ReviewWindow(root, store, demo=args.demo)
         root.mainloop()
