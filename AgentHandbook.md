@@ -97,6 +97,12 @@ contracts. Clean-context local-model reading passed 34 final decision checks.
 PLAYBOOK-TEST-REPORT.md records a conservative 9.1/10 instruction-quality judgment;
 this does not qualify live deployments or imply new runtime features are installed.
 
+Owner clarified that SETUP-PLAYBOOK.md must address the setup model directly.
+Replaced the human handoff preface and copyable prompt with an executable task,
+explicit setup/user/local-model/Claude roles and direct implementation commands.
+Kept the fourteen phases, privacy rules, adaptive model selection and completion
+checks. README now points to the file as the model's task instructions.
+
 Initial implementation on feature/local-email-scrubber in the existing T3 root.
 Installed local model discovered successfully. All 15 synthetic unit tests passed.
 Live Qwen synthetic email test removed the tested name, date of birth, record number,

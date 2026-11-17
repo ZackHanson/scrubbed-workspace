@@ -1,70 +1,71 @@
-# Build and run your own complete scrubbed workspace
+# Build and install the user's scrubbed workspace
 
-This is an implementation and installation playbook. Give it to a coding model
-with access to your development environment. Its task is to deliver a working
-system on your computer, including the components it must build. Access to the
-original author's private repository, accounts or machine is **not required**.
+You are the model responsible for setup. Use your tools to inspect the user's
+system, build or adapt the application, install it, and verify that it works.
+Complete the fourteen phases below. Deliver a working installation, its source
+and tests, and the user's operating instructions.
 
-The finished system automatically collects selected email, scrubs it locally,
-routes eligible messages to Claude, captures Claude's work in a separate workspace,
-and handles permitted actions through local controls. Human attention is reserved
-for exceptions and actions outside the owner's standing policy. A manual scrubber,
-a mocked Claude connection or a written architecture is not the completed result.
+Build a system that collects selected email, scrubs it locally, sends eligible
+requests to Claude, returns Claude's work to a separate workspace, and executes
+permitted actions through local controls. Automate routine processing. Ask the
+user to handle exceptions and actions outside their standing policy.
 
-This playbook defines outcomes and privacy requirements across different systems.
-The setup model must choose and validate the implementation best suited to the
-recipient's actual hardware, operating system, existing software and workload.
-Named products, model tags, paths and commands are examples or reference-source
-details unless explicitly required by the recipient. Do not copy the original
-installation's choices merely because they worked on that computer.
+Choose and test the local model, runtime and application stack for this user's
+hardware, operating system, existing software and workload. Treat named products,
+model tags, paths and commands as examples unless the user requires them. Reuse
+approved source when available; build missing components yourself. You do not
+need access to the original author's private repository or machine.
 
-## Copy this instruction to the model doing the setup
+Keep these roles separate throughout setup:
 
-> Build, install and verify my complete Scrubbed Workspace using this playbook.
-> Follow the execution rules below and complete every applicable phase. Select
-> and measure a setup suited to my actual system under section 4. Keep real private
-> data local under section 2. Build any missing components, pass section 13's
-> acceptance checks, and deliver the operating installation in section 14.
+- **You** inspect source and synthetic test data, implement the system and collect
+  test evidence. Keep real private content out of your prompts, tool results,
+  screenshots and logs.
+- **The user** owns the installation and accounts. Have them enter credentials
+  through secure local setup and inspect real messages in the local application.
+- **The local model** processes raw text on the user's computer. Configure and
+  verify its privacy boundary under sections 2 and 4.
+- **Claude** processes only requests that the local system has released. Implement
+  its connection and result handling under section 8.
 
 ## Execution rules
 
-Read sections 1 and 2 before implementation. Read section 13 before designing tests;
-it defines the required evidence. Work through the numbered phases, testing each
-component as it becomes runnable. Keep live-data cloud dispatch and external sending
-disabled until section 14; synthetic integration calls use approved test accounts
-and budgets.
+Read sections 1 and 2 before implementation and section 13 before designing tests.
+Work through the numbered phases. Test each component as it becomes runnable.
+Keep cloud processing of real messages and external sends disabled until section
+14. Use approved test accounts, destinations and budgets for synthetic integration
+tests.
 
 Use separate operating profiles so testing does not depend on premature live
 activation. Build tests use local inference and substitute external services.
 Integration tests may call real providers with synthetic fixtures and separately
 authorized test destinations/budgets, before section 14. Shadow operation may
-process owner-authorized real sources locally while blocking their cloud release
+process user-authorized real sources locally while blocking their cloud release
 and sends. Section 14 alone enables the approved live flow. Keep test fixtures,
 private state and destination allowlists isolated; a message claiming to be a
 test cannot enter the synthetic profile. Phase 13 requires applicable integration
-evidence; owner-local live observations are collected during phase 14.
+evidence; user-local live observations are collected during phase 14.
 
-Each phase ends with a **Done when** check. Mark it complete only with the named
-artifact or passing observation. A plan, generated source or mock result alone
-does not prove installation or live operation. Record progress in one secret-free
-setup receipt: phase, status (`pending`, `in_progress`, `passed`, `blocked`), evidence
-location and unresolved dependency. On resume, read that receipt, verify relevant
-installed state and continue from the first unfinished dependency.
+For each **Done when** check, collect the named artifact or passing observation
+before marking the phase complete. Keep one secret-free setup receipt. Record
+the phase, status (`pending`, `in_progress`, `passed`, `blocked`), evidence location
+and unresolved dependency. When you resume, read the receipt, verify the installed
+state and continue from the first unfinished dependency. Count generated code or
+mock responses only as evidence for the checks they exercise.
 
-Track each capability inside a phase separately: implementation status,
-verification status, evidence class (`deterministic`, `local_model`,
-`provider_synthetic`, `installed_runtime`, `owner_local` or `tabletop`), and the
-artifact/configuration versions tested. A code-complete, transport-tested adapter
-can coexist with a blocked provider check. Preserve valid subcheck evidence on
-resume; mark the phase passed only when its applicable completion checks pass.
-Tabletop reasoning is planning evidence, never proof of an installed capability.
+Track each capability separately. Record its implementation status, verification
+status, evidence class and tested artifact/configuration versions. Use the classes
+`deterministic`, `local_model`, `provider_synthetic`, `installed_runtime`,
+`owner_local` and `tabletop`. The `owner_local` class records checks the user
+performed locally. Keep a completed adapter test separate from a blocked provider
+check. Preserve valid subchecks on resume and mark a phase passed only when its
+applicable checks pass. Count tabletop reasoning as planning evidence only.
 
-Distinguish missing implementation from missing access. For each blocked feature,
-record the code still needed, the tests already run and the credential/permission
-needed for live verification. Missing account access blocks live execution; keep
-building and testing its enrollment, configuration and production code path with
-fake credentials and an in-process transport substitute. An unconditional refusal
-or placeholder command is unfinished implementation, not an account dependency.
+For each blocked capability, list unfinished code, completed tests and the access
+needed for live verification. Continue implementing enrollment, configuration and
+the production code path with fake credentials and an in-process transport
+substitute when account access is unavailable. Classify a placeholder command or
+unconditional refusal as unfinished code.
 
 Use these branches only when their condition applies:
 
@@ -80,39 +81,39 @@ Use these branches only when their condition applies:
 Continue independent work when a dependency is blocked. Keep dependent features
 disabled and report the missing input precisely; elapsed time is not authorization.
 
-## 1. Agree on the recipient's setup
+## 1. Resolve the user's requirements
 
-Resolve these choices early. Continue independent implementation while waiting
-on account access or other prerequisites. Never ask for a patient example or
+Inspect what you can and ask the user for the remaining choices below. Continue
+independent work while waiting for an answer. Never ask for a patient example or
 password in chat.
 
-| Choice | Default or decision needed |
+| Choice | What you must establish |
 | --- | --- |
-| Host | Inspect the recipient's actual OS and hardware; use that approved host and its native capabilities. No Windows requirement. |
-| Source mail | Use the recipient's selected provider and folder/label with a tested adapter and supported authentication. Gmail below is an example. |
-| Intake scope | New messages after an explicit start point; backfill is a separate bounded choice. |
+| Host | Inspect the user's actual OS and hardware; use that approved host and its native capabilities. No Windows requirement. |
+| Source mail | Use the user's selected provider and folder/label with a tested adapter and supported authentication. Gmail below is an example. |
+| Intake scope | Set an explicit start point for new messages. Agree on a separate limit for any backfill. |
 | Local model | Select a fully local model, quantization and runtime using the system inspection and synthetic evaluation in section 4. No fixed model requirement. |
-| Claude | Recipient's Anthropic API project, approved model and spending ceiling. Confirm API access/billing separately from any chat subscription. |
+| Claude | Confirm the user's Anthropic API project, approved model and spending ceiling. Verify API access and billing separately from any chat subscription. |
 | Workspace | Choose a usable desktop or protected local web application suited to the host, with tasks, results, follow-up chat and exceptions. Optional scrubbed mailbox mirror. |
-| Processing policy | Eligible work categories, excluded content, de-identification requirements and automatic-release rules. |
-| Action policy | Automatic local task/draft updates; external sends only under explicit, bounded standing rules or individual approval. |
-| Operations | Poll interval, daily budget, startup behavior, private retention and encrypted backup destination. |
+| Processing policy | Record eligible work categories, excluded content, de-identification requirements and automatic-release rules. |
+| Action policy | Automate local task/draft updates. Enable external sends only under bounded standing rules or individual approval. |
+| Operations | Set the poll interval, daily budget, startup behavior, retention policy and encrypted backup destination. |
 
-Record decisions in a private local configuration and a content-free setup
-receipt. Do not inherit the original author's paths, Git identity, accounts,
-agent services, scheduling, backup destinations or coordination threads.
+Save decisions in private local configuration and record their status in the
+setup receipt. Use the user's paths, accounts, scheduling and backup choices.
+Do not copy the original author's machine configuration or credentials.
 
-Real clinical messages require an organization-approved de-identification and
-release process. HHS describes Safe Harbor and Expert Determination; LLM redaction
-and two passes through the same model alone do not establish either. Implement the
-chosen process as an enforceable release policy. An unresolved process is a live
-activation dependency, not a reason to omit the cloud pipeline from the build.
+For clinical messages, establish the user's organization-approved de-identification
+and release process before live activation. Implement that process as an
+enforceable policy. Keep building the cloud connection while this decision is
+unresolved, with real-message release disabled. Do not treat LLM redaction or two
+passes through the same model as proof of Safe Harbor or Expert Determination.
 See [HHS de-identification guidance](https://www.hhs.gov/hipaa/for-professionals/special-topics/de-identification/index.html).
 
 **Done when:** the setup receipt records each choice above as resolved or names its
-owner-dependent blocker, including the intended live activation scope.
+user-dependent blocker, including the intended live activation scope.
 
-## 2. Architecture and privacy boundary
+## 2. Enforce the local and cloud privacy boundaries
 
 Implement this complete route:
 
@@ -133,13 +134,14 @@ Exceptions -> local reviewer -> corrected draft or retry -> all release gates ag
 Separate these roles in code and storage; separate worker processes where
 practical. Claude must not have direct access to intake, the original mailbox,
 filesystem search, the credential store, source previews or the routing database.
-The coding model helping set up the system has the same restriction on real data.
+Apply the same restrictions to your setup tools and context. Have the user inspect
+real originals locally; do not inspect them yourself.
 
 | Local-only private data | Permitted cloud payload |
 | --- | --- |
 | Originals, sender/recipient addresses, Reply-To, headers, source filenames/paths, attachment bytes, source message IDs, account hashes, exact private timestamps and identity mappings | Only generalized subject/body and a bounded task request that passed the recorded release policy |
 | Credential material, local diagnostics and backups | No credentials or local diagnostics |
-| Private conversation history and unscreened owner follow-ups | Only separately screened conversation turns |
+| Private conversation history and unscreened user follow-ups | Only separately screened conversation turns |
 
 Use fresh random opaque cloud task IDs where needed; never derive cloud IDs from
 names, addresses or mailbox identifiers. Keep the cloud/local ID mapping local.
@@ -150,7 +152,7 @@ output. Any locally restored routing or identity makes that artifact private aga
 Disable content tracing, SDK debug dumps, error-body logging, crash-report uploads
 and analytics that could capture sensitive text. Do not fetch email tracking
 pixels, remote HTML resources or attachments. Do not put runtime data in Git or
-cloud-synced folders. Use approved encrypted storage and owner-only permissions;
+cloud-synced folders. Use approved encrypted storage and user-only permissions;
 the application must verify its actual state path and protect newly created files.
 
 **Done when:** the implementation plan assigns every data item in the boundary
@@ -158,7 +160,7 @@ table to a component/store and identifies each permitted external connection.
 
 ## 3. Start from source or implement the system
 
-Use one recipient-owned project folder, separate from all private runtime data.
+Use one user-owned project folder, separate from all private runtime data.
 If approved source is supplied, inspect its revision and tests, preserve local
 changes, and inventory which requirements below it actually implements. Do not
 assume a feature exists because documentation mentions it. If no source is
@@ -168,7 +170,8 @@ When reusing the reference prototype, consult the [appendix](#reference-prototyp
 for its limited scope. Determine installed capabilities from actual source, config,
 tests and CLI help; treat absent requirements as implementation work.
 
-Suggested module ownership boundaries for a new implementation:
+Define components with the following responsibilities. Adapt their names and
+organization to your chosen stack.
 
 | Module | Responsibility |
 | --- | --- |
@@ -182,7 +185,7 @@ Suggested module ownership boundaries for a new implementation:
 | `worker` | Polling, recovery, budgets, health and pause controls |
 | `setup` | Secure account enrollment, installation, diagnostics and uninstall |
 
-Choose a maintained application stack supported by the recipient's OS and existing
+Choose a maintained application stack supported by the user's OS and existing
 environment. Python, Tkinter and SQLite are reference options, not requirements.
 If reusing the Python 3.13 prototype, verify compatibility before changing its
 runtime. Use isolated dependencies and pin versions. A full build may add official
@@ -191,28 +194,29 @@ configuration schemas, migrations, installers, synthetic fixtures and operator d
 
 Identify the actual installed source/executable bytes with a manifest/digest,
 including dirty changes and generated artifacts used at runtime. A commit ID alone
-is insufficient. Preserve owner edits and store private manifests locally; receipts
+is insufficient. Preserve user edits and store private manifests locally; receipts
 may refer to their digests without copying private contents. Bind relevant tests
 to this installed identity as well as configuration/model versions.
 
-Start with a working vertical slice: synthetic import, real local inference,
-durable release, cloud adapter, persisted result and an accessible task/draft in
-the workspace. Without API access, substitute only the external transport while
-exercising the same request-building, dispatch and result-handling path intended
-for production. Then expand coverage, recovery and installation. Keep synthetic
-and live configurations separate while sharing the functional implementation.
+First make one synthetic message pass through local inference, durable release,
+the cloud adapter and result storage. Display its result and any selected task
+or draft actions in the workspace.
+Without API access, substitute only the external transport. Exercise the same
+request construction, dispatch and result handling you will use in production.
+Then complete the remaining coverage, recovery and installation work. Keep
+synthetic and live configurations separate and use the same application code.
 
 **Done when:** the selected stack builds and a capability inventory maps every
 required module to verified existing behavior or a concrete implementation task.
 
-## 4. Inspect, select and optimize for the actual system
+## 4. Inspect the host and select its local runtime
 
 ### Inspect before selecting a model
 
 Use read-only system tools to determine OS/version and CPU architecture, available
 RAM, CPU capabilities, GPU type, usable dedicated or unified memory, supported
 acceleration/drivers, free disk space, power/thermal constraints and existing local
-inference installations. Consider memory needed by the OS, owner applications,
+inference installations. Consider memory needed by the OS, user applications,
 context cache and concurrent workers, not just the model-weight download size.
 Keep hostnames, usernames, hardware serials and full diagnostic dumps out of chat.
 
@@ -233,7 +237,7 @@ requirements. A smaller model, CPU execution or partial acceleration is acceptab
 only if it meets the agreed quality and operational requirements.
 
 Evaluate the feasible candidates on the same labeled synthetic corpus, including
-the recipient's languages and expected message lengths. Measure identifier misses,
+the user's languages and expected message lengths. Measure identifier misses,
 required holds, useful meaning retained, exception rate, schema failures, cold/warm
 latency, sustained throughput, peak memory and stability. Set mandatory quality
 thresholds and acceptable latency before comparison. Do not select by benchmark
@@ -250,7 +254,7 @@ after tuning. Keep a known-good configuration and do not auto-switch models late
 
 If no local candidate satisfies the quality/resource requirements, finish the
 other components and explain the measured constraint and feasible options, such
-as reduced throughput, a different evaluated model or owner-approved hardware.
+as reduced throughput, a different evaluated model or user-approved hardware.
 When execution, weights or downloads are unavailable, distinguish observed host
 limits from unmeasured model quality/performance. Record the missing prerequisite
 and leave actual-inference/optimization checks blocked; deterministic work can
@@ -276,7 +280,7 @@ configuration. Other runtimes require their own documented and tested controls;
 do not assume they understand these variables or use the same port. Coordinate
 shared-service restarts. Download weights before processing real messages.
 
-Generate exact installation, verification and service commands for the recipient's
+Generate exact installation, verification and service commands for the user's
 chosen platform. For example, Windows can use `Get-NetTCPConnection` to inspect
 the selected port; use the appropriate native equivalent elsewhere. Use
 platform-native credential storage, private data paths, startup and UI mechanisms
@@ -323,7 +327,7 @@ the old account binding. Test renewal into the wrong account with fake identitie
 For API credentials, retain the approved project/destination and spending scope;
 changing that scope requires revalidation rather than resetting budget history.
 
-For Gmail, prefer an implemented OAuth flow appropriate to the recipient's account
+For Gmail, prefer an implemented OAuth flow appropriate to the user's account
 and deployment. Use official [Gmail IMAP/OAuth documentation](https://developers.google.com/workspace/gmail/imap/imap-smtp)
 and [XOAUTH2 protocol](https://developers.google.com/workspace/gmail/imap/xoauth2-protocol).
 If app passwords are allowed, use secure local entry and storage; availability
@@ -359,7 +363,7 @@ Deduplicate repeated polls and retries with a unique source key. Bound batch
 size, bytes, nesting and decoded text before inference. Fail closed on malformed
 MIME, attachments, unsupported formats and oversized content. Store a typed local
 exception with a retrievable source reference. Keep originals available for
-owner-only preview without fetching remote resources or opening attachments.
+user-only preview without fetching remote resources or opening attachments.
 
 On network/authentication failure, preserve the cursor and queue, back off with
 jitter, surface a fixed error and permit local credential repair. A missing or
@@ -368,7 +372,7 @@ changed original must never be silently replaced by a different source.
 Provide a local source-rebind operation for moved exports. Preserve the immutable
 source identity and history; compare the proposed file with the recorded content
 fingerprint and version before changing its path binding. An identical file may
-be rebound locally under the owner's repair choice. Missing integrity evidence,
+be rebound locally under the user's repair choice. Missing integrity evidence,
 changed bytes or ambiguous matches stay held; use a new source import when the
 content is genuinely different. Never adopt a new file merely because it occupies
 the old path. For provider-side moves, use verified stable provider identity or
@@ -393,7 +397,7 @@ the useful work request without inventing facts. Check names, contacts, location
 dates, IDs, ages, rare events and identifying combinations, including in history.
 Reject uncertain, incomplete or invalid output and suspected remaining identifiers.
 
-Establish routine categories from the recipient's representative work scenarios.
+Establish routine categories from the user's representative work scenarios.
 Test varied wording and new examples within each category. Preserve requested
 deliverables, distinctions, ordering and non-identifying constraints during
 generalization. Locally compare the retained work with the source request; hold
@@ -411,7 +415,7 @@ Implement three routing outcomes after those checks:
   content-free decision rather than silently disappearing.
 
 Confidence from an LLM is not sufficient release authority. Deterministic code
-must enforce the owner's versioned policy. Maintain an immutable release record
+must enforce the user's versioned policy. Maintain an immutable release record
 binding the content digest/version, scrub/audit results, category, destination
 and policy version. In one transaction, commit the release decision and cloud
 outbox entry. Recheck the binding before dispatch; edits or policy revocation
@@ -419,14 +423,14 @@ invalidate unsent releases. A `reviewed_locally` flag alone never opens this gat
 
 Build shadow mode that records would-release/would-hold decisions without
 transmitting. Compare those decisions against labeled synthetic fixtures and
-owner-local evaluation. Set acceptance thresholds before evaluation: zero known
+user-local evaluation. Set acceptance thresholds before evaluation: zero known
 identifier leakage in the suite, all mandatory holds blocked, all designated
 routine fixtures processed, and recorded usefulness/exception-rate targets.
 Do not make routine operation depend on opening every candidate. If exceptions
 are excessive, improve evaluated rules/redaction instead of removing gates.
 
-The local reviewer must support inert source preview, retry, composing a new
-generalized draft, discard/reject and resolving exceptions. Run edited drafts
+Implement a local reviewer with inert source preview, retry, draft editing,
+discard/reject and exception resolution. Run edited drafts
 through all release gates. Preserve drafts on failed checks and prevent stale
 review decisions overwriting a newer version.
 
@@ -435,7 +439,7 @@ the shadow evaluation and exact versioned release policy are recorded.
 
 ## 8. Implement Claude processing and the scrubbed workspace
 
-Use the recipient's approved Anthropic API project and a configurable supported
+Use the user's approved Anthropic API project and a configurable supported
 model. Verify current request/authentication syntax in the official
 [API overview](https://platform.claude.com/docs/en/api/overview) and
 [Messages reference](https://platform.claude.com/docs/en/api/messages/create).
@@ -443,9 +447,10 @@ Use [structured outputs](https://platform.claude.com/docs/en/build-with-claude/s
 where supported, plus strict local validation. Keep schemas and examples generic.
 Do not hard-code an assumed model ID, price, context limit or account entitlement.
 
-The cloud adapter accepts **only a durable released-task object**, never an email,
-candidate directory or source reference. Serialize an allowlist of fields, such
-as a random task ID, generalized subject/body and permitted task instruction.
+Make the cloud adapter accept only a durable released-task object. Reject email,
+candidate directories and source references at this interface. Serialize an
+allowlist of fields, such as a random task ID, generalized subject/body and
+permitted task instruction.
 Reject unexpected fields. Capture outgoing requests in synthetic tests and assert
 that no private identifiers, metadata, paths or credentials except transport
 authentication cross this boundary. Disable automatic redirects to other hosts.
@@ -486,9 +491,9 @@ application; a local web UI needs loopback binding and appropriate authenticatio
 origin and request protections. Private source preview belongs in an explicitly
 local view and must never enter a cloud-connected page's context.
 
-Screen every owner follow-up, pasted text, result reused as context and tool/action
+Screen every user follow-up, pasted text, result reused as context and tool/action
 output through the same local release boundary before another Claude request.
-Do not automatically include entire mailbox threads, prior tasks or owner profile.
+Do not automatically include entire mailbox threads, prior tasks or user profile.
 Validate and locally inspect returned text for unsafe instructions or unexpected
 identifiers before display/reuse/action; no response is executable code.
 
@@ -501,7 +506,7 @@ Unreleased drafts, blocked turns, original mailbox history and other tasks stay
 outside it. Test a context-dependent useful follow-up and an identifying follow-up
 that is held without contaminating later requests.
 
-If the owner wants a dedicated scrubbed mailbox, implement it as an optional
+If the user wants a dedicated scrubbed mailbox, implement it as an optional
 mirror of released tasks and validated results. Build a fresh message envelope:
 generic subject, scrubbed body and opaque task token only. Never forward original
 headers, addresses, attachments or signatures. Replies to this mirror are new
@@ -514,15 +519,16 @@ checks pass for the selected workspace, including a real synthetic API round tri
 
 ## 9. Implement actions, reply routing and approval
 
-Claude proposes work; local code decides what may happen. Use typed actions such
-as `save_task`, `save_draft` and `send_reply`. Resolve source thread and recipients
-from the private local map. Never accept a recipient/address/URL or arbitrary
-command supplied by a cloud response as action authority.
+Treat Claude's output as proposed work. Enforce action authority in local code.
+Use typed actions such as `save_task`, `save_draft` and `send_reply`. Resolve the
+source thread and recipients from the private local map. Never accept a
+recipient/address/URL or arbitrary command supplied by a cloud response as action
+authority.
 
 Default behavior: automatically save results, tasks and drafts; send only under
-an owner-established standing rule or explicit approval. A rule must specify
+a user-established standing rule or explicit approval. A rule must specify
 action type, allowed recipients/categories, content constraints, limits and
-expiry. If the owner elects automatic routine replies, implement that option and
+expiry. If the user elects automatic routine replies, implement that option and
 test it; do not require per-message approval inside the chosen scope. Route new
 recipients, attachments, commitments, sensitive clinical decisions, money,
 destructive requests and other excluded actions to exceptions.
@@ -543,7 +549,7 @@ and bounced or auto-generated messages must not generate indefinite replies.
 **Done when:** section 13's Actions and Send recovery checks pass for the chosen
 action mode, including rejection of an altered approved action.
 
-## 10. Install background operation and recovery
+## 10. Install and test the background worker
 
 Implement one worker with a lease/heartbeat, bounded queues, backoff and graceful
 shutdown. Suggested durable states:
@@ -559,7 +565,7 @@ without discarding work. Distinguish a safe retry from an external operation
 whose outcome is unknown. A worker crash must not erase an exception, cursor,
 release decision, result, approval or send receipt.
 
-Install the platform's appropriate startup mechanism under owner authorization,
+Install the platform's appropriate startup mechanism under user authorization,
 such as a Windows Scheduled Task, macOS launch agent or Linux service. Use absolute
 runtime/source/config paths and the intended non-admin user.
 Choose login start versus unattended boot deliberately: encrypted credentials,
@@ -572,7 +578,7 @@ reboot/login and sleep/wake.
 Expose distinct controls: pause intake, pause cloud release, disable sending,
 resume, stop worker and health/status. A privacy incident pauses new cloud sends
 without deleting records; recovery requires a deliberate reviewed resume.
-Persist independent stop reasons, such as owner pause, privacy failure, exhausted
+Persist independent stop reasons, such as user pause, privacy failure, exhausted
 budget, expired authentication or changed policy/model. Repair clears only the
 reason actually resolved. Resume, activation, credential renewal and restart must
 not clear another outstanding reason or re-enable sending as a side effect. Test
@@ -586,10 +592,10 @@ the actual background account, with real-data dispatch still disabled.
 
 ## 11. Provide an operator interface and installer
 
-Implement and document a single entry point for the selected application stack.
-The following is a **required target interface to build**, not commands provided
-by the reference prototype. The Python syntax is illustrative; equivalent native
-commands are acceptable if the runbook gives exact tested commands for this host.
+Implement and document these operations through one application entry point.
+Choose commands appropriate to your stack and test them on this host. The Python
+commands below describe the required interface; they are not existing commands
+you can assume are installed. Record your tested commands in the user's runbook.
 
 ```powershell
 python -m workspace setup                 # private paths and secure local enrollment
@@ -612,7 +618,7 @@ Make setup idempotent. Validate configuration before starting; include explicit
 `mode`, account/source references, start cursor, model IDs, policy versions,
 poll interval, cloud/send flags, destinations, limits, credential references and
 retention settings. Generate a secret-free example configuration. Provide GUI
-launchers for the owner; they must resolve the installed interpreter correctly.
+launchers for the user; they must resolve the installed interpreter correctly.
 Package installation/uninstall must preserve private data and unrelated jobs.
 
 Choose and document one configuration precedence order for supported inputs.
@@ -630,10 +636,10 @@ synthetic configuration reaches the real dispatcher with a substituted transport
 missing enrollment, invalid policy, budget and permissions produce distinct
 blocking reasons. Provide a usable path from repaired configuration to activation.
 A command that always reports blocked regardless of configuration stays incomplete.
-The delivered runbook must show reason-specific resume examples: the selected
+Write reason-specific resume examples in the runbook. Show the selected
 reason, its repair prerequisites, evidence checked and the reasons still active
 afterward. Include a refused attempt to clear an unresolved privacy stop and a
-successful budget/auth repair that leaves an independent owner pause intact.
+successful budget/auth repair that leaves an independent user pause intact.
 
 Include these recovery paths in the delivered UI and runbook:
 
@@ -662,8 +668,8 @@ handled. Apply a deliberate retention/deletion policy to caches and records.
 
 Perform a restore into an isolated temporary store with cloud/send disabled and
 no installed worker. Verify queue state, source mappings, results and decisions;
-check bytes/counts without exposing content to the coding model. Test with
-synthetic data first; the owner performs private-data checks locally.
+check bytes/counts without bringing content into your context. Test with
+synthetic data first; the user performs private-data checks locally.
 
 Resolve application-owned blob/index paths against the new state root and verify
 they remain inside its approved boundaries. Validate every restored reference;
@@ -690,7 +696,7 @@ reserved example domains and fake credentials. Never use real mail as test fixtu
 Mocks verify deterministic faults; actual local-model and Claude tests verify the
 installed integration. A mock-only pass does not establish end-to-end readiness.
 
-Keep a separate acceptance set authored by the owner or an independent evaluator,
+Keep a separate acceptance set authored by the user or an independent evaluator,
 unseen while building/tuning the implementation. Include subject-only requests,
 new wording within agreed routine categories and requests with several required
 non-identifying details. Check their meaning as well as release counts. After a
@@ -713,8 +719,8 @@ as an acceptance failure even if all rejected inputs were safely held.
 | Hostile instructions | Mail, follow-ups and cloud responses cannot alter policy, discover originals, change destinations or invoke unauthorized tools/actions. |
 | Intake durability | More than one full batch is eventually discovered; repeated polling, UIDVALIDITY changes, credential expiration, cursor crashes and concurrent workers neither lose nor multiply tasks. |
 | Claude integration | A real synthetic request returns useful work, persists it, displays it and supports a screened follow-up; truncation/refusal/429/timeouts produce recoverable states. |
-| Exceptions | Owner can inspect a synthetic original locally, retry/edit, resolve/reject; all new content passes gates and stale decisions fail. |
-| Actions | Automatic allowed local actions work; approved/standing-rule replies reach an owner-controlled test mailbox with correct local routing; disallowed actions are held. |
+| Exceptions | User can inspect a synthetic original locally, retry/edit, resolve/reject; all new content passes gates and stale decisions fail. |
+| Actions | Automatic allowed local actions work; approved/standing-rule replies reach a user-controlled test mailbox with correct local routing; disallowed actions are held. |
 | Send recovery | Recipient/body edits invalidate approvals; duplicate submissions and crash-after-send become reconciled or unknown, never blind retries. |
 | Workspace/mirror | Results are usable; optional mirror contains no original envelope and cannot feed itself endlessly. |
 | Operations | Installed worker starts under the real account, accesses credentials, resumes after reboot/sleep, respects pause and prevents overlap. |
@@ -728,15 +734,15 @@ Zero known leaks in a finite suite is necessary evidence, not a universal privac
 guarantee. Do not lower gates to make acceptance pass.
 
 **Done when:** every applicable row passes with evidence for this installation;
-owner-dependent gaps remain explicitly blocked rather than counted as passes.
+user-dependent gaps remain explicitly blocked rather than counted as passes.
 
-## 14. Activate the recipient's complete installation
+## 14. Activate and hand over the installation
 
 Finish implementation, packaging, synthetic tests and a shadow run first. Verify
 the exact source revision, release policy, destination, send rules, budget,
 credential references, worker identity and recovery plan. Use already recorded
 authorization; ask only for unresolved live account, cost or external-action
-decisions. The coding model must not inspect real mail to obtain that confirmation.
+decisions. Do not inspect real mail to obtain that confirmation.
 
 Record one private activation manifest binding the installed artifact/config
 digest, model/prompt/release-policy versions, enrolled accounts and worker identity,
@@ -748,21 +754,21 @@ destination, model or rule changes invalidate affected checks and authority
 bindings, not unrelated completed work. Activation also checks every outstanding
 stop reason from section 10 before dispatch.
 
-Activate with a small bounded batch and conservative concurrency. The owner
-locally verifies the initial real results and that exceptions are recoverable.
+Activate with a small bounded batch and conservative concurrency. Have the user
+check the initial real results and exception recovery locally.
 Then enable the intended automatic routine flow and installed background worker
 under the approved limits. Verify at least one real eligible task reaches Claude
 and returns to the workspace, one local exception can be handled, and the worker
-continues after restart. The owner may attest to private checks using counts and
-fixed outcomes; do not bring content into the setup model's context.
+continues after restart. Collect counts and fixed outcomes as the user's
+attestation of private checks. Keep private content out of your context.
 
-If external replies are authorized, demonstrate the chosen route to an
-owner-controlled test mailbox before allowing the standing rule's real scope.
-An owner may choose draft-only external actions while still having fully
+If external replies are authorized, demonstrate the chosen route to a
+user-controlled test mailbox before allowing the standing rule's real scope.
+A user may choose draft-only external actions while still having fully
 automatic intake, Claude processing and results. Record the configured action
-mode accurately. Optional mirrors are required only when the owner selected them.
+mode accurately. Optional mirrors are required only when the user selected them.
 
-Hand back:
+Give the user these deliverables:
 
 - Installed workspace launcher and exact start/status/pause/resume/stop commands.
 - Source revision, dependency/model versions and the installed worker identity.
@@ -770,14 +776,14 @@ Hand back:
   quality/performance, resource limits and exact platform-specific setup commands.
 - Secure enrollment/renewal instructions without secret values or private addresses.
 - Active release/action rules, limits, excluded categories and exception workflow.
-- Acceptance results, owner-attested live checks, reboot evidence and restore evidence.
+- Acceptance results, user-attested live checks, reboot evidence and restore evidence.
 - Update/rollback/uninstall and retention instructions, with any remaining dependency
   explicitly identified rather than reported as completed.
 
-**Done when:** the owner can launch and operate the workspace; the live processing,
-exception, restart and applicable action checks above pass; and the handoff contains
-every listed deliverable. An unresolved activation dependency means setup remains
-incomplete even when all independent implementation work is finished.
+**Done when:** the user can launch and operate the workspace, all applicable live
+processing, exception, restart and action checks above pass, and you have supplied
+every listed deliverable. If activation remains blocked, report the unfinished
+checks and their dependencies. Do not mark the full setup complete.
 
 ## Reference prototype
 

@@ -339,9 +339,28 @@ reports, and `reader/reader-baseline.json`, `reader/contracts-revised.json`,
 
 Reviewed final snapshot before the last context clarification:
 `dbbed1dd452b7d6a5e8eef6683bd8e7976bf539583887a329aafb297cb6c9d46`.
-Delivery playbook SHA-256, checked by the 34-decision reader probe:
+Prior delivery playbook SHA-256, checked by the 34-decision reader probe:
 `8bf23f82c53a93fba5d855336fa706351a101dbf76d70b56080cf3746af15a91`.
 
 The repository changes are documentation only. Real mail, secret credentials,
 paid provider requests, installed startup jobs and live external replies were
 not used to obtain this rating.
+
+## Rewrite for the setup model
+
+Replaced the human handoff preface and copyable prompt with direct instructions
+to the model performing setup. The file now assigns the model responsibility for
+inspection, implementation, installation, testing and delivery. It distinguishes
+that model from the user, the local inference model and Claude. The fourteen
+phases, completion checks, privacy rules and adaptive setup requirements remain.
+
+The local reader passed 38/38 decisions on this revision, including four explicit
+role checks. It identified building/installing/verifying as its task, rejected
+rewriting the document as the deliverable, and kept real-original inspection with
+the user rather than the setup model. Structure, links and workflow identifiers
+also passed checks. These reading tests do not replace live integration tests;
+no new application build or live activation was performed for this audience edit.
+
+Tested playbook SHA-256:
+`bf8e9276d3d900fac341f67aa023f06c72632acaa0a7513f972a91639812aaf1`.
+Receipt: `reader/contracts-agent-directed-final.json` in the retained rating run.

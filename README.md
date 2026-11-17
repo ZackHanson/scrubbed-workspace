@@ -7,13 +7,10 @@ remain pending local review; automatic routing and Claude delivery are not enabl
 
 Requires Python 3.13 and the installed local `qwen3.5:9b-q4_K_M` model.
 
-To have another coding model build and install a complete independent system,
-use the [full-system playbook](SETUP-PLAYBOOK.md). It covers automatic intake,
-local scrubbing and routing, Claude processing, a separate results workspace,
-actions/replies, background operation and recovery, including components beyond
-this prototype and a copyable implementation prompt. The setup model must inspect
-each recipient's system and select/test suitable local models, runtimes and settings;
-the prototype's Windows/Python/Ollama choices are reference details.
+Give the [setup instructions](SETUP-PLAYBOOK.md) to the model building a separate
+installation. The file addresses that model directly and requires it to build,
+install and test the full system, including components beyond this prototype.
+It must choose local models, runtimes and settings for the user's own system.
 
 Observed trial results and remaining validation gaps are recorded in the
 [playbook execution test report](PLAYBOOK-TEST-REPORT.md).
