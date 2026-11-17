@@ -66,6 +66,12 @@ and tuning, native platform integration and a recorded installation profile.
 Reference model tags and Windows/Python/Ollama settings are examples, not universal
 requirements. Privacy and complete-workflow acceptance requirements remain fixed.
 
+Applied [writing-for-agents](https://github.com/mattpocock/skills/blob/main/skills/productivity/writing-for-agents/SKILL.md)
+guidance to the playbook: explicit
+phase completion evidence, execution/resume rules, conditional reference lookup
+and one optional prototype appendix. Kept the shareable playbook self-contained;
+the external skill was read for this edit, not installed as a project dependency.
+
 Initial implementation on feature/local-email-scrubber in the existing T3 root.
 Installed local model discovered successfully. All 15 synthetic unit tests passed.
 Live Qwen synthetic email test removed the tested name, date of birth, record number,

@@ -21,25 +21,39 @@ installation's choices merely because they worked on that computer.
 ## Copy this instruction to the model doing the setup
 
 > Build, install and verify my complete Scrubbed Workspace using this playbook.
-> Reuse approved source if available; implement missing components yourself.
-> Inspect my actual system first. Choose, install and tune a suitable local model,
-> inference runtime, application stack and background service for my hardware,
-> operating system and workload. Compare realistic options with synthetic tests;
-> optimize privacy, redaction quality, usefulness, responsiveness and reliability
-> within my resource and cost limits. Do not assume the largest model is best or
-> copy the reference machine's model/settings. Explain and record your choices.
-> Continue through intake, local redaction, automatic routing, Claude processing,
-> result capture, actions/replies, background operation and recovery. Give me a
-> usable workspace and operating instructions. Use synthetic data for development
-> and testing. Never bring original email, private routing maps, credentials or
-> potentially identifying candidates into your cloud context, screenshots or logs.
-> Real mail is processed by the local application and local model only; the
-> runtime Claude connection receives only content permitted by the release policy.
-> Configure my accounts through secure local setup, not credentials pasted in chat.
-> Prepare and test the complete system before asking me for any remaining live
-> activation decisions. Use authorization I have already given for specific
-> destinations, costs and actions. Do not claim completion until the full workflow
-> runs, exceptions recover, and the installed worker survives restart.
+> Follow the execution rules below and complete every applicable phase. Select
+> and measure a setup suited to my actual system under section 4. Keep real private
+> data local under section 2. Build any missing components, pass section 13's
+> acceptance checks, and deliver the operating installation in section 14.
+
+## Execution rules
+
+Read sections 1 and 2 before implementation. Read section 13 before designing tests;
+it defines the required evidence. Work through the numbered phases, testing each
+component as it becomes runnable. Keep real cloud dispatch and external sending
+disabled until section 14; synthetic integration calls use approved test accounts
+and budgets.
+
+Each phase ends with a **Done when** check. Mark it complete only with the named
+artifact or passing observation. A plan, generated source or mock result alone
+does not prove installation or live operation. Record progress in one secret-free
+setup receipt: phase, status (`pending`, `in_progress`, `passed`, `blocked`), evidence
+location and unresolved dependency. On resume, read that receipt, verify relevant
+installed state and continue from the first unfinished dependency.
+
+Use these branches only when their condition applies:
+
+| Condition | Instructions to use |
+| --- | --- |
+| Approved source supplied | Inspect and reuse it under section 3; otherwise implement from the requirements. |
+| Reference prototype reused | Consult the appendix and actual source/CLI; skip this reference for a fresh implementation. |
+| Ollama selected | Apply its runtime-specific controls in section 4; otherwise use the selected runtime's official controls. |
+| Gmail selected | Use the Gmail enrollment reference in section 5; otherwise implement the selected provider's supported authentication. |
+| Mailbox mirror selected | Implement the optional mirror in section 8 and include it in acceptance tests. |
+| External sending enabled | Complete section 9's applicable authorization route and section 14's test-mailbox demonstration. |
+
+Continue independent work when a dependency is blocked. Keep dependent features
+disabled and report the missing input precisely; elapsed time is not authorization.
 
 ## 1. Agree on the recipient's setup
 
@@ -69,6 +83,9 @@ and two passes through the same model alone do not establish either. Implement t
 chosen process as an enforceable release policy. An unresolved process is a live
 activation dependency, not a reason to omit the cloud pipeline from the build.
 See [HHS de-identification guidance](https://www.hhs.gov/hipaa/for-professionals/special-topics/de-identification/index.html).
+
+**Done when:** the setup receipt records each choice above as resolved or names its
+owner-dependent blocker, including the intended live activation scope.
 
 ## 2. Architecture and privacy boundary
 
@@ -111,6 +128,9 @@ pixels, remote HTML resources or attachments. Do not put runtime data in Git or
 cloud-synced folders. Use approved encrypted storage and owner-only permissions;
 the application must verify its actual state path and protect newly created files.
 
+**Done when:** the implementation plan assigns every data item in the boundary
+table to a component/store and identifies each permitted external connection.
+
 ## 3. Start from source or implement the system
 
 Use one recipient-owned project folder, separate from all private runtime data.
@@ -119,12 +139,9 @@ changes, and inventory which requirements below it actually implements. Do not
 assume a feature exists because documentation mentions it. If no source is
 available, create a new project and implement these requirements directly.
 
-The reference prototype at revision `466de50` provides only Python local
-scrubbing, synthetic checks and desktop candidate/exception review. Its files
-include `scrubber.py`, `holds.py`, `review.py`, `triage.py`, `synthetic_check.py`
-and three test modules. It can accelerate the local components; it is not the
-completion target. Do not preserve its mandatory-review behavior as the routine
-workflow or treat its local review status as permission to transmit.
+When reusing the reference prototype, consult the [appendix](#reference-prototype)
+for its limited scope. Determine installed capabilities from actual source, config,
+tests and CLI help; treat absent requirements as implementation work.
 
 Suggested module ownership boundaries for a new implementation:
 
@@ -146,6 +163,9 @@ If reusing the Python 3.13 prototype, verify compatibility before changing its
 runtime. Use isolated dependencies and pin versions. A full build may add official
 provider SDKs, OAuth and OS credential-store integration. Include dependency locks,
 configuration schemas, migrations, installers, synthetic fixtures and operator docs.
+
+**Done when:** the selected stack builds and a capability inventory maps every
+required module to verified existing behavior or a concrete implementation task.
 
 ## 4. Inspect, select and optimize for the actual system
 
@@ -224,28 +244,8 @@ settings, summarized hardware capacity, comparison results and selection rationa
 in a content-free installation profile. Protect private machine details. Include
 the tested workload limits and when to reevaluate after hardware/software changes.
 
-### Optional reference-prototype checks
-
-The seed uses Python 3.13, Tkinter and Ollama with `qwen3.5:9b-q4_K_M`. These are
-historical reference choices, not recommendations for every recipient. Its client
-fixes the model tag and `127.0.0.1:11434`, requests a 32,768-token context and uses
-a 240-second API timeout. If reusing it with a different selection, implement
-validated configuration/adapters for model, context, timeout and local transport;
-update capability checks and tests rather than merely downloading another model.
-Keep remote endpoints and raw-content cloud fallback prohibited.
-
-For a compatible installation of the prototype, these existing checks can be used:
-
-```powershell
-python scrubber.py check
-python -m unittest -v
-python synthetic_check.py
-python review.py --demo
-```
-
-The reference synthetic batch expects three candidates and two blocked messages,
-clinical yield 2/2 and blocked auditor probes. These checks cover the seed only;
-implement the full acceptance suite in section 13 as well.
+**Done when:** the installed local runtime passes section 13's System fit checks
+and its private transport checks, with results and selection rationale recorded.
 
 ## 5. Create private state and secure enrollment
 
@@ -280,6 +280,9 @@ depends on 2-Step Verification and account policy. Do not weaken account securit
 See [Google's app-password instructions](https://support.google.com/accounts/answer/185833).
 An interactive password prompt on every poll is not unattended authentication.
 
+**Done when:** a temporary-store transaction/restart test and enrollment/retrieval
+under the intended worker account pass; private storage controls are verified.
+
 ## 6. Implement reliable unattended intake
 
 Support folder/label selection, bounded initial import, repeated polling and
@@ -304,6 +307,9 @@ changed original must never be silently replaced by a different source.
 Acceptance: repeat an import, interrupt it before/after checkpoint commit, change
 UIDVALIDITY, expire credentials, move a source and restart. No duplicate task,
 silent loss, read-status mutation or source substitution is allowed.
+
+**Done when:** section 13's Intake durability and Unsupported input checks pass
+against the selected provider adapter using synthetic messages.
 
 ## 7. Implement local redaction and automatic release
 
@@ -343,6 +349,9 @@ The local reviewer must support inert source preview, retry, composing a new
 generalized draft, discard/reject and resolving exceptions. Run edited drafts
 through all release gates. Preserve drafts on failed checks and prevent stale
 review decisions overwriting a newer version.
+
+**Done when:** section 13's Redaction, Automatic routing and Exceptions checks pass;
+the shadow evaluation and exact versioned release policy are recorded.
 
 ## 8. Implement Claude processing and the scrubbed workspace
 
@@ -396,6 +405,9 @@ untrusted intake requiring screening. Tag application-generated messages locally
 and prevent recursive intake loops. Claude processing must be an actual API
 connection; sending mail to a second inbox does not by itself make Claude handle it.
 
+**Done when:** section 13's Claude integration, Cloud boundary and Workspace/mirror
+checks pass for the selected workspace, including a real synthetic API round trip.
+
 ## 9. Implement actions, reply routing and approval
 
 Claude proposes work; local code decides what may happen. Use typed actions such
@@ -423,6 +435,9 @@ IDs/receipts when available. If the network drops after submission, mark the sen
 blindly resend. SMTP is not an exactly-once service. Test duplicate clicks,
 concurrent workers and crashes on both sides of submission. Content/action loops
 and bounced or auto-generated messages must not generate indefinite replies.
+
+**Done when:** section 13's Actions and Send recovery checks pass for the chosen
+action mode, including rejection of an altered approved action.
 
 ## 10. Install background operation and recovery
 
@@ -456,6 +471,9 @@ without deleting records; recovery requires a deliberate reviewed resume.
 Show last successful poll, queue counts, exception count, worker heartbeat,
 model/API health, budget remaining and fixed error categories. Notifications must
 contain counts or opaque references only, not subjects, names or message text.
+
+**Done when:** section 13's Operations and Budget and privacy stop checks pass under
+the actual background account, with real-data dispatch still disabled.
 
 ## 11. Provide an operator interface and installer
 
@@ -501,6 +519,9 @@ Include these recovery paths in the delivered UI and runbook:
 | Missing/changed original | Show local source-repair/reimport guidance; do not rewrite source identity checks. |
 | Restore or update failure | Keep dispatch disabled, preserve the failed state and follow the tested compatible rollback. |
 
+**Done when:** each applicable command/control above works from the installed
+launcher, setup can rerun safely, and the operator recovery paths are documented.
+
 ## 12. Back up, update and recover
 
 Separate source backup from private operational recovery. Back up the database
@@ -520,6 +541,9 @@ migrations. Model/prompt/policy changes need reevaluation and must not silently
 reclassify previously held or released tasks. Keep a known-good source/config
 version and a tested rollback procedure compatible with the database schema.
 Rollback must not resend already submitted actions. Preserve evidence on failure.
+
+**Done when:** section 13's Recovery check passes and a rehearsed update/rollback
+preserves synthetic state without repeating completed external actions.
 
 ## 13. Acceptance suite for the complete system
 
@@ -550,6 +574,9 @@ Report corpus size, fixture categories, leakage/hold/usefulness results, excepti
 rate, latency and approximate API spend against thresholds agreed before testing.
 Zero known leaks in a finite suite is necessary evidence, not a universal privacy
 guarantee. Do not lower gates to make acceptance pass.
+
+**Done when:** every applicable row passes with evidence for this installation;
+owner-dependent gaps remain explicitly blocked rather than counted as passes.
 
 ## 14. Activate the recipient's complete installation
 
@@ -585,7 +612,21 @@ Hand back:
 - Update/rollback/uninstall and retention instructions, with any remaining dependency
   explicitly identified rather than reported as completed.
 
-Completion means the recipient has their own functioning automatic workspace and
-knows how to operate and recover it. If live access or an owner decision remains
-unavailable, finish all independent build/test/install work and report precisely
-what prevents activation. Do not stop at reproducing the seed prototype.
+**Done when:** the owner can launch and operate the workspace; the live processing,
+exception, restart and applicable action checks above pass; and the handoff contains
+every listed deliverable. An unresolved activation dependency means setup remains
+incomplete even when all independent implementation work is finished.
+
+## Reference prototype
+
+Consult only when reusing source from the original project. Revision `466de50`
+implements local scrubbing and candidate/exception review, not the automatic
+system required here. Inspect its source and CLI for current files, constants,
+supported commands and synthetic expectations rather than relying on copied
+version-specific settings. Its mandatory review status is a local workflow marker,
+not a release decision.
+
+When adapting this source, replace fixed runtime/model settings with validated
+configuration and adapters for the choices established in section 4. Verify the
+existing tests and update capability checks for the selected runtime. Keep the
+section 2 privacy boundary and section 13 acceptance requirements intact.
