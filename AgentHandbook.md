@@ -50,6 +50,12 @@ through a cloud agent. Use --demo and temporary stores for automated UI testing.
 
 ## Current work
 
+November 17: Added SETUP-PLAYBOOK.md for another user's assisting model to set up
+an independent installation from approved source. Includes local runtime setup,
+synthetic acceptance checks, owner-only real intake/review, storage boundaries,
+troubleshooting and a copyable handoff prompt. README links to it. Describes the
+existing prototype; no automatic release, Claude delivery or runtime changes.
+
 Initial implementation on feature/local-email-scrubber in the existing T3 root.
 Installed local model discovered successfully. All 15 synthetic unit tests passed.
 Live Qwen synthetic email test removed the tested name, date of birth, record number,
