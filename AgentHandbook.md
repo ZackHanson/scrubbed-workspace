@@ -124,6 +124,11 @@ in the coding agent, saves the playbook there and starts the project chat. The
 prompt names that project folder as the build location; later setup resumes reuse
 it. Local tool access remains required rather than implied by a chat project.
 
+Clarified the folder's location in README: create it on the user's computer with
+File Explorer on Windows, using the example user-profile Projects path, then
+select that exact local folder in the coding agent. Added Mac/Linux home-folder
+example and distinguished folder selection from naming a chat project.
+
 Initial implementation on feature/local-email-scrubber in the existing T3 root.
 Installed local model discovered successfully. All 15 synthetic unit tests passed.
 Live Qwen synthetic email test removed the tested name, date of birth, record number,
