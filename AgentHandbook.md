@@ -50,6 +50,13 @@ through a cloud agent. Use --demo and temporary stores for automated UI testing.
 
 ## Current work
 
+November 18: Added setup and ongoing-use issue reporting to SETUP-PLAYBOOK.md,
+a concise README issues link and a GitHub problem-report template. Reports use
+synthetic reproductions and allowlisted diagnostics, require authorization before
+posting, and stay local when private-repository access is unavailable. The playbook
+now requires a reporting control/runbook and synthetic acceptance checks. These
+are setup instructions; no issue was submitted or runtime reporting installed.
+
 November 17: SETUP-PLAYBOOK.md is a complete implementation/installation brief
 for another user's coding model, including automatic intake, local redaction and
 release policy, Claude processing, separate results/chat workspace, actions/replies,

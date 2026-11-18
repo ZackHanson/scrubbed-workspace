@@ -41,4 +41,9 @@ local access needed to do this.
 The included code is a local-review prototype. Your agent must build the missing
 components described in the playbook.
 
+Problems during setup or use? Have your agent draft a report following the
+playbook, review it, then submit it through [GitHub Issues](https://github.com/ZackHanson/scrubbed-workspace/issues).
+Keep private email and credentials out. If you cannot access the private repository,
+save the draft and ask whoever shared the playbook to help submit it.
+
 See [prototype usage](PROTOTYPE.md) and [test results](PLAYBOOK-TEST-REPORT.md).

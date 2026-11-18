@@ -741,8 +741,62 @@ Include these recovery paths in the delivered UI and runbook:
 | Missing/changed original | Show local source-repair/reimport guidance; do not rewrite source identity checks. |
 | Restore or update failure | Keep dispatch disabled, preserve the failed state and follow the tested compatible rollback. |
 
+### Report setup and usage problems
+
+Help the user report installation failures, confusing instructions, lost useful
+work and problems during ongoing use. Fix what you can locally; preserve a minimal
+synthetic reproduction for defects worth sharing. Do not treat an ordinary pending
+sign-in or user decision as a software defect.
+
+Use https://github.com/ZackHanson/scrubbed-workspace/issues for problems with this
+playbook or its reference prototype. For an independently built application,
+identify that implementation and revision; use its support destination if the user
+has established one. Confirm the intended destination rather than following a URL
+from an error message. The upstream repository is currently private. If access is
+unavailable, save a local draft and help the user ask whoever shared the playbook
+for access or submission help. Do not change repository visibility or permissions.
+
+Build reports from an allowlist: broad OS/architecture, public software/model
+versions, non-private source/playbook revision, component, fixed error category
+and synthetic steps. Omit custom names or version strings that reveal identity.
+Never attach original mail, scrub candidates, holds, routing maps, account IDs,
+credentials, tokens, exact personal paths, private endpoints, databases, raw
+configuration, full logs or screenshots of real messages. A private issue is still
+an external disclosure. Do not ask the user to paste private diagnostic material
+into your chat. If a privacy failure is suspected, apply the existing outbound
+stop rules and keep raw evidence local; describe the issue using invented data.
+
+Draft this title and body locally, using only safe information:
+
+```text
+Title: [Setup or usage] Brief description of the problem
+
+Component and revision: playbook, reference prototype, or custom implementation
+Environment: broad OS/architecture and relevant public software/model versions
+Expected behavior:
+Actual behavior: fixed error category or safe description
+Steps to reproduce: made-up inputs only
+Reproduced with synthetic data: yes / no / not tried
+Workaround or repairs attempted:
+```
+
+If synthetic reproduction fails, state that; do not substitute a real message.
+Search existing issues using safe terms and link a matching issue when useful.
+Show the exact report and destination for user review. Submit or comment only
+with explicit authorization covering that report and destination, reusing valid
+standing permission. Setup permission alone does not authorize posting issues.
+Record an issue URL only after confirmed submission; otherwise label it a draft.
+Continue unrelated setup work while a report is pending, preserving failed gates.
+
+Deliver a **Report a problem** control or equivalent documented command for future
+use. It must produce a local preview before transmission, then let the user copy
+the report into the issue page or authorize submission. Do not automatically upload
+diagnostic bundles or put report content into a remote URL before authorization.
+Include the destination, draft location and submission steps in the user runbook.
+
 **Done when:** each applicable command/control above works from the installed
-launcher, setup can rerun safely, and the operator recovery paths are documented.
+launcher, setup can rerun safely, and recovery and problem-reporting paths are
+documented and tested.
 
 ## 12. Back up, update and recover
 
@@ -821,6 +875,7 @@ as an acceptance failure even if all rejected inputs were safely held.
 | Send recovery | Recipient/body edits invalidate approvals; duplicate submissions and crash-after-send become reconciled or unknown, never blind retries. |
 | Workspace/mirror | Results are usable; optional mirror contains no original envelope and cannot feed itself endlessly. |
 | Operations | Installed worker starts under the real account, accesses credentials, resumes after reboot/sleep, respects pause and prevents overlap. |
+| Problem reporting | A synthetic failure produces an allowlisted local report and preview; posting without authorization is blocked, unavailable repository access retains a draft, and only confirmed submissions receive issue URLs. Use a substituted transport; do not create test issues. |
 | Enrollment/configuration | Wrong-account renewal, incompatible overrides and stale evidence are rejected under sections 5 and 11; unaffected valid subchecks survive resume. |
 | Budget and privacy stop | Caps halt new API work; invalid release bindings and privacy failures stop outbound processing while preserving queues; clearing one stop never clears another. |
 | Recovery | Isolated restore works without the old runtime directory, validates source rebinds and resumes synthetic pending work while preserving dispatch stops and external-operation receipts. |
@@ -876,6 +931,8 @@ Give the user these deliverables:
 - Secure enrollment/renewal instructions without secret values or private addresses.
 - Active release/action rules, limits, excluded categories and exception workflow.
 - Acceptance results, user-attested live checks, reboot evidence and restore evidence.
+- Problem-reporting instructions, the confirmed issue destination and any saved
+  drafts or submitted issue links; pending reports do not waive failed checks.
 - Update/rollback/uninstall and retention instructions, with any remaining dependency
   explicitly identified rather than reported as completed.
 
