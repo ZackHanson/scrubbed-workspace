@@ -11,7 +11,7 @@ Private issues are still external disclosures. Review the report before submitti
 
 **Problem occurs during:** setup / ongoing use
 
-**Component and revision:** playbook / reference prototype / custom implementation
+**Component and revision:** playbook / custom implementation
 
 **Environment:** broad OS/architecture and relevant public software/model versions
 

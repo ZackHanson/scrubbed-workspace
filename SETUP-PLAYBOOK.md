@@ -80,7 +80,6 @@ Use these branches only when their condition applies:
 | --- | --- |
 | Required software or model absent | Install and verify it under sections 3 and 4. Treat absence as a blocker only when access, permission, connectivity, resources or compatibility prevents installation. |
 | Approved source supplied | Inspect and reuse it under section 3; otherwise implement from the requirements. |
-| Reference prototype reused | Consult the appendix and actual source/CLI; skip this reference for a fresh implementation. |
 | Ollama selected | Apply its runtime-specific controls in section 4; otherwise use the selected runtime's official controls. |
 | Gmail selected | Use the Gmail enrollment reference in section 5; otherwise implement the selected provider's supported authentication. |
 | Mailbox mirror selected | Implement the optional mirror in section 8 and include it in acceptance tests. |
@@ -174,10 +173,6 @@ changes, and inventory which requirements below it actually implements. Do not
 assume a feature exists because documentation mentions it. If no source is
 available, create a new project and implement these requirements directly.
 
-When reusing the reference prototype, consult the [appendix](#reference-prototype)
-for its limited scope. Determine installed capabilities from actual source, config,
-tests and CLI help; treat absent requirements as implementation work.
-
 Define components with the following responsibilities. Adapt their names and
 organization to your chosen stack.
 
@@ -195,8 +190,7 @@ organization to your chosen stack.
 
 Choose a maintained application stack supported by the user's OS and existing
 environment. Python, Tkinter and SQLite are reference options, not requirements.
-If reusing the Python 3.13 prototype, verify compatibility before changing its
-runtime. Use isolated dependencies and pin versions. A full build may add official
+Use isolated dependencies and pin versions. A full build may add official
 provider SDKs, OAuth and OS credential-store integration. Include dependency locks,
 configuration schemas, migrations, installers, synthetic fixtures and operator docs.
 
@@ -749,7 +743,7 @@ synthetic reproduction for defects worth sharing. Do not treat an ordinary pendi
 sign-in or user decision as a software defect.
 
 Use https://github.com/ZackHanson/scrubbed-workspace/issues for problems with this
-playbook or its reference prototype. For an independently built application,
+playbook. For an independently built application,
 identify that implementation and revision; use its support destination if the user
 has established one. Confirm the intended destination rather than following a URL
 from an error message. The upstream repository is currently private. If access is
@@ -771,7 +765,7 @@ Draft this title and body locally, using only safe information:
 ```text
 Title: [Setup or usage] Brief description of the problem
 
-Component and revision: playbook, reference prototype, or custom implementation
+Component and revision: playbook or custom implementation
 Environment: broad OS/architecture and relevant public software/model versions
 Expected behavior:
 Actual behavior: fixed error category or safe description
@@ -945,17 +939,3 @@ Give the user these deliverables:
 processing, exception, restart and action checks above pass, and you have supplied
 every listed deliverable. If activation remains blocked, report the unfinished
 checks and their dependencies. Do not mark the full setup complete.
-
-## Reference prototype
-
-Consult only when reusing source from the original project. Revision `466de50`
-implements local scrubbing and candidate/exception review, not the automatic
-system required here. Inspect its source and CLI for current files, constants,
-supported commands and synthetic expectations rather than relying on copied
-version-specific settings. Its mandatory review status is a local workflow marker,
-not a release decision.
-
-When adapting this source, replace fixed runtime/model settings with validated
-configuration and adapters for the choices established in section 4. Verify the
-existing tests and update capability checks for the selected runtime. Keep the
-section 2 privacy boundary and section 13 acceptance requirements intact.

@@ -1,6 +1,7 @@
-<img src="assets/icon.svg" width="64" height="64" alt="">
-
 # scrubbed-workspace
+
+A setup playbook for building your own workspace from locally scrubbed email.
+Start here, then give the playbook to your coding agent.
 
 ## Start here
 
@@ -37,8 +38,3 @@ Finish with a working workspace, a demonstration and simple operating instructio
 If you cannot work on my computer yet, first help me get a coding agent with the
 local access needed to do this.
 ```
-
-The included code is a local-review prototype. Your agent must build the missing
-components described in the playbook.
-
-See [prototype usage](PROTOTYPE.md) and [test results](PLAYBOOK-TEST-REPORT.md).
