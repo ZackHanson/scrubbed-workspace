@@ -785,6 +785,11 @@ Search existing issues using safe terms and link a matching issue when useful.
 Show the exact report and destination for user review. Submit or comment only
 with explicit authorization covering that report and destination, reusing valid
 standing permission. Setup permission alone does not authorize posting issues.
+For manual submission, walk the user through opening the issue destination,
+choosing **New issue**, selecting the problem-report template if available, copying
+the reviewed title/body and choosing **Submit new issue**. The report format above
+also works without a repository template. If you submit through an authorized
+tool instead, send the same reviewed text to the same destination.
 Record an issue URL only after confirmed submission; otherwise label it a draft.
 Continue unrelated setup work while a report is pending, preserving failed gates.
 

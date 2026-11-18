@@ -50,6 +50,10 @@ through a cloud agent. Use --demo and temporary stores for automated UI testing.
 
 ## Current work
 
+November 18 follow-up: Removed issue-reporting instructions from README at the
+owner's request. Kept the workflow self-contained in SETUP-PLAYBOOK.md and added
+explicit manual submission steps, including when no issue template is available.
+
 November 18: Added setup and ongoing-use issue reporting to SETUP-PLAYBOOK.md,
 a concise README issues link and a GitHub problem-report template. Reports use
 synthetic reproductions and allowlisted diagnostics, require authorization before
