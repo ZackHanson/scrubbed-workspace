@@ -50,6 +50,15 @@ through a cloud agent. Use --demo and temporary stores for automated UI testing.
 
 ## Current work
 
+November 18 separation: Owner requested a standalone playbook with no inherited
+application or assets. Created private ZackHanson/scrubbed-workspace-playbook at
+C:/Users/zackw/Projects/scrubbed-workspace-playbook with independent Git history.
+PR https://github.com/ZackHanson/scrubbed-workspace-playbook/pull/1 contains only
+README, SETUP-PLAYBOOK, generic repository guidance and an issue template. Removed
+implementation references and stack-specific commands; recipients design their
+own application. This repository and its prototype files are preserved. The new
+repository supersedes the playbook delivery in this repository's PR 13.
+
 November 18 follow-up: Removed issue-reporting instructions from README at the
 owner's request. Kept the workflow self-contained in SETUP-PLAYBOOK.md and added
 explicit manual submission steps, including when no issue template is available.
