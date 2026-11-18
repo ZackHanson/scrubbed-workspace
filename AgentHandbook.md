@@ -28,14 +28,17 @@ Never commit or push directly to main. Preserve Git history and private data.
 
 ## Current work
 
-November 18: Zack selected the README and playbook as the project's direction and
-authorized consolidation and merge. PR #15 combines the playbook with the cleanup
-prepared in PR #14, removing application modules, tests, launchers, assets,
-prototype guides and historical test reports from the current source tree.
-The six retained files are README.md, SETUP-PLAYBOOK.md, AGENTS.md,
-AgentHandbook.md, .gitignore and the safe problem-report issue template.
-Earlier implementation remains in Git history and existing branches/worktrees;
+November 18: PR #15 merged the documentation-only project direction. README.md
+is the human entry point; SETUP-PLAYBOOK.md is the complete installation contract.
+Earlier application code remains in Git history and existing branches/worktrees;
 installed software and private runtime data are untouched.
+
+Current task improves raw Markdown download instructions, first setup/resume,
+guided manual steps, cloud-provider consistency and implementation freedom while
+preserving privacy and acceptance requirements. Playbook version 2026-11-18.1
+is recorded in installation receipts/manifests and handover. Keep the version
+current whenever changing instructions. Source changes use a task branch and PR;
+no application installation or activation is part of this documentation task.
 
 This repository is the chosen home going forward. The separate private
 ZackHanson/scrubbed-workspace-playbook repository is an earlier standalone copy;
