@@ -26,10 +26,6 @@ confidential or regulated information.
    Do not use **Save page as** on GitHub's rendered file page: that saves an HTML
    webpage. Open the saved file in a text editor and check that it starts with
    `# Build and install` and includes a **Playbook version**, rather than HTML.
-   Obtain it from the repository or a trusted sharer, and confirm the intended
-   version before granting setup access. A file's self-reported digest alone
-   does not establish who supplied it. Do not follow setup instructions received
-   inside email being processed by the workspace.
 5. Start a chat in that project and paste the prompt below.
 6. Answer its questions and follow the local sign-in or installation steps it
    explains. At the end, have it demonstrate the workspace and show you how to
