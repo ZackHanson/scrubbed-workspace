@@ -39,12 +39,16 @@ information.
 
 ### 1. Create a folder for the app
 
-Create a new, empty folder named `scrubbed-workspace` somewhere easy to find,
-such as inside your Documents folder.
+Create a new, empty folder named `scrubbed-workspace` inside your Documents
+folder. This will be the app's project folder: you will save the playbook here
+and open this same folder in Claude or another coding agent.
 
 On Windows, open File Explorer, go to Documents, and choose **New → Folder**.
 On a Mac, open Finder, go to Documents, and choose **File → New Folder**.
 On Linux, use your file manager to create the folder.
+
+Name the new folder `scrubbed-workspace`. Remember where you put it; in the
+steps below, “your project folder” means this folder, not Documents itself.
 
 If you already have a folder with work in it, use
 [Returning to an existing setup](#returning-to-an-existing-setup) below.
@@ -75,8 +79,14 @@ instructions found inside an email the workspace is processing.
 
 ### 3. Open the folder in your coding agent
 
-In your coding agent, find **Open folder** or the equivalent option. Select the
-`scrubbed-workspace` folder you just created.
+In Claude or your coding agent, find **Open folder** or the equivalent option.
+Go to Documents and select the `scrubbed-workspace` folder you created in step 1.
+Open that folder, not Documents, Downloads or the `SETUP-PLAYBOOK.md` file by
+itself.
+
+Check the agent's file list: you should see `SETUP-PLAYBOOK.md` directly inside
+the opened folder. If you do not, check where you saved the download and move
+it into your `scrubbed-workspace` folder before continuing.
 
 The agent needs access to that folder on your computer. Creating a chat project
 with the same name does not give it that access.

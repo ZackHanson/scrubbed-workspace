@@ -52,3 +52,8 @@ November 18 README clarity: added a plain-language overview, definitions, smalle
 first-time setup steps and a separate copyable resume prompt. Privacy and setup
 access requirements remain in place. The setup playbook is unchanged; this is a
 documentation-only change with no installation or activation.
+
+November 18 folder clarity: README now names Documents as the first-time folder
+location and explains how to open that same project folder in Claude or another
+coding agent. The agent's file list should show SETUP-PLAYBOOK.md directly inside
+it. Download instructions and the setup playbook are unchanged.
