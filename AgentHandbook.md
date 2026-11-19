@@ -47,3 +47,9 @@ distribution PR #12 are superseded by this direction.
 
 November 18 cleanup: removed the obsolete repository reference and preservation
 instruction. The current documentation uses this repository as its source.
+
+November 18 folder clarity: a fresh branch from main clarifies creating the
+application folder in Documents, opening that same folder in Claude and checking
+that SETUP-PLAYBOOK.md appears directly inside it. Download instructions and the
+setup playbook are unchanged. This replaces the folder edit on the earlier
+plain-language README branch without including that branch's broader rewrite.
