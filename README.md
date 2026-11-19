@@ -1,13 +1,9 @@
 # scrubbed-workspace
 
-A setup playbook for building your own workspace from locally scrubbed email.
-Start here, then give the playbook to your coding agent.
-
-The playbook requires safety checks before live use; it cannot guarantee that
-an agent-built application is safe or that automated redaction catches everything.
-Keep live processing disabled until the installed system passes its checks and
-you understand its remaining risks. Use your organization's approved process for
-confidential or regulated information.
+Scrubbed Workspace helps you use cloud AI with selected email by scrubbing sensitive
+details on your computer first. It organizes the results in a separate workspace
+and keeps automated actions under your control. Give this playbook to your coding
+agent to build and set up your workspace.
 
 ## Start here
 

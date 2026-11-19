@@ -25,6 +25,9 @@ test the application in the recipient project by following SETUP-PLAYBOOK.md.
 Preserve the established T3 workspace and other branches/worktrees. Use task
 branches and pull requests against main in private ZackHanson/scrubbed-workspace.
 Never commit or push directly to main. Preserve Git history and private data.
+Resolve merge conflicts as they arise during project work, preserving intended
+changes from both sides. Verify the thread's branch matches the Git checkout
+and check PR mergeability before handing work back.
 
 ## Current work
 
@@ -51,3 +54,7 @@ instruction. The current documentation uses this repository as its source.
 November 19: README uses "project folder" and gives returning users two steps
 with a pasteable resume prompt that explains the setup receipt and preserves
 existing work and the processing pause. Playbook instructions are unchanged.
+
+November 19: shortened the README introduction to summarize local email scrubbing,
+cloud AI, organized results and user-controlled actions. Setup safeguards remain
+in SETUP-PLAYBOOK.md; its instructions are unchanged.
