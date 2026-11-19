@@ -22,8 +22,7 @@ confidential or regulated information.
    Keep private email and runtime data outside this folder.
 4. Open [SETUP-PLAYBOOK.md](SETUP-PLAYBOOK.md) on GitHub and use **Download raw
    file** (the download button in the file toolbar). Alternatively, choose **Raw**
-   and save that raw text. Save it as `SETUP-PLAYBOOK.md` in your application folder.
-   See [GitHub's raw-file instructions](https://docs.github.com/en/repositories/working-with-files/using-files/viewing-and-understanding-files#viewing-or-copying-the-raw-file-content).
+   and save that raw text. Save it as `SETUP-PLAYBOOK.md` in your new project folder.
    Do not use **Save page as** on GitHub's rendered file page: that saves an HTML
    webpage. Open the saved file in a text editor and check that it starts with
    `# Build and install` and includes a **Playbook version**, rather than HTML.
