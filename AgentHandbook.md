@@ -25,6 +25,9 @@ test the application in the recipient project by following SETUP-PLAYBOOK.md.
 Preserve the established T3 workspace and other branches/worktrees. Use task
 branches and pull requests against main in private ZackHanson/scrubbed-workspace.
 Never commit or push directly to main. Preserve Git history and private data.
+Resolve merge conflicts as they arise during project work, preserving intended
+changes from both sides. Verify the thread's branch matches the Git checkout
+and check PR mergeability before handing work back.
 
 ## Current work
 
