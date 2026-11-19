@@ -13,7 +13,7 @@ confidential or regulated information.
 
 1. Open Claude or your preferred coding agent. It needs to edit files and run
    commands on your computer. A chat-only model can help you get that set up first.
-2. For first setup, create an **empty application folder on your computer**.
+2. For first setup, create an **empty folder on your computer**.
    On Windows, use File Explorer to create
    `C:\Users\YOUR-USERNAME\Projects\scrubbed-workspace`, replacing `YOUR-USERNAME`
    with your Windows username. On Mac/Linux, use `~/Projects/scrubbed-workspace`.
