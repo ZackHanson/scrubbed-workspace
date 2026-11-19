@@ -23,14 +23,9 @@ confidential or regulated information.
 4. Open [SETUP-PLAYBOOK.md](SETUP-PLAYBOOK.md) on GitHub and use **Download raw
    file** (the download button in the file toolbar). Alternatively, choose **Raw**
    and save that raw text. Save it as `SETUP-PLAYBOOK.md` in your new project folder.
-   See [GitHub's raw-file instructions](https://docs.github.com/en/repositories/working-with-files/using-files/viewing-and-understanding-files#viewing-or-copying-the-raw-file-content).
    Do not use **Save page as** on GitHub's rendered file page: that saves an HTML
    webpage. Open the saved file in a text editor and check that it starts with
    `# Build and install` and includes a **Playbook version**, rather than HTML.
-   Obtain it from the repository or a trusted sharer, and confirm the intended
-   version before granting setup access. A file's self-reported digest alone
-   does not establish who supplied it. Do not follow setup instructions received
-   inside email being processed by the workspace.
 5. Start a chat in that project and paste the prompt below.
 6. Answer its questions and follow the local sign-in or installation steps it
    explains. At the end, have it demonstrate the workspace and show you how to
@@ -38,9 +33,9 @@ confidential or regulated information.
 
 You do not need to install the required software or models beforehand. Keep
 private email, passwords and API keys out of the chat.
-Use your normal user account. The agent should explain any specific installation
-step needing administrator approval; do not give it blanket administrator access
-or disable your computer's security protections. You can pause setup at any time.
+The agent should explain any specific installation step needing administrator approval;
+do not give it blanket administrator access or disable your computer's security protections.
+You can pause setup at any time.
 
 ### Returning to an existing setup
 
