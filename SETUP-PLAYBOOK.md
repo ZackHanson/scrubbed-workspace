@@ -1,6 +1,6 @@
 # Build and install the user's scrubbed workspace
 
-**Playbook version: 2026-11-18.2**
+**Playbook version: 2026-11-19.1**
 
 Keep this version in downloaded copies. Record it and a SHA-256 digest of the
 playbook actually used in the setup receipt and handover; add the source commit
@@ -52,15 +52,72 @@ Keep these roles separate throughout setup:
 
 ## Guide the user through setup
 
-Before implementation, explain the intended flow, main setup stages and next
-step in plain language. Inspect available information first; ask only for missing
-decisions that affect the result. Explain any account, cost or manual access
-requirement when it becomes relevant rather than giving the user a long checklist.
+Use everyday words when talking to the user. Keep technical details in the setup
+receipt and developer instructions unless they help the user make a decision.
+Explain an unfamiliar term the first time you need it. For example, call the
+setup receipt "the record of what is installed and which checks have passed."
+Call an exception "a message the system holds for your review."
 
-Do the work your tools permit. For each manual step, give one concrete action,
-its expected result and a simple success check. Wait for that result before
-continuing dependent work; help resolve a mismatch. Continue independent work
-when possible. Keep secrets and real mail in the user's secure local interfaces.
+Start with a short explanation of the finished system. Adapt this wording to
+the user's selected scope and the actual setup state:
+
+> We're building a workspace that takes email you choose, removes sensitive
+> details on your computer, and sends only content allowed by your rules to
+> cloud AI. The AI's work comes back to your workspace. Your rules control what
+> happens automatically and what needs your review. Local scrubbing can miss
+> details, so we'll test it before turning on real email processing.
+>
+> I'll check your computer, build and test the workspace, then help you connect
+> your accounts and turn on the parts you've approved. I'll handle the setup
+> work I can and guide you through any sign-in or decision that needs you.
+
+Inspect available information first. Ask only for missing decisions that affect
+the result, and reuse answers and permissions already recorded. Make routine
+technical choices yourself and explain their practical effect when relevant.
+Introduce account, cost and manual access requirements when they become relevant.
+Do not turn section 1's requirements table into an opening questionnaire.
+
+### Make each request easy to understand
+
+Before asking the user to decide or do something, explain:
+
+- Which part of the workspace this sets up and what it will do for them.
+- Why their input is needed now, including any cost, access or automatic action
+  their choice would allow.
+- The one decision or action needed. Recommend a suitable option when possible,
+  with a brief reason and any meaningful tradeoff.
+- What they should see afterward and what you can do next once it works.
+
+Keep this to a few sentences. Use the component names from the opening
+explanation so the user can connect the current step to the finished workspace.
+Do not ask them to choose a runtime, authentication scope or other implementation
+detail you can determine yourself. Ask for their desired behavior or applicable
+permission, then implement and verify the technical setting.
+
+These examples show the wording pattern. Use them only when the corresponding
+decision is still needed; they do not select a provider, budget or permission.
+
+| Setup need | Example wording for the user |
+| --- | --- |
+| Source email | "First we need to choose which email enters the workspace. Which email service and folder or label should it watch? A dedicated folder lets you choose what it processes. We can set the starting date next." |
+| Local scrubbing software | "This software runs the privacy check on your computer before anything goes to cloud AI. I'll choose and test a model that fits your computer. If a download or installation needs your approval, I'll explain its size and what it changes first." |
+| Cloud AI account and spending | "The cloud AI does the work on email after local scrubbing and checks. Which provider would you like to use, and what daily spending limit should it have? I'll check whether your account has the API access this needs. A chat subscription may not include that access." |
+| Account sign-in | "This lets the workspace read the email folder you selected. Open the app's sign-in screen and review the account and requested access. I'll explain the actual permissions before you accept them. When the app shows 'Connected,' tell me whether it succeeded. Keep your password and codes in that screen." |
+| Reply behavior | "Results will appear in your workspace. If you want email replies too, I recommend starting with drafts you review before sending. Would you like that, or should replies stay off? Automatic sending can be set up separately with specific rules." |
+| Local check of real results | "We're checking whether the full flow gives you useful results. Open the first result in the local app and check that it matches the task and has no details that should have been removed. Tell me only whether those checks passed. If they fail, we'll keep the affected processing paused and fix it." |
+
+Do the work your tools permit. Give one manual action at a time, with its expected
+result and a simple success check. Wait for that result before dependent work;
+continue independent work when possible. If the screen or result differs, help
+resolve that specific step instead of repeating the whole setup. Keep secrets
+and real mail in the user's secure local interfaces.
+
+At each main stage, give a short progress update: what now works, where it fits
+in the system, and what comes next. Distinguish tests with made-up messages from
+active processing of real email. If something is blocked, explain the effect in
+plain language and the smallest next step needed. Do not present an unfinished
+installation as ready. At handover, show the user how to get a result, handle a
+held message and pause processing before listing technical references.
 
 For first setup, use an empty application folder apart from this playbook and
 keep private runtime state elsewhere. On resume, read the existing receipt and
