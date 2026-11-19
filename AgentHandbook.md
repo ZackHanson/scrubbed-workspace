@@ -42,7 +42,8 @@ Keep the version current whenever changing instructions and record it in setup
 receipts/manifests and handover. Source changes use a task branch and PR; no
 application installation or activation is part of this documentation task.
 
-This repository is the chosen home going forward. The separate private
-ZackHanson/scrubbed-workspace-playbook repository is an earlier standalone copy;
-no ongoing synchronization is required. Preserve it without further changes.
-PR #14 and the older distribution PR #12 are superseded by this direction.
+This repository is the sole home for the setup playbook. PR #14 and the older
+distribution PR #12 are superseded by this direction.
+
+November 18 cleanup: removed the obsolete repository reference and preservation
+instruction. The current documentation uses this repository as its source.
