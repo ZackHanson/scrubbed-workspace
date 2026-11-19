@@ -33,9 +33,9 @@ confidential or regulated information.
 
 You do not need to install the required software or models beforehand. Keep
 private email, passwords and API keys out of the chat.
-Use your normal user account. The agent should explain any specific installation
-step needing administrator approval; do not give it blanket administrator access
-or disable your computer's security protections. You can pause setup at any time.
+The agent should explain any specific installation step needing administrator approval;
+do not give it blanket administrator access or disable your computer's security protections.
+You can pause setup at any time.
 
 ### Returning to an existing setup
 
