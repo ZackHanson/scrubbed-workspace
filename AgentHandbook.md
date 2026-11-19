@@ -51,3 +51,7 @@ instruction. The current documentation uses this repository as its source.
 November 19: README uses "project folder" and gives returning users two steps
 with a pasteable resume prompt that explains the setup receipt and preserves
 existing work and the processing pause. Playbook instructions are unchanged.
+
+November 19: shortened the README introduction to summarize local email scrubbing,
+cloud AI, organized results and user-controlled actions. Setup safeguards remain
+in SETUP-PLAYBOOK.md; its instructions are unchanged.
