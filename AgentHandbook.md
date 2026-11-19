@@ -47,3 +47,8 @@ distribution PR #12 are superseded by this direction.
 
 November 18 cleanup: removed the obsolete repository reference and preservation
 instruction. The current documentation uses this repository as its source.
+
+November 18 folder steps: branch `docs/clear-claude-folder-steps` clarifies creating
+`Documents/scrubbed-workspace`, selecting that exact local folder in Claude and
+checking that the downloaded playbook appears directly inside it. Changes are
+limited to README setup guidance; the installation playbook is unchanged.

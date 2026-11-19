@@ -13,12 +13,16 @@ confidential or regulated information.
 
 1. Open Claude or your preferred coding agent. It needs to edit files and run
    commands on your computer. A chat-only model can help you get that set up first.
-2. For first setup, create an **empty application folder on your computer**.
-   On Windows, use File Explorer to create
-   `C:\Users\YOUR-USERNAME\Projects\scrubbed-workspace`, replacing `YOUR-USERNAME`
-   with your Windows username. On Mac/Linux, use `~/Projects/scrubbed-workspace`.
-3. In your coding agent, choose its option to open a local folder and select that
-   exact folder. Use the local-folder picker, rather than just naming a chat project.
+2. For first setup, create a new, **empty folder named `scrubbed-workspace` inside
+   Documents**. On Windows, open File Explorer, go to Documents, choose
+   **New → Folder**, and name it `scrubbed-workspace`. On a Mac, open Finder,
+   go to Documents, and choose **File → New Folder**. On Linux, use your file
+   manager to create the folder inside Documents. This is your application folder.
+3. In Claude or your coding agent, use the option to open a local folder.
+   In the folder picker, go to **Documents → scrubbed-workspace** and select
+   **scrubbed-workspace**. This is the folder you just created; open it rather
+   than Documents, Downloads or the playbook file by itself. Creating a chat
+   project with the same name does not give the agent access to this local folder.
    Keep private email and runtime data outside this folder.
 4. Open [SETUP-PLAYBOOK.md](SETUP-PLAYBOOK.md) on GitHub and use **Download raw
    file** (the download button in the file toolbar). Alternatively, choose **Raw**
@@ -31,7 +35,10 @@ confidential or regulated information.
    version before granting setup access. A file's self-reported digest alone
    does not establish who supplied it. Do not follow setup instructions received
    inside email being processed by the workspace.
-5. Start a chat in that project and paste the prompt below.
+5. Check the agent's file list: `SETUP-PLAYBOOK.md` should appear directly inside
+   the opened `scrubbed-workspace` folder. If it is missing, find the downloaded
+   file and move it into **Documents → scrubbed-workspace**, then check again.
+   Start a chat with that folder open and paste the prompt below.
 6. Answer its questions and follow the local sign-in or installation steps it
    explains. At the end, have it demonstrate the workspace and show you how to
    start, pause and use it.
