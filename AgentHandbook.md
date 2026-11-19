@@ -58,8 +58,3 @@ existing work and the processing pause. Playbook instructions are unchanged.
 November 19: shortened the README introduction to summarize local email scrubbing,
 cloud AI, organized results and user-controlled actions. Setup safeguards remain
 in SETUP-PLAYBOOK.md; its instructions are unchanged.
-
-November 19: playbook version 2026-11-19.1 expands user guidance with a plain-language
-system overview, context for each request, example questions and stage updates.
-README's setup prompt requests the same guidance. Technical setup requirements
-remain in place. This is a documentation change, not an installed application update.

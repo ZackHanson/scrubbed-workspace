@@ -1,6 +1,6 @@
 # Build and install the user's scrubbed workspace
 
-**Playbook version: 2026-11-19.1**
+**Playbook version: 2026-11-19.2**
 
 Keep this version in downloaded copies. Record it and a SHA-256 digest of the
 playbook actually used in the setup receipt and handover; add the source commit
@@ -29,8 +29,10 @@ is setup work, not a reason to ask the user to prepare the machine first.
 
 Build a system that collects selected email, scrubs it locally, sends eligible
 requests to the selected cloud model, returns its work to a separate workspace,
-and executes permitted actions through local controls. Automate routine processing. Ask the
-user to handle exceptions and actions outside their standing policy.
+and executes permitted actions through local controls. The user chooses how
+released email reaches cloud AI and how much of that handoff is automatic.
+Automate only the selected steps. Ask the user to handle exceptions and actions
+outside their standing policy.
 
 Choose and test the local model, runtime and application stack for this user's
 hardware, operating system, existing software and workload. Treat named products,
@@ -67,9 +69,9 @@ the user's selected scope and the actual setup state:
 > happens automatically and what needs your review. Local scrubbing can miss
 > details, so we'll test it before turning on real email processing.
 >
-> I'll check your computer, build and test the workspace, then help you connect
-> your accounts and turn on the parts you've approved. I'll handle the setup
-> work I can and guide you through any sign-in or decision that needs you.
+> I'll check your computer, build and test the workspace, then help you choose how
+> cloud AI receives the scrubbed email and turn on the parts you've approved.
+> I'll handle the setup work I can and guide you through any sign-in or decision that needs you.
 
 Inspect available information first. Ask only for missing decisions that affect
 the result, and reuse answers and permissions already recorded. Make routine
@@ -101,7 +103,7 @@ decision is still needed; they do not select a provider, budget or permission.
 | --- | --- |
 | Source email | "First we need to choose which email enters the workspace. Which email service and folder or label should it watch? A dedicated folder lets you choose what it processes. We can set the starting date next." |
 | Local scrubbing software | "This software runs the privacy check on your computer before anything goes to cloud AI. I'll choose and test a model that fits your computer. If a download or installation needs your approval, I'll explain its size and what it changes first." |
-| Cloud AI account and spending | "The cloud AI does the work on email after local scrubbing and checks. Which provider would you like to use, and what daily spending limit should it have? I'll check whether your account has the API access this needs. A chat subscription may not include that access." |
+| Cloud AI connection | "The cloud AI works on email after local scrubbing and checks. You choose how it receives that content. I recommend a direct API connection if you want automatic processing and results returned here. You can also move approved text yourself, or choose a supported connector limited to a separate scrubbed mailbox. Which approach would you prefer? We'll confirm the account and any costs for your choice next." |
 | Account sign-in | "This lets the workspace read the email folder you selected. Open the app's sign-in screen and review the account and requested access. I'll explain the actual permissions before you accept them. When the app shows 'Connected,' tell me whether it succeeded. Keep your password and codes in that screen." |
 | Reply behavior | "Results will appear in your workspace. If you want email replies too, I recommend starting with drafts you review before sending. Would you like that, or should replies stay off? Automatic sending can be set up separately with specific rules." |
 | Local check of real results | "We're checking whether the full flow gives you useful results. Open the first result in the local app and check that it matches the task and has no details that should have been removed. Tell me only whether those checks passed. If they fail, we'll keep the affected processing paused and fix it." |
@@ -236,7 +238,7 @@ password in chat.
 | Source mail | Use the user's selected provider and folder/label with a tested adapter and supported authentication. Gmail below is an example. |
 | Intake scope | Set an explicit start point for new messages. Agree on a separate limit for any backfill. |
 | Local model | Select a fully local model, quantization and runtime using the system inspection and synthetic evaluation in section 4. No fixed model requirement. |
-| Cloud provider/model | Confirm the selected provider, API project/account, approved model and spending ceiling. Verify API access and billing separately from any chat subscription. |
+| Cloud connection | Let the user choose the handoff method, provider/model, account, automation level and spending limits after the comparison in section 8. For an API route, verify API access and billing separately from any chat subscription. |
 | Workspace | Choose a usable desktop or protected local web application suited to the host, with tasks, results, follow-up chat and exceptions. Optional scrubbed mailbox mirror. |
 | Processing policy | Record eligible work categories, excluded content, de-identification requirements and automatic-release rules. |
 | Action policy | Automate local task/draft updates. Enable external sends only under bounded standing rules or individual approval. |
@@ -273,7 +275,7 @@ Original mailbox / local export
     -> local parsing, redaction, generalization and audit
     -> local policy: release automatically / local exception / ignore
     -> durable release outbox containing only permitted scrubbed content
-    -> selected cloud API, with no raw-mail tools or private context
+    -> user-selected cloud handoff, with no raw-mail tools or private context
     -> validated result stored in the scrubbed workspace
     -> local action policy and optional approval
     -> local dispatcher resolves recipient/thread and executes permitted action
@@ -425,12 +427,13 @@ may refer to their digests without copying private contents. Bind relevant tests
 to this installed identity as well as configuration/model versions.
 
 First make one synthetic message pass through local inference, durable release,
-the cloud adapter and result storage. Display its result and any selected task
-or draft actions in the workspace.
+the selected cloud handoff and result storage. Display its result and any
+selected task or draft actions in the workspace.
 Build its application structure here and complete the route as you implement
 sections 4 through 8. Do not assume those components already exist.
-Without API access, substitute only the external transport. Exercise the same
-request construction, dispatch and result handling you will use in production.
+For an API route without account access, substitute only the external transport.
+For a manual route, test the approved-text export and result import. Exercise
+the same release checks and result handling you will use in production.
 Then complete the remaining coverage, recovery and installation work. Keep
 synthetic and live configurations separate and use the same application code.
 
@@ -578,9 +581,9 @@ bodies to operational logs. Avoid storing raw originals if source references
 suffice; any required private cache needs its own encrypted retention policy.
 
 Build native local enrollment for mailbox OAuth/app passwords and the selected
-cloud provider's required API credentials. Use Windows Credential Manager/DPAPI
-or the platform's secure credential store with an established library. Config stores credential references, not secret
-values. Never pass secrets in CLI arguments, `.env` committed to source, service
+cloud provider's credentials only when its selected connection requires them.
+Use Windows Credential Manager/DPAPI or the platform's secure credential store
+with an established library. Config stores credential references, not secret values. Never pass secrets in CLI arguments, `.env` committed to source, service
 definitions, chat or screenshots. Test credential retrieval under the actual
 background account, renewal/revocation, and a fixed-error re-enrollment flow.
 
@@ -720,13 +723,57 @@ discard/reject and exception resolution. Run edited drafts
 through all release gates. Preserve drafts on failed checks and prevent stale
 review decisions overwriting a newer version.
 
-**Done when:** section 13's Redaction, Automatic routing and Exceptions checks pass;
+**Done when:** section 13's Redaction, Selected routing and Exceptions checks pass;
 the shadow evaluation and exact versioned release policy are recorded.
 
 ## 8. Implement cloud processing and the scrubbed workspace
 
-Use the selected provider's approved API project/account and a configurable
-supported model. Verify authentication, request/response formats, data-handling
+### Let the user choose the cloud connection
+
+The user decides how cloud AI receives the locally scrubbed email. Explain the
+options in basic wording, recommend a fit for their goals, and wait for their
+choice before connecting an account or enabling that handoff. Reuse a recorded
+choice on resume. Do not assume that choosing a provider also chooses an API,
+automatic processing, a mailbox connector or permission to spend money.
+
+| Approach | When to suggest it | What the user needs to know |
+| --- | --- | --- |
+| Direct API connection | Recommended for automatic processing with results returned to the workspace. The local app sends only released content and saves the response. | Requires supported API access, secure local credentials and agreed spending limits. A chat subscription may not include API access. The user chooses the provider and how much can run automatically. |
+| Manual handoff to a cloud chat | Suggest when the user wants to choose each submission or try the workflow before connecting an API. The app prepares approved text; the user copies it into their chosen cloud chat and imports the response. | More manual work. The app cannot enforce spending, retention or tools inside an external chat. Check that the selected chat can meet the required privacy rules. Only app-released text can be exported; originals and private previews stay local. |
+| Supported connector to a separate scrubbed mailbox or store | Suggest only when the user prefers an email-based workflow and the chosen service can be restricted to that destination. | Verify actual service support, permissions, costs and result return before recommending a specific connector. Never connect cloud AI to the original mailbox. If access cannot be restricted to approved scrubbed content, do not use this route. A second inbox alone does not invoke AI. |
+
+Ask, for example: "Would you like approved email sent to cloud AI automatically,
+or would you prefer to move it yourself? For automatic work, I recommend a direct
+API connection because the workspace can control what it sends and bring the
+results back. We can use another supported route if you prefer."
+
+Record the chosen method, destination/account, provider/model, automation level,
+cost limits and result-return steps. Explain what remains manual. Verify the
+selected service's current official documentation before promising support or
+setting it up. Do not require an API account for a manual or supported connector
+route. If the choice is pending, keep building local scrubbing and the workspace
+with synthetic handoffs; keep real-content cloud release disabled.
+
+All routes must use the same local release checks, approved-field export,
+private-source separation and result validation. A manual copy button must export
+only released content and honor pause controls. Imported responses remain
+untrusted. A connector must see only the released store and must not expand access
+to originals, private metadata or other tasks. Record and test how results return
+to the workspace. Follow-ups must pass local checks before export again.
+
+Apply API credential, request-dispatch, retry and per-call budget requirements
+below and elsewhere in this playbook when the selected route makes API calls.
+For other routes, test the equivalent handoff and return path and record API-only
+checks as `not_selected`, with the reason. Do not count them as passes. Disclose
+which cost or service controls the local app cannot enforce. Required privacy,
+authority and recovery checks still apply to every selected route. If a route
+cannot meet them, explain the limitation and offer a workable alternative for
+the user to choose. Never silently replace their choice.
+
+### Build the selected connection
+
+For a direct API route, use the selected provider's approved API project/account
+and a configurable supported model. Verify authentication, request/response formats, data-handling
 settings, limits and pricing in that provider's current official documentation.
 Use structured outputs where supported, plus strict local validation; otherwise
 implement equivalent schema validation and hold invalid responses. Keep schemas
@@ -823,11 +870,13 @@ mirror of released tasks and validated results. Build a fresh message envelope:
 generic subject, scrubbed body and opaque task token only. Never forward original
 headers, addresses, attachments or signatures. Replies to this mirror are new
 untrusted intake requiring screening. Tag application-generated messages locally
-and prevent recursive intake loops. Cloud processing must be an actual API
-connection; sending mail to a second inbox does not by itself invoke the cloud model.
+and prevent recursive intake loops. If this mailbox is the selected cloud handoff,
+verify its supported connector actually invokes the model and returns results.
+Sending mail to a second inbox alone does not complete the cloud connection.
 
 **Done when:** section 13's Cloud integration, Cloud boundary and Workspace/mirror
-checks pass for the selected workspace, including a real synthetic API round trip.
+checks pass for the selected connection and workspace, including a real round trip
+with made-up content through the chosen API, manual handoff or supported connector.
 
 ## 9. Implement actions, reply routing and approval
 
@@ -1126,7 +1175,9 @@ failure, retain it as a regression and rerun both that case and additional unsee
 examples; record whether a run used mocks, actual inference or provider access.
 
 Require positive traffic: at least one expected routine task must generate a
-captured cloud request and a persisted, displayed result. Privacy and persistence
+verified cloud handoff and a persisted, displayed result. For manual handoff,
+record the released export and the user's local confirmation of submission and
+return, without exposing real content to the setup agent. Privacy and persistence
 assertions over an empty release set do not qualify. Report missing useful work
 as an acceptance failure even if all rejected inputs were safely held.
 
@@ -1140,12 +1191,12 @@ as an acceptance failure even if all rejected inputs were safely held.
 | Redaction | Names, contact details, dates, ages, locations, IDs, signatures, quoted history, rare combinations and attacks are removed or held; useful task meaning survives. |
 | Work preservation | Subject-only and unseen in-category requests proceed; every specified non-identifying deliverable, required section and ordering survives generalization. Canned substitutes that omit those requirements fail. |
 | Unsupported input | Attachments, malformed MIME, unsupported content, oversized inputs, model errors and uncertainty cannot create release entries. |
-| Automatic routing | Approved routine fixtures reach the cloud model without per-message review; excluded/ambiguous fixtures reach exceptions; ignore decisions match policy. |
-| Cloud boundary | Captured request bodies/metadata contain only allowlisted released fields; raw headers, routing, source paths, identifiers and private timestamps never cross. |
+| Selected routing | Approved routine fixtures follow the chosen handoff. Automatic routes reach the model without per-message review when authorized; manual routes wait for the user and never submit automatically. Excluded/ambiguous fixtures reach exceptions; ignore decisions match policy. |
+| Cloud boundary | Captured API/connector requests or manual exports contain only allowlisted released fields; raw headers, routing, source paths, identifiers and private timestamps never cross. |
 | Hostile instructions | Mail, follow-ups and cloud responses cannot alter policy, discover originals, change destinations or invoke unauthorized tools/actions. |
 | UI isolation | Script/HTML/Markdown and active-link payloads remain inert; no remote resource loads or privileged bridge calls. Applicable web tests reject unauthenticated access, forged cross-origin requests, invalid Host/DNS-rebinding requests and unauthorized WebSockets. Private previews cannot enter cloud page context. |
 | Intake durability | More than one full batch is eventually discovered; repeated polling, UIDVALIDITY changes, credential expiration, cursor crashes and concurrent workers neither lose nor multiply tasks. |
-| Cloud integration | A real synthetic request returns useful work, persists it, displays it and supports a screened follow-up; truncation/refusal/429/timeouts produce recoverable states. |
+| Cloud integration | A real synthetic round trip through the selected connection returns useful work, persists it, displays it and supports a screened follow-up. Test interruption, invalid results and applicable service errors. Manual export/import is demonstrated by the user locally; a mock is not a completed cloud handoff. |
 | Exceptions | User can inspect a synthetic original locally, retry/edit, resolve/reject; all new content passes gates and stale decisions fail. |
 | Actions | Automatic allowed local actions work; approved/standing-rule replies reach a user-controlled test mailbox with correct local routing; disallowed actions are held. |
 | Send recovery | Recipient/body edits invalidate approvals; duplicate submissions and crash-after-send become reconciled or unknown, never blind retries. |
@@ -1176,7 +1227,8 @@ decisions. Do not inspect real mail to obtain that confirmation.
 
 Record one private activation manifest binding the installed artifact/config
 digest, playbook version/digest, model/prompt/release-policy versions, enrolled accounts and worker identity,
-provider/project and budget, selected mirror destination, and action mode/rules.
+cloud connection method, provider/account or project and budget, selected mirror
+destination, automation level and action mode/rules.
 Resolve authority for each selected scope independently: API spending permission
 does not authorize a source mailbox, mirror or outbound reply rule. Reuse recorded
 valid authority; ask only for unresolved changes. Configuration, account,
@@ -1186,16 +1238,18 @@ stop reason from section 10 before dispatch.
 
 Activate with a small bounded batch and conservative concurrency. Have the user
 check the initial real results and exception recovery locally.
-Then enable the intended automatic routine flow and installed background worker
-under the approved limits. Verify at least one real eligible task reaches the cloud model
-and returns to the workspace, one local exception can be handled, and the worker
+Then enable only the chosen automation and installed background worker under
+the approved limits. For manual handoff, demonstrate export and result import
+with the user; keep automatic cloud submission off. Verify at least one real
+eligible task reaches the cloud model and returns to the workspace, one local exception can be handled, and the worker
 continues after restart. Collect counts and fixed outcomes as the user's
 attestation of private checks. Keep private content out of your context.
 
 If external replies are authorized, demonstrate the chosen route to a
 user-controlled test mailbox before allowing the standing rule's real scope.
 A user may choose draft-only external actions while still having fully
-automatic intake, cloud processing and results. Record the configured action
+automatic intake and local scrubbing. Cloud processing follows the selected
+manual or automatic handoff. Record the configured action
 mode accurately. Optional mirrors are required only when the user selected them.
 
 Give the user these deliverables:
@@ -1207,6 +1261,7 @@ Give the user these deliverables:
 - Content-free system profile, local model/runtime selection rationale, measured
   quality/performance, resource limits and exact platform-specific setup commands.
 - Secure enrollment/renewal instructions without secret values or private addresses.
+- Chosen cloud connection and result-return steps, including what remains manual.
 - Active release/action rules, limits, excluded categories and exception workflow.
 - Acceptance results, user-attested live checks, reboot evidence and restore evidence.
 - Problem-reporting instructions, the confirmed issue destination and any saved
