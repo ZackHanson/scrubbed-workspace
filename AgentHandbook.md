@@ -47,3 +47,7 @@ distribution PR #12 are superseded by this direction.
 
 November 18 cleanup: removed the obsolete repository reference and preservation
 instruction. The current documentation uses this repository as its source.
+
+November 19: README uses "project folder" and gives returning users two steps
+with a pasteable resume prompt that explains the setup receipt and preserves
+existing work and the processing pause. Playbook instructions are unchanged.

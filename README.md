@@ -13,7 +13,7 @@ confidential or regulated information.
 
 1. Open Claude or your preferred coding agent. It needs to edit files and run
    commands on your computer. A chat-only model can help you get that set up first.
-2. For first setup, create an **empty folder on your computer**.
+2. For first setup, create a **new, empty project folder on your computer**.
    On Windows, use File Explorer to create
    `C:\Users\YOUR-USERNAME\Projects\scrubbed-workspace`, replacing `YOUR-USERNAME`
    with your Windows username. On Mac/Linux, use `~/Projects/scrubbed-workspace`.
@@ -39,12 +39,17 @@ You can pause setup at any time.
 
 ### Returning to an existing setup
 
-Open the same application folder. Ask the agent to read the playbook and existing
-setup receipt, verify the installed source, configuration and completed checks,
-and resume the first unfinished dependency. Do not start over, overwrite an
-installation or reactivate processing just because you reopened the folder.
-If the folder already contains work but has no receipt, have the agent inspect
-and preserve it before proposing how to continue.
+1. Open your coding agent and select the same project folder you used before.
+2. Paste this message:
+
+   > Read SETUP-PLAYBOOK.md and check what has already been set up in this folder
+   > and on my computer. Look for the setup receipt (the record of previous setup
+   > steps and checks), and verify what is installed and working. Explain what
+   > still needs to be done, then continue from there. Preserve my existing work.
+   > If there is no receipt, inspect what is here before making changes. Do not
+   > start over or turn email processing back on automatically.
+
+You do not need to create another folder or repeat the first-time setup prompt.
 
 ### Prompt to paste
 
