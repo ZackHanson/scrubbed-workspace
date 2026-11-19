@@ -47,3 +47,8 @@ distribution PR #12 are superseded by this direction.
 
 November 18 cleanup: removed the obsolete repository reference and preservation
 instruction. The current documentation uses this repository as its source.
+
+November 18 README clarity: added a plain-language overview, definitions, smaller
+first-time setup steps and a separate copyable resume prompt. Privacy and setup
+access requirements remain in place. The setup playbook is unchanged; this is a
+documentation-only change with no installation or activation.
