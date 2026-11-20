@@ -3,11 +3,11 @@
 This guide (README) is for **You**, and the [PLAYBOOK](PLAYBOOK.md) is for the AI agent.
 
 Scrubbed Workspace helps you use AI in colaboration with your email.
-
 What you'll have:
-1. A workspace your AI can read that contains only processed email copies.
-2. A private place to review messages the setup doesn't deem fully confidant in.
-3. A way to check, pause, and resume the workspace.
+1. emails locally copied and scrubbed.
+2. A workspace your AI can read from that contains only processed email copies.
+3. A private place to review messages the system isn't confident in.
+4. A way to check, pause, and resume the workspace.
 
 ## Start here
 
