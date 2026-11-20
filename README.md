@@ -18,17 +18,10 @@ What you'll have:
 
 ### Returning to an existing setup
 
-1. Open your coding agent and select the same project folder you used before.
-2. Paste this message:
+Open your coding agent in the same project folder and paste:
 
-   > Read SETUP-PLAYBOOK.md and check what has already been set up in this folder
-   > and on my computer. Look for the setup receipt (the record of previous setup
-   > steps and checks), and verify what is installed and working. Explain what
-   > still needs to be done, then continue from there. Preserve my existing work.
-   > If there is no receipt, inspect what is here before making changes. Do not
-   > start over or turn email processing back on automatically.
-
-You do not need to create another folder or repeat the first-time setup prompt.
+> Read SETUP-PLAYBOOK.md, check the existing setup, and continue where we left off.
+> Preserve my work and keep email processing paused until I ask to resume it.
 
 ### Prompt to paste
 

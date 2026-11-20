@@ -71,3 +71,6 @@ a local coding agent when access is missing. Existing instructions cover a bare
 OS, software/model selection and installation, minimal questions, guided manual
 steps and secure local credential entry. README's setup prompt now delegates
 these requirements to the playbook.
+
+November 19: shortened README's returning-user section to opening the same project
+folder and a brief continuation prompt that preserves work and the processing pause.
