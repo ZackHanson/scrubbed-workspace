@@ -1,6 +1,6 @@
 # scrubbed-workspace
 
-**This README page is for **you**, and the SETUP-PLAYBOOK is for the AI agent.**
+**This README page is for YOU, and the SETUP-PLAYBOOK is for the AI agent.**
 
 Scrubbed Workspace helps you use AI in colaboration with your email.
 What you'll have:
