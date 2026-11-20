@@ -27,12 +27,6 @@ agent to build and set up your workspace.
    explains. At the end, have it demonstrate the workspace and show you how to
    start, pause and use it.
 
-You do not need to install the required software or models beforehand. Keep
-private email, passwords and API keys out of the chat.
-The agent should explain any specific installation step needing administrator approval;
-do not give it blanket administrator access or disable your computer's security protections.
-You can pause setup at any time.
-
 ### Returning to an existing setup
 
 1. Open your coding agent and select the same project folder you used before.

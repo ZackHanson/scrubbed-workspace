@@ -1,6 +1,6 @@
 # Build and install the user's scrubbed workspace
 
-**Playbook version: 2026-11-19.2**
+**Playbook version: 2026-11-19.3**
 
 Keep this version in downloaded copies. Record it and a SHA-256 digest of the
 playbook actually used in the setup receipt and handover; add the source commit
@@ -72,6 +72,17 @@ the user's selected scope and the actual setup state:
 > I'll check your computer, build and test the workspace, then help you choose how
 > cloud AI receives the scrubbed email and turn on the parts you've approved.
 > I'll handle the setup work I can and guide you through any sign-in or decision that needs you.
+
+Before starting setup, tell the user:
+
+> You do not need to install the required software or models beforehand. Keep
+> private email, passwords and API keys out of the chat; I'll guide you through
+> secure local setup when needed. I'll explain any specific installation step
+> needing administrator approval. Do not give me blanket administrator access or
+> disable your computer's security protections. You can pause setup at any time.
+
+If the user pauses setup, stop setup changes and new jobs, preserve existing work
+and record where to resume. Wait for their instruction to continue.
 
 Inspect available information first. Ask only for missing decisions that affect
 the result, and reuse answers and permissions already recorded. Make routine

@@ -58,3 +58,9 @@ existing work and the processing pause. Playbook instructions are unchanged.
 November 19: shortened the README introduction to summarize local email scrubbing,
 cloud AI, organized results and user-controlled actions. Setup safeguards remain
 in SETUP-PLAYBOOK.md; its instructions are unchanged.
+
+November 19: playbook version 2026-11-19.3 requires an opening explanation that
+prerequisites need not be installed beforehand, private email and credentials stay
+out of chat, administrator approval is limited to specific explained steps, host
+protections stay enabled and setup can be paused at any time. Pausing preserves
+work and records the resume point. Removed that paragraph from README.md.
