@@ -1,9 +1,12 @@
 # scrubbed-workspace
 
-Scrubbed Workspace helps you use cloud AI with selected email by scrubbing sensitive
-details on your computer first. It organizes the results in a separate workspace
-and keeps automated actions under your control. Give this playbook to your coding
-agent to build and set up your workspace.
+## This README page is for **you**, and the SETUP-PLAYBOOK is for the AI agent.
+
+Scrubbed Workspace helps you use AI in colaboration with your email.
+What you'll have:
+A workspace your AI can read that contains only processed email copies.
+A private place to review messages the setup doesn't deem fully confidant in.
+A way to check, pause, and resume the workspace.
 
 ## Start here
 
