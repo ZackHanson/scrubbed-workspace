@@ -1,31 +1,20 @@
 # scrubbed-workspace
 
-Scrubbed Workspace helps you use cloud AI with selected email by scrubbing sensitive
-details on your computer first. It organizes the results in a separate workspace
-and keeps automated actions under your control. Give this playbook to your coding
-agent to build and set up your workspace.
+**This README page is for YOU, and the SETUP-PLAYBOOK is for the AI agent.**
+
+Scrubbed Workspace helps you use AI in colaboration with your email.
+What you'll have:
+1. A workspace your AI can read that contains only processed email copies.
+2. A private place to review messages the setup doesn't deem fully confidant in.
+3. A way to check, pause, and resume the workspace.
 
 ## Start here
 
 1. Open Claude or your preferred coding agent. It needs to edit files and run
    commands on your computer. A chat-only model can help you get that set up first.
-2. For first setup, create a **new, empty project folder on your computer**.
-   On Windows, use File Explorer to create
-   `C:\Users\YOUR-USERNAME\Projects\scrubbed-workspace`, replacing `YOUR-USERNAME`
-   with your Windows username. On Mac/Linux, use `~/Projects/scrubbed-workspace`.
-3. In your coding agent, choose its option to open a local folder and select that
-   exact folder. Use the local-folder picker, rather than just naming a chat project.
-   Keep private email and runtime data outside this folder.
-4. Open [SETUP-PLAYBOOK.md](SETUP-PLAYBOOK.md) on GitHub and use **Download raw
-   file** (the download button in the file toolbar). Alternatively, choose **Raw**
-   and save that raw text. Save it as `SETUP-PLAYBOOK.md` in your new project folder.
-   Do not use **Save page as** on GitHub's rendered file page: that saves an HTML
-   webpage. Open the saved file in a text editor and check that it starts with
-   `# Build and install` and includes a **Playbook version**, rather than HTML.
-5. Start a chat in that project and paste the prompt below.
-6. Answer its questions and follow the local sign-in or installation steps it
-   explains. At the end, have it demonstrate the workspace and show you how to
-   start, pause and use it.
+2. Paste the prompt below.
+3. Answer its questions and follow the local sign-in or installation steps it
+   explains. At the end, have it demonstrate the workspace and show you how to use it.
 
 ### Returning to an existing setup
 
