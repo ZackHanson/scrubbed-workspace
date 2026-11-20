@@ -26,6 +26,5 @@ Open your coding agent in the same project folder and paste:
 ### Prompt to paste
 
 ```text
-Read SETUP-PLAYBOOK.md and follow it to build, install and test my own complete
-scrubbed workspace on my computer.
+Read https://github.com/ZackHanson/scrubbed-workspace/blob/main/SETUP-PLAYBOOK.md and set up a working Scrubbed Workspace for me. Create and organize the project folder yourself.
 ```
