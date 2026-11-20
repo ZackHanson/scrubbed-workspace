@@ -12,27 +12,13 @@ What you'll have:
 
 1. Open Claude or your preferred coding agent. It needs to edit files and run
    commands on your computer. A chat-only model can help you get that set up first.
-2. For first setup, create a **new, empty project folder on your computer**.
-   On Windows, use File Explorer to create
-   `C:\Users\YOUR-USERNAME\Projects\scrubbed-workspace`, replacing `YOUR-USERNAME`
-   with your Windows username. On Mac/Linux, use `~/Projects/scrubbed-workspace`.
-3. In your coding agent, choose its option to open a local folder and select that
-   exact folder. Use the local-folder picker, rather than just naming a chat project.
-   Keep private email and runtime data outside this folder.
-4. Open [SETUP-PLAYBOOK.md](SETUP-PLAYBOOK.md) on GitHub and use **Download raw
-   file** (the download button in the file toolbar). Alternatively, choose **Raw**
-   and save that raw text. Save it as `SETUP-PLAYBOOK.md` in your new project folder.
-   Do not use **Save page as** on GitHub's rendered file page: that saves an HTML
-   webpage. Open the saved file in a text editor and check that it starts with
-   `# Build and install` and includes a **Playbook version**, rather than HTML.
-5. Start a chat in that project and paste the prompt below.
-6. Answer its questions and follow the local sign-in or installation steps it
-   explains. At the end, have it demonstrate the workspace and show you how to
-   start, pause and use it.
+2. Paste the prompt below.
+3. Answer its questions and follow the local sign-in or installation steps it
+   explains. At the end, have it demonstrate the workspace and show you how to use it.
 
 You do not need to install the required software or models beforehand. Keep
 private email, passwords and API keys out of the chat.
-The agent should explain any specific installation step needing administrator approval;
+
 do not give it blanket administrator access or disable your computer's security protections.
 You can pause setup at any time.
 
