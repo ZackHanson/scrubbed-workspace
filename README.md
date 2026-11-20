@@ -1,6 +1,6 @@
 # scrubbed-workspace
 
-This guide (README) is for **You**, and the PLAYBOOK is for the AI agent.
+This guide (README) is for **You**, and the [PLAYBOOK](PLAYBOOK.md) is for the AI agent.
 
 Scrubbed Workspace helps you use AI in colaboration with your email.
 What you'll have:
