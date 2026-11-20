@@ -1,12 +1,12 @@
 # scrubbed-workspace
 
-## This README page is for **you**, and the SETUP-PLAYBOOK is for the AI agent.
+**This README page is for **you**, and the SETUP-PLAYBOOK is for the AI agent.**
 
 Scrubbed Workspace helps you use AI in colaboration with your email.
 What you'll have:
-A workspace your AI can read that contains only processed email copies.
-A private place to review messages the setup doesn't deem fully confidant in.
-A way to check, pause, and resume the workspace.
+1. A workspace your AI can read that contains only processed email copies.
+2. A private place to review messages the setup doesn't deem fully confidant in.
+3. A way to check, pause, and resume the workspace.
 
 ## Start here
 
