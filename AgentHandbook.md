@@ -78,3 +78,8 @@ folder and a brief continuation prompt that preserves work and the processing pa
 November 19: renamed the playbook file to PLAYBOOK.md and updated all README and
 handbook references, including the setup URL and continuation prompt. Playbook
 instructions and version are unchanged.
+
+November 19: playbook version 2026-11-19.5 separates cloud setup questions into
+preferred behavior, service, a recommended connection and relevant spending limits.
+Defines cloud AI and API connections in plain language, replaces the bundled
+technical question and requires cost context before asking for a budget.
