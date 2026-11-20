@@ -1,6 +1,6 @@
 # Build and install the user's scrubbed workspace
 
-**Playbook version: 2026-11-19.4**
+**Playbook version: 2026-11-19.5**
 
 Keep this version in downloaded copies. Record it and a SHA-256 digest of the
 playbook actually used in the setup receipt and handover; add the source commit
@@ -122,7 +122,7 @@ decision is still needed; they do not select a provider, budget or permission.
 | --- | --- |
 | Source email | "First we need to choose which email enters the workspace. Which email service and folder or label should it watch? A dedicated folder lets you choose what it processes. We can set the starting date next." |
 | Local scrubbing software | "This software runs the privacy check on your computer before anything goes to cloud AI. I'll choose and test a model that fits your computer. If a download or installation needs your approval, I'll explain its size and what it changes first." |
-| Cloud AI connection | "The cloud AI works on email after local scrubbing and checks. You choose how it receives that content. I recommend a direct API connection if you want automatic processing and results returned here. You can also move approved text yourself, or choose a supported connector limited to a separate scrubbed mailbox. Which approach would you prefer? We'll confirm the account and any costs for your choice next." |
+| Cloud AI connection | "Cloud AI runs on the service's computers and receives only email content that passes your local checks. Would you like the workspace to send that content and bring back results automatically, or would you prefer to copy it into an AI chat and bring the results back yourself? Automatic processing may require separate usage charges; we'll confirm costs before connecting it." |
 | Account sign-in | "This lets the workspace read the email folder you selected. Open the app's sign-in screen and review the account and requested access. I'll explain the actual permissions before you accept them. When the app shows 'Connected,' tell me whether it succeeded. Keep your password and codes in that screen." |
 | Reply behavior | "Results will appear in your workspace. If you want email replies too, I recommend starting with drafts you review before sending. Would you like that, or should replies stay off? Automatic sending can be set up separately with specific rules." |
 | Local check of real results | "We're checking whether the full flow gives you useful results. Open the first result in the local app and check that it matches the task and has no details that should have been removed. Tell me only whether those checks passed. If they fail, we'll keep the affected processing paused and fix it." |
@@ -257,7 +257,7 @@ password in chat.
 | Source mail | Use the user's selected provider and folder/label with a tested adapter and supported authentication. Gmail below is an example. |
 | Intake scope | Set an explicit start point for new messages. Agree on a separate limit for any backfill. |
 | Local model | Select a fully local model, quantization and runtime using the system inspection and synthetic evaluation in section 4. No fixed model requirement. |
-| Cloud connection | Let the user choose the handoff method, provider/model, account, automation level and spending limits after the comparison in section 8. For an API route, verify API access and billing separately from any chat subscription. |
+| Cloud connection | Follow section 8's question sequence to establish the user's preferred behavior, service/account and spending limits. Recommend a compatible connection and model for their agreement; do not ask them to select technical settings from a list. For an API route, verify API access and billing separately from any chat subscription. |
 | Workspace | Choose a usable desktop or protected local web application suited to the host, with tasks, results, follow-up chat and exceptions. Optional scrubbed mailbox mirror. |
 | Processing policy | Record eligible work categories, excluded content, de-identification requirements and automatic-release rules. |
 | Action policy | Automate local task/draft updates. Enable external sends only under bounded standing rules or individual approval. |
@@ -749,22 +749,36 @@ the shadow evaluation and exact versioned release policy are recorded.
 
 ### Let the user choose the cloud connection
 
-The user decides how cloud AI receives the locally scrubbed email. Explain the
-options in basic wording, recommend a fit for their goals, and wait for their
-choice before connecting an account or enabling that handoff. Reuse a recorded
-choice on resume. Do not assume that choosing a provider also chooses an API,
-automatic processing, a mailbox connector or permission to spend money.
+The user decides how cloud AI receives the locally scrubbed email. Explain that
+cloud AI runs on the service's computers, separate from the local privacy check
+and the agent helping with setup. Reuse recorded choices; ask only what remains
+unresolved, one question at a time:
+
+1. Ask about automatic processing versus moving text and results by hand, using
+   the wording in the setup examples above. Do not lead with "API or connector?"
+2. Ask: "Which AI service would you like to use, if you have a preference? I can
+   recommend one if you're unsure." Use a known preference without asking again.
+3. Recommend a supported connection for that behavior and service. Explain what
+   it sends, how results return, any manual work and costs before asking whether
+   to proceed. If using an API, call it "a direct connection the app uses to send
+   requests and receive results." Explain that a chat subscription does not prove
+   this connection is included; verify access and billing separately.
+4. If paid use is needed, explain the verified charges and suggest a bounded
+   starting budget: "Is that spending limit okay, or would you prefer another?"
+   Name the amount, currency and period; never ask for a budget without context.
+
+Do not ask for provider, model, account, connection and budget in one question.
+Avoid unexplained terms such as "handoff," "endpoint" or "cloud-hosted agent."
+Use the actual service name once known. Choosing a service does not authorize
+automatic processing, account access or spending; confirm the proposed scope
+before connecting or enabling it. The table below guides your recommendation;
+do not present it as a required technical questionnaire.
 
 | Approach | When to suggest it | What the user needs to know |
 | --- | --- | --- |
 | Direct API connection | Recommended for automatic processing with results returned to the workspace. The local app sends only released content and saves the response. | Requires supported API access, secure local credentials and agreed spending limits. A chat subscription may not include API access. The user chooses the provider and how much can run automatically. |
 | Manual handoff to a cloud chat | Suggest when the user wants to choose each submission or try the workflow before connecting an API. The app prepares approved text; the user copies it into their chosen cloud chat and imports the response. | More manual work. The app cannot enforce spending, retention or tools inside an external chat. Check that the selected chat can meet the required privacy rules. Only app-released text can be exported; originals and private previews stay local. |
 | Supported connector to a separate scrubbed mailbox or store | Suggest only when the user prefers an email-based workflow and the chosen service can be restricted to that destination. | Verify actual service support, permissions, costs and result return before recommending a specific connector. Never connect cloud AI to the original mailbox. If access cannot be restricted to approved scrubbed content, do not use this route. A second inbox alone does not invoke AI. |
-
-Ask, for example: "Would you like approved email sent to cloud AI automatically,
-or would you prefer to move it yourself? For automatic work, I recommend a direct
-API connection because the workspace can control what it sends and bring the
-results back. We can use another supported route if you prefer."
 
 Record the chosen method, destination/account, provider/model, automation level,
 cost limits and result-return steps. Explain what remains manual. Verify the
