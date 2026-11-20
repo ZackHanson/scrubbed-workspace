@@ -34,18 +34,5 @@ You do not need to create another folder or repeat the first-time setup prompt.
 
 ```text
 Read SETUP-PLAYBOOK.md and follow it to build, install and test my own complete
-scrubbed workspace in this project folder. Assume only my operating system is
-installed. Inspect my computer, choose suitable local models and software, and
-install what is missing.
-
-First explain your plan in plain language and ask only for decisions you cannot
-infer or inspect. Do the setup work yourself where your tools allow. When you
-need my input or a
-manual step, explain one action at a time, tell me how to check that it worked,
-and wait for that result before continuing dependent steps. Keep private email and
-credentials out of this chat; help me enter them through secure local setup.
-
-Finish with a working workspace, a demonstration and simple operating instructions.
-If you cannot work on my computer yet, first help me get a coding agent with the
-local access needed to do this.
+scrubbed workspace on my computer.
 ```

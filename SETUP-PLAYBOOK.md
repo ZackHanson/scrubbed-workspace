@@ -1,6 +1,6 @@
 # Build and install the user's scrubbed workspace
 
-**Playbook version: 2026-11-19.3**
+**Playbook version: 2026-11-19.4**
 
 Keep this version in downloaded copies. Record it and a SHA-256 digest of the
 playbook actually used in the setup receipt and handover; add the source commit
@@ -10,8 +10,14 @@ an existing installation or invalidate unrelated passing checks.
 
 You are the model responsible for setup. Use your tools to inspect the user's
 system, build or adapt the application, install it, and verify that it works.
-Complete the fourteen phases below. Deliver a working installation, its source
-and tests, and the user's operating instructions.
+Complete the fourteen phases below. Finish with a working installation, its source
+and tests, a demonstration and simple operating instructions.
+
+If you cannot yet edit files and run commands on the user's computer, first help
+them get a coding agent with the local access needed for setup. Explain how to
+open this playbook in that agent and continue there. Follow the host protections
+below when arranging access; do not claim to have installed or verified anything
+you could not actually inspect or run.
 
 This playbook specifies safeguards; it does not certify an implementation or
 guarantee zero risk. Local models can miss identifying information and cloud
@@ -60,8 +66,10 @@ Explain an unfamiliar term the first time you need it. For example, call the
 setup receipt "the record of what is installed and which checks have passed."
 Call an exception "a message the system holds for your review."
 
-Start with a short explanation of the finished system. Adapt this wording to
-the user's selected scope and the actual setup state:
+Start by explaining your setup plan in plain language, including what you will
+inspect, install and test and where the user's input may be needed. Include a
+short explanation of the finished system. Adapt this wording to the user's
+selected scope and the actual setup state:
 
 > We're building a workspace that takes email you choose, removes sensitive
 > details on your computer, and sends only content allowed by your rules to

@@ -64,3 +64,10 @@ prerequisites need not be installed beforehand, private email and credentials st
 out of chat, administrator approval is limited to specific explained steps, host
 protections stay enabled and setup can be paused at any time. Pausing preserves
 work and records the resume point. Removed that paragraph from README.md.
+
+November 19: playbook version 2026-11-19.4 explicitly requires a plain-language
+setup plan, a demonstration and simple operating instructions, and help getting
+a local coding agent when access is missing. Existing instructions cover a bare
+OS, software/model selection and installation, minimal questions, guided manual
+steps and secure local credential entry. README's setup prompt now delegates
+these requirements to the playbook.
