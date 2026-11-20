@@ -1,6 +1,6 @@
 # scrubbed-workspace
 
-**This README page is for YOU, and the SETUP-PLAYBOOK is for the AI agent.**
+**This README page is for YOU, and the PLAYBOOK is for the AI agent.**
 
 Scrubbed Workspace helps you use AI in colaboration with your email.
 What you'll have:
@@ -20,11 +20,11 @@ What you'll have:
 
 Open your coding agent in the same project folder and paste:
 
-> Read SETUP-PLAYBOOK.md, check the existing setup, and continue where we left off.
+> Read PLAYBOOK.md, check the existing setup, and continue where we left off.
 > Preserve my work and keep email processing paused until I ask to resume it.
 
 ### Prompt to paste
 
 ```text
-Read https://github.com/ZackHanson/scrubbed-workspace/blob/main/SETUP-PLAYBOOK.md and set up a working Scrubbed Workspace for me. Create and organize the project folder yourself.
+Read https://github.com/ZackHanson/scrubbed-workspace/blob/main/PLAYBOOK.md and set up a working Scrubbed Workspace for me. Create and organize the project folder yourself.
 ```
