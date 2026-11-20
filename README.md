@@ -1,5 +1,5 @@
 # scrubbed-workspace
-Scrubbed Workspace helps you use AI in colaboration with your email.
+Scrubbed Workspace helps you use AI in colaboration with sensitive emails.
 
 This guide (README) is for **You**, and the [PLAYBOOK](PLAYBOOK.md) is for the AI agent.
 
